@@ -9,7 +9,172 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          guest_id: string | null
+          id: string
+          message: string | null
+          stripe_payment_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          guest_id?: string | null
+          id?: string
+          message?: string | null
+          stripe_payment_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          guest_id?: string | null
+          id?: string
+          message?: string | null
+          stripe_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contributions_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          location: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          location: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          location?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      guest_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          guest_id: string
+          is_attending: boolean | null
+          response_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          guest_id: string
+          is_attending?: boolean | null
+          response_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          guest_id?: string
+          is_attending?: boolean | null
+          response_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_events_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guests: {
+        Row: {
+          created_at: string
+          dietary_restrictions: string | null
+          email: string | null
+          first_name: string
+          household_id: string
+          id: string
+          invitation_code: string
+          last_name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          dietary_restrictions?: string | null
+          email?: string | null
+          first_name: string
+          household_id: string
+          id?: string
+          invitation_code: string
+          last_name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          dietary_restrictions?: string | null
+          email?: string | null
+          first_name?: string
+          household_id?: string
+          id?: string
+          invitation_code?: string
+          last_name?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guests_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      households: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
