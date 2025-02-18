@@ -6,7 +6,7 @@ export interface GuestEvent {
     email: string;
     dietary_restrictions: string | null;
   };
-  is_attending: boolean | null;
+  status: 'not_invited' | 'invited' | 'attending' | 'declined';
   response_date: string | null;
 }
 
