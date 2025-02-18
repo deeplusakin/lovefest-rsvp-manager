@@ -1,16 +1,17 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const images = [
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-  "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-  "https://images.unsplash.com/photo-1486718448742-163732cd1544"
-];
+interface HeroImage {
+  id: string;
+  url: string;
+}
 
 export const Hero = () => {
   const ref = useRef<HTMLElement>(null);
   const [currentImage, setCurrentImage] = useState(0);
+  const [images, setImages] = useState<HeroImage[]>([]);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"]
@@ -20,17 +21,38 @@ export const Hero = () => {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
 
   useEffect(() => {
+    const fetchHeroImages = async () => {
+      const { data } = await supabase
+        .from('photos')
+        .select('id, url')
+        .eq('type', 'hero')
+        .order('sort_order');
+      
+      setImages(data || []);
+    };
+
+    fetchHeroImages();
+  }, []);
+
+  useEffect(() => {
+    if (images.length === 0) return;
+    
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
     }, 8000);
+    
     return () => clearInterval(timer);
-  }, []);
+  }, [images.length]);
+
+  if (images.length === 0) {
+    return null;
+  }
 
   return (
     <section ref={ref} className="min-h-screen relative flex items-center justify-center overflow-hidden -mx-[calc(50vw-50%)]">
       {images.map((img, index) => (
         <motion.div
-          key={img}
+          key={img.id}
           animate={{
             opacity: currentImage === index ? 1 : 0,
             scale: currentImage === index ? 1 : 1.1
@@ -41,7 +63,7 @@ export const Hero = () => {
         >
           <div 
             className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-2000"
-            style={{ backgroundImage: `url(${img})` }}
+            style={{ backgroundImage: `url(${img.url})` }}
           />
         </motion.div>
       ))}

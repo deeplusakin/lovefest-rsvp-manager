@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { EventsList } from "@/components/admin/EventsList";
 import { RSVPList } from "@/components/admin/RSVPList";
 import { GuestForm } from "@/components/admin/GuestForm";
 import { GuestsTable } from "@/components/admin/GuestsTable";
+import { PhotoManager } from "@/components/admin/PhotoManager";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventManagement } from "@/hooks/useEventManagement";
@@ -102,6 +102,7 @@ export const Admin = () => {
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="events" className="space-y-8">
@@ -166,6 +167,10 @@ export const Admin = () => {
                 <GuestsTable guests={guests} onDelete={fetchGuests} />
               )}
             </Card>
+          </TabsContent>
+
+          <TabsContent value="photos" className="space-y-8">
+            <PhotoManager />
           </TabsContent>
         </Tabs>
       </div>
