@@ -1,5 +1,6 @@
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 
 const partyMembers = [
   {
@@ -15,9 +16,20 @@ const partyMembers = [
 ];
 
 export const WeddingParty = () => {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
+
   return (
-    <section className="py-24 bg-gray-50">
-      <div className="container max-w-6xl">
+    <section ref={ref} className="py-24 bg-gray-50 relative overflow-hidden">
+      <motion.div 
+        style={{ y }}
+        className="container max-w-6xl"
+      >
         <h2 className="text-4xl md:text-5xl font-serif text-center mb-16">Wedding Party</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {partyMembers.map((member, index) => (
@@ -26,6 +38,7 @@ export const WeddingParty = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
               className="group relative overflow-hidden rounded-lg"
             >
               <div className="aspect-[3/4] overflow-hidden">
@@ -44,7 +57,7 @@ export const WeddingParty = () => {
             </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 };

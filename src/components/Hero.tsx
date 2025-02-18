@@ -1,14 +1,26 @@
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 
 export const Hero = () => {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"]
+  });
+
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
+
   return (
-    <section className="min-h-screen relative flex items-center justify-center overflow-hidden">
-      <div 
+    <section ref={ref} className="min-h-screen relative flex items-center justify-center overflow-hidden">
+      <motion.div 
+        style={{ scale }}
         className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469474968028-56623f02e42e')] 
         bg-cover bg-center brightness-50"
       />
-      <div className="relative z-10 text-center text-white px-4">
+      <motion.div style={{ y, opacity }} className="relative z-10 text-center text-white px-4">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -33,7 +45,7 @@ export const Hero = () => {
         >
           Join us for our celebration of love
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 };
