@@ -6,6 +6,8 @@ import { Event, EventStats } from "@/types/admin";
 import { EventStatistics } from "./EventStatistics";
 import { GuestListUpload } from "./GuestListUpload";
 import { GuestsTable } from "./GuestsTable";
+import { useCallback } from "react";
+import { useAdminData } from "@/hooks/useAdminData";
 
 interface RSVPListProps {
   events: Event[];
@@ -14,6 +16,12 @@ interface RSVPListProps {
 }
 
 export const RSVPList = ({ events, getEventStats, onExportGuests }: RSVPListProps) => {
+  const { fetchEvents } = useAdminData();
+
+  const handleUploadSuccess = useCallback(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
   return (
     <>
       {events.map(event => (
@@ -30,7 +38,10 @@ export const RSVPList = ({ events, getEventStats, onExportGuests }: RSVPListProp
 
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-semibold">Guest List</h4>
-            <GuestListUpload eventId={event.id} />
+            <GuestListUpload 
+              eventId={event.id} 
+              onUploadSuccess={handleUploadSuccess}
+            />
           </div>
 
           <GuestsTable guests={event.guest_events} eventId={event.id} />
