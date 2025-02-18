@@ -11,11 +11,13 @@ import WeddingParty from "@/pages/WeddingParty";
 import QAndA from "@/pages/QAndA";
 import Travel from "@/pages/Travel";
 import Registry from "@/pages/Registry";
+import { Navigation } from "@/components/Navigation";
 import "@/App.css";
 
 function App() {
   return (
     <Router>
+      <Navigation />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/our-story" element={<OurStory />} />
