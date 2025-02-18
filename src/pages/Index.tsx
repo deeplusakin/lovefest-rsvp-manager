@@ -6,6 +6,7 @@ import { HoneymoonFund } from "@/components/HoneymoonFund";
 import { ContributionWall } from "@/components/ContributionWall";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
+import { Countdown } from "@/components/Countdown";
 
 const Index = () => {
   return (
@@ -13,6 +14,7 @@ const Index = () => {
       <Navigation />
       <main className="pt-16">
         <Hero />
+        <Countdown />
         <WeddingDetails />
         <RsvpForm />
         <HoneymoonFund />
