@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,65 +42,94 @@ export const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const checkAuth = async () => {
       try {
-        // Fetch events with guest RSVPs
-        const { data: eventsData, error: eventsError } = await supabase
-          .from("events")
-          .select(`
-            id,
-            name,
-            date,
-            location,
-            guest_events (
-              is_attending,
-              response_date,
-              guest:guests (
-                first_name,
-                last_name,
-                email,
-                dietary_restrictions
-              )
-            )
-          `)
-          .order("date");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/login');
+          return;
+        }
 
-        if (eventsError) throw eventsError;
-        setEvents(eventsData || []);
+        // Check if user is admin
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
 
-        // Fetch contributions
-        const { data: contributionsData, error: contributionsError } = await supabase
-          .from("contributions")
-          .select(`
-            id,
-            amount,
-            message,
-            created_at,
-            guests (
-              first_name,
-              last_name
-            )
-          `)
-          .order("created_at", { ascending: false });
+        if (profileError || !profile?.is_admin) {
+          await supabase.auth.signOut();
+          navigate('/login');
+          return;
+        }
 
-        if (contributionsError) throw contributionsError;
-        setContributions(contributionsData || []);
-
-        // Calculate total contributions
-        const total = (contributionsData || []).reduce(
-          (sum, contrib) => sum + contrib.amount,
-          0
-        );
-        setTotalContributions(total);
-      } catch (error: any) {
-        console.error("Error fetching data:", error.message);
-      } finally {
-        setIsLoading(false);
+        fetchData();
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        navigate('/login');
       }
     };
 
-    fetchData();
-  }, []);
+    checkAuth();
+  }, [navigate]);
+
+  const fetchData = async () => {
+    try {
+      // Fetch events with guest RSVPs
+      const { data: eventsData, error: eventsError } = await supabase
+        .from("events")
+        .select(`
+          id,
+          name,
+          date,
+          location,
+          guest_events (
+            is_attending,
+            response_date,
+            guest:guests (
+              first_name,
+              last_name,
+              email,
+              dietary_restrictions
+            )
+          )
+        `)
+        .order("date");
+
+      if (eventsError) throw eventsError;
+      setEvents(eventsData || []);
+
+      // Fetch contributions
+      const { data: contributionsData, error: contributionsError } = await supabase
+        .from("contributions")
+        .select(`
+          id,
+          amount,
+          message,
+          created_at,
+          guests (
+            first_name,
+            last_name
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (contributionsError) throw contributionsError;
+      setContributions(contributionsData || []);
+
+      // Calculate total contributions
+      const total = (contributionsData || []).reduce(
+        (sum, contrib) => sum + contrib.amount,
+        0
+      );
+      setTotalContributions(total);
+    } catch (error: any) {
+      console.error("Error fetching data:", error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
