@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,6 +33,8 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [responses, setResponses] = useState<Record<string, Record<string, string>>>({});
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchHouseholdGuests();
@@ -107,6 +110,43 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
     }
   };
 
+  const handleSubmitMessage = async () => {
+    if (!message.trim()) return;
+    setIsSubmitting(true);
+
+    try {
+      const attendingGuests = guests.filter(guest => 
+        Object.values(responses[guest.id] || {}).includes('attending')
+      );
+
+      if (attendingGuests.length === 0) {
+        toast.error("At least one guest must be attending to leave a message");
+        return;
+      }
+
+      // Use the first attending guest as the message sender
+      const firstAttendingGuest = attendingGuests[0];
+
+      const { error } = await supabase
+        .from('contributions')
+        .insert({
+          guest_id: firstAttendingGuest.id,
+          message: message.trim(),
+          amount: 0 // Required field, set to 0 for messages without contributions
+        });
+
+      if (error) throw error;
+
+      toast.success("Thank you for your message!");
+      setMessage("");
+    } catch (error: any) {
+      toast.error("Failed to submit message");
+      console.error('Error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -116,38 +156,59 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      {guests.map(guest => (
-        <Card key={guest.id} className="p-6">
-          <h3 className="text-xl font-semibold mb-4">
-            {guest.first_name} {guest.last_name}
-          </h3>
-          <div className="space-y-6">
-            {guest.guest_events?.map(event => (
-              <div key={event.event_id} className="space-y-3">
-                <h4 className="font-medium">{event.events.name}</h4>
-                <p className="text-sm text-gray-600">
-                  {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
-                </p>
-                <RadioGroup
-                  value={responses[guest.id]?.[event.event_id] || 'not_invited'}
-                  onValueChange={(value) => handleRsvpChange(guest.id, event.event_id, value)}
-                  className="flex items-center gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="attending" id={`attending-${guest.id}-${event.event_id}`} />
-                    <Label htmlFor={`attending-${guest.id}-${event.event_id}`}>Attending</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="declined" id={`declined-${guest.id}-${event.event_id}`} />
-                    <Label htmlFor={`declined-${guest.id}-${event.event_id}`}>Cannot Attend</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ))}
+    <div className="space-y-8">
+      <div className="space-y-6">
+        {guests.map(guest => (
+          <Card key={guest.id} className="p-6">
+            <h3 className="text-xl font-semibold mb-4">
+              {guest.first_name} {guest.last_name}
+            </h3>
+            <div className="space-y-6">
+              {guest.guest_events?.map(event => (
+                <div key={event.event_id} className="space-y-3">
+                  <h4 className="font-medium">{event.events.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
+                  </p>
+                  <RadioGroup
+                    value={responses[guest.id]?.[event.event_id] || 'not_invited'}
+                    onValueChange={(value) => handleRsvpChange(guest.id, event.event_id, value)}
+                    className="flex items-center gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="attending" id={`attending-${guest.id}-${event.event_id}`} />
+                      <Label htmlFor={`attending-${guest.id}-${event.event_id}`}>Attending</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="declined" id={`declined-${guest.id}-${event.event_id}`} />
+                      <Label htmlFor={`declined-${guest.id}-${event.event_id}`}>Cannot Attend</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-4">Share a Message</h3>
+        <div className="space-y-4">
+          <Textarea
+            placeholder="Write a message for the couple..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="min-h-[100px]"
+          />
+          <Button 
+            onClick={handleSubmitMessage}
+            disabled={isSubmitting || !message.trim()}
+            className="w-full"
+          >
+            {isSubmitting ? "Sending..." : "Send Message"}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 };

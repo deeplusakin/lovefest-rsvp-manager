@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import { Button } from "./ui/button";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Contribution {
   id: string;
@@ -17,6 +20,24 @@ interface Contribution {
 export const ContributionWall = () => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
+        
+        setIsAdmin(!!data?.is_admin);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
 
   useEffect(() => {
     const fetchContributions = async () => {
@@ -52,12 +73,12 @@ export const ContributionWall = () => {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*", // Listen to all changes (INSERT, UPDATE, DELETE)
           schema: "public",
           table: "contributions",
         },
-        async (payload) => {
-          // Fetch the complete contribution data including guest info
+        async () => {
+          // Refresh the contributions when any change occurs
           const { data } = await supabase
             .from("contributions")
             .select(`
@@ -70,11 +91,10 @@ export const ContributionWall = () => {
                 last_name
               )
             `)
-            .eq("id", payload.new.id)
-            .single();
+            .order("created_at", { ascending: false });
 
           if (data) {
-            setContributions((prev) => [data, ...prev]);
+            setContributions(data);
           }
         }
       )
@@ -84,6 +104,21 @@ export const ContributionWall = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contributions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success("Message deleted successfully");
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error("Failed to delete message");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -117,8 +152,22 @@ export const ContributionWall = () => {
                     {new Date(contribution.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="text-lg font-medium text-primary">
-                  ${contribution.amount}
+                <div className="flex items-center gap-4">
+                  {contribution.amount > 0 && (
+                    <div className="text-lg font-medium text-primary">
+                      ${contribution.amount}
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(contribution.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
               {contribution.message && (
@@ -128,7 +177,7 @@ export const ContributionWall = () => {
           ))}
           {contributions.length === 0 && (
             <div className="text-center text-gray-500 py-8">
-              No contributions yet. Be the first to contribute!
+              No messages yet. Be the first to share!
             </div>
           )}
         </div>
