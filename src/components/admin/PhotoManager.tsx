@@ -4,14 +4,22 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Photo, PhotoRow } from "@/types/photos";
+import { ImageCropper } from "./ImageCropper";
+
+interface CropState {
+  file: File;
+  preview: string;
+  type: 'hero' | 'gallery';
+}
 
 export const PhotoManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [cropState, setCropState] = useState<CropState | null>(null);
 
   useEffect(() => {
     fetchPhotos();
@@ -37,11 +45,25 @@ export const PhotoManager = () => {
     }
   };
 
-  const handleUpload = async (files: FileList | null, type: 'hero' | 'gallery') => {
+  const handleFileSelect = (files: FileList | null, type: 'hero' | 'gallery') => {
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
     const file = files[0];
+    const preview = URL.createObjectURL(file);
+    setCropState({ file, preview, type });
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!cropState) return;
+    
+    const { type, file } = cropState;
+    const croppedFile = new File([croppedBlob], file.name, { type: file.type });
+    await handleUpload(croppedFile, type);
+    setCropState(null);
+  };
+
+  const handleUpload = async (file: File, type: 'hero' | 'gallery') => {
+    setIsUploading(true);
 
     try {
       // Upload to storage
@@ -120,7 +142,7 @@ export const PhotoManager = () => {
               type="file"
               accept="image/*"
               disabled={isUploading}
-              onChange={(e) => handleUpload(e.target.files, 'hero')}
+              onChange={(e) => handleFileSelect(e.target.files, 'hero')}
               className="max-w-sm"
             />
             {isUploading && <span>Uploading...</span>}
@@ -155,7 +177,7 @@ export const PhotoManager = () => {
               type="file"
               accept="image/*"
               disabled={isUploading}
-              onChange={(e) => handleUpload(e.target.files, 'gallery')}
+              onChange={(e) => handleFileSelect(e.target.files, 'gallery')}
               className="max-w-sm"
             />
             {isUploading && <span>Uploading...</span>}
@@ -184,6 +206,16 @@ export const PhotoManager = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {cropState && (
+        <ImageCropper
+          imageUrl={cropState.preview}
+          aspectRatio={cropState.type === 'hero' ? 16 / 9 : 1}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setCropState(null)}
+          open={true}
+        />
+      )}
     </Card>
   );
 };
