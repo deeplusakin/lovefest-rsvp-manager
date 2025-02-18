@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,18 +9,27 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const RsvpForm = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle QR code scans
+  useEffect(() => {
+    const codeFromQR = searchParams.get("code");
+    if (codeFromQR) {
+      setCode(codeFromQR);
+      handleLogin(codeFromQR);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLogin = async (invitationCode: string) => {
     setIsLoading(true);
 
     try {
       // Authenticate as the guest using their invitation code
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: `${code}@guest.wedding.com`,
-        password: code,
+        email: `${invitationCode}@guest.wedding.com`,
+        password: invitationCode,
       });
 
       if (authError) {
@@ -45,7 +54,7 @@ export const RsvpForm = () => {
             )
           )
         `)
-        .eq("invitation_code", code)
+        .eq("invitation_code", invitationCode)
         .single();
 
       if (guestError || !guestData) {
@@ -66,12 +75,17 @@ export const RsvpForm = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLogin(code);
+  };
+
   return (
     <section className="py-24 bg-primary text-white">
       <div className="container max-w-md text-center">
         <h2 className="text-4xl md:text-5xl font-serif mb-8">RSVP</h2>
         <p className="text-gray-300 mb-8">
-          Please enter your unique code to RSVP for our wedding celebration.
+          Please enter your unique code or scan your QR code to RSVP for our wedding celebration.
         </p>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
