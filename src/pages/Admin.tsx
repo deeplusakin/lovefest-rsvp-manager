@@ -7,12 +7,13 @@ import { Home, PlusCircle } from "lucide-react";
 import { EventForm } from "@/components/admin/EventForm";
 import { EventsList } from "@/components/admin/EventsList";
 import { RSVPList } from "@/components/admin/RSVPList";
+import { GuestForm } from "@/components/admin/GuestForm";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventManagement } from "@/hooks/useEventManagement";
 import { getEventStats } from "@/utils/eventStats";
 import { downloadCSV } from "@/utils/csvExport";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export const Admin = () => {
   const {
@@ -33,6 +34,8 @@ export const Admin = () => {
     handleDeleteEvent,
     startEditEvent,
   } = useEventManagement(fetchData);
+
+  const [showGuestForm, setShowGuestForm] = useState(false);
 
   useAdminAuth(fetchData);
 
@@ -83,6 +86,7 @@ export const Admin = () => {
           <TabsList>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
+            <TabsTrigger value="guests">Guests</TabsTrigger>
           </TabsList>
 
           <TabsContent value="events" className="space-y-8">
@@ -128,6 +132,21 @@ export const Admin = () => {
               getEventStats={getEventStats}
               onExportGuests={exportEventGuests}
             />
+          </TabsContent>
+
+          <TabsContent value="guests" className="space-y-8">
+            <Card className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-serif">Manage Guests</h2>
+                <Button onClick={() => setShowGuestForm(!showGuestForm)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {showGuestForm ? 'Cancel' : 'Add Guest'}
+                </Button>
+              </div>
+              {showGuestForm && (
+                <GuestForm onSuccess={() => fetchData()} />
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
