@@ -66,7 +66,6 @@ export const HoneymoonFund = () => {
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
                     className="text-lg"
                     disabled={isLoading}
                   />
