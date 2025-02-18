@@ -6,7 +6,7 @@ import { HoneymoonFund } from "@/components/HoneymoonFund";
 import { ContributionWall } from "@/components/ContributionWall";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
-import { Countdown } from "@/components/Countdown";
+import Countdown from "@/components/Countdown";
 
 const Index = () => {
   return (
