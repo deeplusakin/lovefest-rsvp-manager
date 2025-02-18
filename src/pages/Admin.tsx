@@ -1,8 +1,14 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface GuestEvent {
   guest: {
@@ -20,6 +26,7 @@ interface Event {
   name: string;
   date: string;
   location: string;
+  description: string | null;
   guest_events: GuestEvent[];
 }
 
@@ -34,12 +41,27 @@ interface Contribution {
   };
 }
 
+interface EventFormData {
+  name: string;
+  date: string;
+  location: string;
+  description: string;
+}
+
 export const Admin = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [eventFormData, setEventFormData] = useState<EventFormData>({
+    name: "",
+    date: "",
+    location: "",
+    description: "",
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -84,6 +106,7 @@ export const Admin = () => {
           name,
           date,
           location,
+          description,
           guest_events (
             is_attending,
             response_date,
@@ -126,9 +149,80 @@ export const Admin = () => {
       setTotalContributions(total);
     } catch (error: any) {
       console.error("Error fetching data:", error.message);
+      toast.error("Error loading data");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('events')
+        .insert([eventFormData]);
+
+      if (error) throw error;
+
+      toast.success("Event created successfully");
+      setShowEventForm(false);
+      setEventFormData({ name: "", date: "", location: "", description: "" });
+      fetchData();
+    } catch (error: any) {
+      toast.error("Error creating event: " + error.message);
+    }
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update(eventFormData)
+        .eq('id', editingEvent.id);
+
+      if (error) throw error;
+
+      toast.success("Event updated successfully");
+      setEditingEvent(null);
+      setEventFormData({ name: "", date: "", location: "", description: "" });
+      fetchData();
+    } catch (error: any) {
+      toast.error("Error updating event: " + error.message);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm("Are you sure you want to delete this event? This will also delete all associated RSVPs.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      toast.success("Event deleted successfully");
+      fetchData();
+    } catch (error: any) {
+      toast.error("Error deleting event: " + error.message);
+    }
+  };
+
+  const startEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setEventFormData({
+      name: event.name,
+      date: new Date(event.date).toISOString().slice(0, 16),
+      location: event.location,
+      description: event.description || "",
+    });
+    setShowEventForm(true);
   };
 
   if (isLoading) {
@@ -148,16 +242,127 @@ export const Admin = () => {
     return { totalInvited, responded, attending, notAttending };
   };
 
+  const EventForm = () => (
+    <form onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Event Name</Label>
+        <Input
+          id="name"
+          value={eventFormData.name}
+          onChange={(e) => setEventFormData(prev => ({ ...prev, name: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="date">Date and Time</Label>
+        <Input
+          id="date"
+          type="datetime-local"
+          value={eventFormData.date}
+          onChange={(e) => setEventFormData(prev => ({ ...prev, date: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="location">Location</Label>
+        <Input
+          id="location"
+          value={eventFormData.location}
+          onChange={(e) => setEventFormData(prev => ({ ...prev, location: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          value={eventFormData.description}
+          onChange={(e) => setEventFormData(prev => ({ ...prev, description: e.target.value }))}
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit">
+          {editingEvent ? "Update Event" : "Create Event"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setShowEventForm(false);
+            setEditingEvent(null);
+            setEventFormData({ name: "", date: "", location: "", description: "" });
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container max-w-7xl">
         <h1 className="text-4xl font-serif mb-8">Wedding Admin Dashboard</h1>
 
-        <Tabs defaultValue="rsvps">
+        <Tabs defaultValue="events">
           <TabsList>
+            <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
             <TabsTrigger value="contributions">Contributions</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="events" className="space-y-8">
+            <Card className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-serif">Manage Events</h2>
+                {!showEventForm && (
+                  <Button onClick={() => setShowEventForm(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Event
+                  </Button>
+                )}
+              </div>
+              {showEventForm ? (
+                <EventForm />
+              ) : (
+                <div className="space-y-4">
+                  {events.map(event => (
+                    <Card key={event.id} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-semibold">{event.name}</h3>
+                          <p className="text-gray-600">
+                            {new Date(event.date).toLocaleDateString()} at{" "}
+                            {new Date(event.date).toLocaleTimeString()}
+                          </p>
+                          <p className="text-gray-600">{event.location}</p>
+                          {event.description && (
+                            <p className="text-gray-600 mt-2">{event.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => startEditEvent(event)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteEvent(event.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
 
           <TabsContent value="rsvps" className="space-y-8">
             {events.map(event => {
