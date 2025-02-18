@@ -17,6 +17,8 @@ interface GuestEventsTableProps {
   eventId: string;
 }
 
+type RsvpStatus = "not_invited" | "invited" | "attending" | "declined";
+
 export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => {
   const [addingEventToGuest, setAddingEventToGuest] = useState<string | null>(null);
   const [availableEvents, setAvailableEvents] = useState<Array<{ id: string; name: string }>>([]);
@@ -81,7 +83,7 @@ export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => 
     }
   };
 
-  const handleStatusUpdate = async (guestId: string, newStatus: string) => {
+  const handleStatusUpdate = async (guestId: string, newStatus: RsvpStatus) => {
     setUpdatingStatus(guestId);
     try {
       const { error } = await supabase
@@ -134,7 +136,7 @@ export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => 
               <td className="p-2">
                 <Select
                   value={guestEvent.status}
-                  onValueChange={(value) => handleStatusUpdate(guestEvent.guest_id, value)}
+                  onValueChange={(value: RsvpStatus) => handleStatusUpdate(guestEvent.guest_id, value)}
                   disabled={!!updatingStatus}
                 >
                   <SelectTrigger className="w-[140px]">
