@@ -21,37 +21,65 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           return;
         }
 
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .single();
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
 
-          if (profileError) {
-            throw profileError;
+        if (profileError) {
+          // Log the specific error for debugging
+          console.error('Profile fetch error:', profileError);
+          
+          // If the error is about network connectivity, show a specific message
+          if (profileError.message === 'Failed to fetch') {
+            toast.error("Network error: Unable to verify admin status. Please check your connection.");
+          } else {
+            toast.error("Error verifying admin access");
           }
-
-          if (!profile?.is_admin) {
-            await supabase.auth.signOut();
-            toast.error("Unauthorized access: Admin privileges required");
-            navigate('/login');
-            return;
-          }
-
-          onAuthenticated();
-        } catch (error: any) {
-          console.error('Error checking admin status:', error);
-          toast.error("Error verifying admin access");
+          
+          await supabase.auth.signOut();
           navigate('/login');
+          return;
         }
+
+        if (!profile?.is_admin) {
+          toast.error("Unauthorized access: Admin privileges required");
+          await supabase.auth.signOut();
+          navigate('/login');
+          return;
+        }
+
+        // If we get here, the user is authenticated and is an admin
+        onAuthenticated();
+        
       } catch (error: any) {
-        console.error('Error checking auth:', error);
-        toast.error("Please log in to continue");
+        console.error('Auth check error:', error);
+        
+        // Handle network errors specifically
+        if (error.message === 'Failed to fetch') {
+          toast.error("Network error: Please check your connection");
+        } else {
+          toast.error("Please log in to continue");
+        }
+        
         navigate('/login');
       }
     };
 
+    // Initial auth check
     checkAuth();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate('/login');
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, onAuthenticated]);
 };
