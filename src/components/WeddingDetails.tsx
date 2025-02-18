@@ -50,8 +50,8 @@ export const WeddingDetails = () => {
             className="relative h-[400px] md:h-full"
           >
             <img
-              src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05"
-              alt="Venue"
+              src="/lovable-uploads/db7566be-e769-4bdd-9440-f835bee825c8.png"
+              alt="Main Street Ballroom venue exterior"
               className="absolute inset-0 w-full h-full object-cover rounded-lg"
             />
           </motion.div>
