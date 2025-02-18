@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export const HoneymoonFund = () => {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
-  const [venmoUsername, setVenmoUsername] = useState("@Akin-Walker");
+  const [venmoUsername, setVenmoUsername] = useState("u/Akin-Walker");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleContribute = async (e: React.FormEvent) => {
@@ -16,7 +16,7 @@ export const HoneymoonFund = () => {
     setIsLoading(true);
 
     try {
-      // Open Venmo in a new tab
+      // Open Venmo in a new tab with the direct profile URL format
       const venmoUrl = `https://venmo.com/${venmoUsername}?txn=pay&note=${encodeURIComponent(
         `Wedding Gift: ${message}`
       )}&amount=${amount}`;
