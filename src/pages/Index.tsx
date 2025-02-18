@@ -3,15 +3,19 @@ import { Hero } from "@/components/Hero";
 import { WeddingDetails } from "@/components/WeddingDetails";
 import { WeddingParty } from "@/components/WeddingParty";
 import { RsvpForm } from "@/components/RsvpForm";
+import { HoneymoonFund } from "@/components/HoneymoonFund";
+import { ContributionWall } from "@/components/ContributionWall";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <main>
       <Hero />
       <WeddingDetails />
       <WeddingParty />
       <RsvpForm />
-    </div>
+      <HoneymoonFund />
+      <ContributionWall />
+    </main>
   );
 };
 
