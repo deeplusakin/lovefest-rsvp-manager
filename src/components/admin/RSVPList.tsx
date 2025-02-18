@@ -58,14 +58,14 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
       const csvData = guestEvents.map(ge => ({
         first_name: ge.guest.first_name,
         last_name: ge.guest.last_name,
+        household_name: ge.guest.household.name,
+        invitation_code: ge.guest.household.invitation_code,
+        household_address: ge.guest.household.address || '',
         email: ge.guest.email || '',
         phone: ge.guest.phone || '',
         status: ge.status,
         response_date: ge.response_date ? new Date(ge.response_date).toLocaleDateString() : '',
-        dietary_restrictions: ge.guest.dietary_restrictions || '',
-        household: ge.guest.household.name,
-        invitation_code: ge.guest.household.invitation_code,
-        address: ge.guest.household.address || ''
+        dietary_restrictions: ge.guest.dietary_restrictions || ''
       }));
 
       downloadCSV(csvData, `${event.name}-guest-list`);
