@@ -21,7 +21,7 @@ const Index = () => {
         <ContributionWall />
         <footer className="py-8 text-center text-sm text-muted-foreground border-t">
           <div className="container">
-            <p>© 2024 Dearborne & Akin Wedding</p>
+            <p>2024 Dearborne & Akin Wedding</p>
             <Link 
               to="/admin" 
               className="mt-2 inline-block text-xs hover:underline"
