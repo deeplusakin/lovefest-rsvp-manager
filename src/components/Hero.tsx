@@ -11,18 +11,16 @@ export const Hero = () => {
 
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
 
   return (
-    <section ref={ref} className="relative min-h-screen flex">
+    <section ref={ref} className="min-h-screen relative flex items-center justify-center overflow-hidden">
       <motion.div 
         style={{ scale }}
-        className="fixed top-0 left-0 w-1/2 h-screen bg-[url('https://images.unsplash.com/photo-1469474968028-56623f02e42e')] 
+        className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469474968028-56623f02e42e')] 
         bg-cover bg-center brightness-50"
       />
-      <motion.div 
-        style={{ opacity }} 
-        className="fixed top-1/2 left-[25%] -translate-x-1/2 -translate-y-1/2 text-center text-white z-10"
-      >
+      <motion.div style={{ y, opacity }} className="relative z-10 text-center text-white px-4">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
