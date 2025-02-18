@@ -30,20 +30,26 @@ const Travel = () => {
               <h2 className="text-2xl font-serif">Where to Stay</h2>
             </div>
             <p className="text-gray-600 mb-4">
-              We've secured room blocks at the following hotels:
+              Here are some quality, affordable accommodation options near the venue:
             </p>
             <ul className="space-y-4">
               <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Turf Valley Resort</h3>
                 <p className="text-gray-600">10 minutes from venue</p>
-                <p className="text-gray-600">Group rate: $189/night</p>
-                <p className="text-gray-600">Booking code: DEARBORNE2025</p>
+                <p className="text-gray-600">Spacious rooms with resort amenities</p>
+                <p className="text-gray-600">Average rates from $150-200/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Hampton Inn Columbia</h3>
                 <p className="text-gray-600">15 minutes from venue</p>
-                <p className="text-gray-600">Group rate: $159/night</p>
-                <p className="text-gray-600">Booking code: AKIN2025</p>
+                <p className="text-gray-600">Complimentary breakfast included</p>
+                <p className="text-gray-600">Average rates from $120-160/night</p>
+              </li>
+              <li className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold mb-2">Sonesta ES Suites Columbia</h3>
+                <p className="text-gray-600">12 minutes from venue</p>
+                <p className="text-gray-600">Apartment-style suites with kitchens</p>
+                <p className="text-gray-600">Average rates from $130-170/night</p>
               </li>
             </ul>
           </section>
