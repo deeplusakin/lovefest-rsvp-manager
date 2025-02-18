@@ -88,7 +88,7 @@ export const Hero = () => {
             scale: currentImage === index ? 1 : 1.1
           }}
           initial={false}
-          transition={{ duration: 1.5 }} // Reduced from 2.5 for faster transitions
+          transition={{ duration: 1.5 }}
           style={{ scale }}
           className="absolute inset-0"
         >
@@ -96,12 +96,20 @@ export const Hero = () => {
             className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-1000"
             style={{ 
               backgroundImage: `url(${img.url})`,
-              willChange: 'transform' // Optimize for animations
+              willChange: 'transform'
             }}
-            loading="eager"
-            role="img"
             aria-label={img.title || 'Hero image'}
-          />
+            role="img"
+          >
+            {/* Hidden image for preloading */}
+            <img 
+              src={img.url} 
+              alt="" 
+              className="hidden" 
+              loading="eager"
+              aria-hidden="true"
+            />
+          </div>
         </motion.div>
       ))}
       <motion.div style={{ opacity }} className="relative z-10 text-center text-white px-4">
