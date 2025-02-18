@@ -11,9 +11,9 @@ interface Guest {
   first_name: string;
   last_name: string;
   email: string | null;
-  invitation_code: string;
   household: {
     name: string;
+    invitation_code: string;
   };
   household_id: string;
 }
@@ -21,6 +21,7 @@ interface Guest {
 interface Household {
   id: string;
   name: string;
+  invitation_code: string;
 }
 
 interface GuestsTableProps {
@@ -41,7 +42,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
   const fetchHouseholds = async () => {
     const { data, error } = await supabase
       .from('households')
-      .select('id, name')
+      .select('id, name, invitation_code')
       .order('name');
     
     if (error) {
@@ -85,10 +86,13 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     }
 
     try {
-      // Create new household
+      // Create new household with a random invitation code
       const { data: household, error: householdError } = await supabase
         .from('households')
-        .insert({ name: newHouseholdName.trim() })
+        .insert({ 
+          name: newHouseholdName.trim(),
+          invitation_code: Math.random().toString(36).substring(2, 8).toUpperCase()
+        })
         .select()
         .single();
 
@@ -223,7 +227,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
                   </div>
                 )}
               </td>
-              <td className="p-2">{guest.invitation_code}</td>
+              <td className="p-2">{guest.household.invitation_code}</td>
               <td className="p-2">
                 <Button
                   variant="destructive"

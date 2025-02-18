@@ -118,7 +118,6 @@ export type Database = {
           first_name: string
           household_id: string
           id: string
-          invitation_code: string
           last_name: string
           phone: string | null
         }
@@ -129,7 +128,6 @@ export type Database = {
           first_name: string
           household_id?: string
           id?: string
-          invitation_code: string
           last_name: string
           phone?: string | null
         }
@@ -140,7 +138,6 @@ export type Database = {
           first_name?: string
           household_id?: string
           id?: string
-          invitation_code?: string
           last_name?: string
           phone?: string | null
         }
@@ -159,18 +156,21 @@ export type Database = {
           address: string | null
           created_at: string
           id: string
+          invitation_code: string
           name: string
         }
         Insert: {
           address?: string | null
           created_at?: string
           id?: string
+          invitation_code: string
           name: string
         }
         Update: {
           address?: string | null
           created_at?: string
           id?: string
+          invitation_code?: string
           name?: string
         }
         Relationships: []

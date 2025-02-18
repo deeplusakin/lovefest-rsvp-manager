@@ -51,7 +51,8 @@ export const Admin = () => {
         last_name,
         email,
         household:households (
-          name
+          name,
+          invitation_code
         )
       `)
       .order('last_name');
