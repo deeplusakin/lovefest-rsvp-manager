@@ -32,7 +32,7 @@ export const WeddingDetails = () => {
                 <h3 className="text-2xl font-serif">Ceremony & Reception</h3>
               </div>
               <p className="text-secondary mb-2">Saturday, August 30, 2025</p>
-              <p className="text-secondary">4:00 PM - 10:00 PM</p>
+              <p className="text-secondary">5:00 PM - 11:00 PM</p>
             </div>
             <div className="p-8 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-4 mb-4">
@@ -40,7 +40,11 @@ export const WeddingDetails = () => {
                 <h3 className="text-2xl font-serif">Venue</h3>
               </div>
               <p className="text-secondary mb-2">Main Street Ballroom</p>
-              <p className="text-secondary">8390 Main Street, Ellicott City, MD 21043</p>
+              <p className="text-secondary mb-4">8390 Main Street, Ellicott City, MD 21043</p>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-lg font-serif mb-2">Parking Information</h4>
+                <p className="text-secondary">Complimentary parking is available in the venue's main lot. Additional parking can be found at the public garage on Main Street, just a 2-minute walk from the venue.</p>
+              </div>
             </div>
           </motion.div>
           <motion.div 
