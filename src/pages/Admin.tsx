@@ -5,21 +5,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
+interface GuestEvent {
+  guest: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    dietary_restrictions: string | null;
+  };
+  is_attending: boolean | null;
+  response_date: string | null;
+}
+
 interface Event {
   id: string;
   name: string;
   date: string;
   location: string;
-  guests: {
-    guest: {
-      first_name: string;
-      last_name: string;
-      email: string;
-      dietary_restrictions: string | null;
-    };
-    is_attending: boolean | null;
-    response_date: string | null;
-  }[];
+  guest_events: GuestEvent[];
 }
 
 interface Contribution {
@@ -51,7 +53,7 @@ export const Admin = () => {
             name,
             date,
             location,
-            guest_events!inner (
+            guest_events (
               is_attending,
               response_date,
               guest:guests (
@@ -110,10 +112,10 @@ export const Admin = () => {
   }
 
   const getEventStats = (event: Event) => {
-    const totalInvited = event.guests.length;
-    const responded = event.guests.filter(g => g.is_attending !== null).length;
-    const attending = event.guests.filter(g => g.is_attending === true).length;
-    const notAttending = event.guests.filter(g => g.is_attending === false).length;
+    const totalInvited = event.guest_events.length;
+    const responded = event.guest_events.filter(g => g.is_attending !== null).length;
+    const attending = event.guest_events.filter(g => g.is_attending === true).length;
+    const notAttending = event.guest_events.filter(g => g.is_attending === false).length;
 
     return { totalInvited, responded, attending, notAttending };
   };
@@ -171,7 +173,7 @@ export const Admin = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {event.guests.map((g, i) => (
+                        {event.guest_events.map((g, i) => (
                           <tr key={i} className="border-b">
                             <td className="p-2">
                               {g.guest.first_name} {g.guest.last_name}
