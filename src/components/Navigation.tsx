@@ -21,7 +21,7 @@ export const Navigation = () => {
       <div className="container">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="font-serif text-xl">
-            Sarah & Michael
+            Dearborne & Akin
           </Link>
           <ul className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
