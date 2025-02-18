@@ -2,7 +2,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Photo } from "@/types/photos";
+import type { Photo, PhotoRow } from "@/types/photos";
 
 export const Hero = () => {
   const ref = useRef<HTMLElement>(null);
@@ -24,7 +24,13 @@ export const Hero = () => {
         .eq('type', 'hero')
         .order('sort_order');
       
-      setImages(data || []);
+      if (data) {
+        const typedData = data.filter(
+          (photo: PhotoRow): photo is Photo => 
+            photo.type === 'hero' || photo.type === 'gallery'
+        );
+        setImages(typedData);
+      }
     };
 
     fetchHeroImages();

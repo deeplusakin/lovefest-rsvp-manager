@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Photo } from "@/types/photos";
+import type { Photo, PhotoRow } from "@/types/photos";
 
 const Photos = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -15,7 +15,13 @@ const Photos = () => {
         .eq('type', 'gallery')
         .order('sort_order');
       
-      setPhotos(data || []);
+      if (data) {
+        const typedData = data.filter(
+          (photo: PhotoRow): photo is Photo => 
+            photo.type === 'hero' || photo.type === 'gallery'
+        );
+        setPhotos(typedData);
+      }
     };
 
     fetchPhotos();

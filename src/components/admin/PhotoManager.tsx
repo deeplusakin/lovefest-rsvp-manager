@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Photo } from "@/types/photos";
+import type { Photo, PhotoRow } from "@/types/photos";
 
 export const PhotoManager = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -28,7 +28,13 @@ export const PhotoManager = () => {
       return;
     }
 
-    setPhotos(data || []);
+    if (data) {
+      const typedData = data.filter(
+        (photo: PhotoRow): photo is Photo => 
+          photo.type === 'hero' || photo.type === 'gallery'
+      );
+      setPhotos(typedData);
+    }
   };
 
   const handleUpload = async (files: FileList | null, type: 'hero' | 'gallery') => {
