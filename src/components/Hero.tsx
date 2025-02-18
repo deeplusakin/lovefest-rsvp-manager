@@ -22,7 +22,7 @@ export const Hero = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
-    }, 5000);
+    }, 8000); // Increased from 5000 to 8000ms
     return () => clearInterval(timer);
   }, []);
 
@@ -35,12 +35,12 @@ export const Hero = () => {
             opacity: currentImage === index ? 1 : 0,
             scale: currentImage === index ? 1 : 1.1
           }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 2.5 }} // Increased from 1 to 2.5s
           style={{ scale }}
           className="absolute inset-0"
         >
           <div 
-            className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-1000"
+            className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-2000"
             style={{ backgroundImage: `url(${img})` }}
           />
         </motion.div>
