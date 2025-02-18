@@ -1,33 +1,38 @@
 
-import { GuestEvent } from "@/types/admin";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface GuestsTableProps {
-  guests: GuestEvent[];
-  eventId: string;
+interface Guest {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  household: {
+    name: string;
+  };
 }
 
-export const GuestsTable = ({ guests, eventId }: GuestsTableProps) => {
-  const handleStatusChange = async (
-    guestId: string,
-    status: 'not_invited' | 'invited' | 'attending' | 'declined'
-  ) => {
+interface GuestsTableProps {
+  guests: Guest[];
+  onDelete: () => void;
+}
+
+export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
+  const handleDelete = async (guestId: string) => {
     try {
       const { error } = await supabase
-        .from('guest_events')
-        .update({
-          status,
-          response_date: status === 'invited' ? null : new Date().toISOString()
-        })
-        .match({ guest_id: guestId, event_id: eventId });
+        .from('guests')
+        .delete()
+        .eq('id', guestId);
 
       if (error) throw error;
-      toast.success("RSVP status updated");
-    } catch (error: any) {
-      toast.error("Error updating RSVP status");
-      console.error(error);
+      
+      toast.success("Guest deleted successfully");
+      onDelete();
+    } catch (error) {
+      console.error('Error deleting guest:', error);
+      toast.error("Error deleting guest");
     }
   };
 
@@ -38,43 +43,26 @@ export const GuestsTable = ({ guests, eventId }: GuestsTableProps) => {
           <tr className="border-b">
             <th className="text-left p-2">Guest</th>
             <th className="text-left p-2">Email</th>
-            <th className="text-left p-2">Status</th>
-            <th className="text-left p-2">Response Date</th>
-            <th className="text-left p-2">Dietary Restrictions</th>
+            <th className="text-left p-2">Household</th>
+            <th className="text-left p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {guests.map((g, i) => (
-            <tr key={i} className="border-b">
+          {guests.map((guest) => (
+            <tr key={guest.id} className="border-b">
               <td className="p-2">
-                {g.guest.first_name} {g.guest.last_name}
+                {guest.first_name} {guest.last_name}
               </td>
-              <td className="p-2">{g.guest.email || "-"}</td>
+              <td className="p-2">{guest.email || "-"}</td>
+              <td className="p-2">{guest.household.name}</td>
               <td className="p-2">
-                <Select
-                  defaultValue={g.status}
-                  onValueChange={(value: 'not_invited' | 'invited' | 'attending' | 'declined') => 
-                    handleStatusChange(g.guest_id, value)
-                  }
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(guest.id)}
                 >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="not_invited">Not Invited</SelectItem>
-                    <SelectItem value="invited">Invited</SelectItem>
-                    <SelectItem value="attending">Attending</SelectItem>
-                    <SelectItem value="declined">Declined</SelectItem>
-                  </SelectContent>
-                </Select>
-              </td>
-              <td className="p-2">
-                {g.response_date
-                  ? new Date(g.response_date).toLocaleDateString()
-                  : "-"}
-              </td>
-              <td className="p-2">
-                {g.guest.dietary_restrictions || "-"}
+                  Delete
+                </Button>
               </td>
             </tr>
           ))}

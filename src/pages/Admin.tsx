@@ -8,12 +8,14 @@ import { EventForm } from "@/components/admin/EventForm";
 import { EventsList } from "@/components/admin/EventsList";
 import { RSVPList } from "@/components/admin/RSVPList";
 import { GuestForm } from "@/components/admin/GuestForm";
+import { GuestsTable } from "@/components/admin/GuestsTable";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventManagement } from "@/hooks/useEventManagement";
 import { getEventStats } from "@/utils/eventStats";
 import { downloadCSV } from "@/utils/csvExport";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Admin = () => {
   const {
@@ -36,12 +38,41 @@ export const Admin = () => {
   } = useEventManagement(fetchData);
 
   const [showGuestForm, setShowGuestForm] = useState(false);
+  const [guests, setGuests] = useState<any[]>([]);
 
   useAdminAuth(fetchData);
+
+  const fetchGuests = async () => {
+    const { data, error } = await supabase
+      .from('guests')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        email,
+        household:households (
+          name
+        )
+      `)
+      .order('last_name');
+
+    if (error) {
+      console.error('Error fetching guests:', error);
+      return;
+    }
+
+    setGuests(data || []);
+  };
+
+  useEffect(() => {
+    fetchGuests();
+  }, []);
 
   const handleTabChange = useCallback((value: string) => {
     if (value === "events") {
       fetchEvents();
+    } else if (value === "guests") {
+      fetchGuests();
     }
   }, [fetchEvents]);
 
@@ -143,8 +174,13 @@ export const Admin = () => {
                   {showGuestForm ? 'Cancel' : 'Add Guest'}
                 </Button>
               </div>
-              {showGuestForm && (
-                <GuestForm onSuccess={() => fetchData()} />
+              {showGuestForm ? (
+                <GuestForm onSuccess={() => {
+                  fetchGuests();
+                  setShowGuestForm(false);
+                }} />
+              ) : (
+                <GuestsTable guests={guests} onDelete={fetchGuests} />
               )}
             </Card>
           </TabsContent>
