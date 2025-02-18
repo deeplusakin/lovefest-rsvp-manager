@@ -84,8 +84,8 @@ export const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container max-w-7xl">
+    <div className="min-h-screen bg-gray-50 overflow-y-auto">
+      <div className="container max-w-7xl py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-serif">Wedding Admin Dashboard</h1>
           <Link to="/">
@@ -96,7 +96,7 @@ export const Admin = () => {
           </Link>
         </div>
 
-        <Tabs defaultValue="events" onValueChange={handleTabChange}>
+        <Tabs defaultValue="events" onValueChange={handleTabChange} className="space-y-8">
           <TabsList>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
