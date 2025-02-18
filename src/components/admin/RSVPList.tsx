@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import { Event, EventStats } from "@/types/admin";
 import { EventStatistics } from "./EventStatistics";
 import { GuestListUpload } from "./GuestListUpload";
-import { GuestsTable } from "./GuestsTable";
+import { GuestEventsTable } from "./GuestEventsTable";
 import { useCallback } from "react";
 import { useAdminData } from "@/hooks/useAdminData";
 
@@ -44,7 +44,7 @@ export const RSVPList = ({ events, getEventStats, onExportGuests }: RSVPListProp
             />
           </div>
 
-          <GuestsTable guests={event.guest_events} eventId={event.id} />
+          <GuestEventsTable guests={event.guest_events} eventId={event.id} />
         </Card>
       ))}
     </>
