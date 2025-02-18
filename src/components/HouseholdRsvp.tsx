@@ -92,6 +92,9 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
         }
       }));
 
+      const guest = guests.find(g => g.id === guestId);
+      const event = guest?.guest_events.find(ge => ge.event_id === eventId)?.events;
+
       const { error } = await supabase
         .from('guest_events')
         .update({
@@ -103,7 +106,11 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
 
       if (error) throw error;
       
-      toast.success("RSVP updated successfully");
+      // Show success message with guest name and event details
+      const responseMessage = status === 'attending' ? 'will attend' : 'cannot attend';
+      toast.success(
+        `Thank you! We've recorded that ${guest?.first_name} ${responseMessage} ${event?.name}.`
+      );
     } catch (error: any) {
       toast.error("Failed to update RSVP");
       console.error('Error:', error);
