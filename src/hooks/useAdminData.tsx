@@ -8,7 +8,7 @@ export const useAdminData = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);  // Changed to false initially
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -74,8 +74,18 @@ export const useAdminData = () => {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
-    await Promise.all([fetchEvents(), fetchContributions()]);
-    setIsLoading(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No active session");
+      }
+      await Promise.all([fetchEvents(), fetchContributions()]);
+    } catch (error: any) {
+      console.error("Error fetching data:", error);
+      toast.error("Please log in to access admin data");
+    } finally {
+      setIsLoading(false);
+    }
   }, [fetchEvents, fetchContributions]);
 
   return {
