@@ -22,12 +22,12 @@ export const Hero = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
-    }, 8000); // Increased from 5000 to 8000ms
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <section ref={ref} className="min-h-screen relative flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="min-h-screen relative flex items-center justify-center overflow-hidden -mx-[calc(50vw-50%)]">
       {images.map((img, index) => (
         <motion.div
           key={img}
@@ -35,7 +35,7 @@ export const Hero = () => {
             opacity: currentImage === index ? 1 : 0,
             scale: currentImage === index ? 1 : 1.1
           }}
-          transition={{ duration: 2.5 }} // Increased from 1 to 2.5s
+          transition={{ duration: 2.5 }}
           style={{ scale }}
           className="absolute inset-0"
         >
