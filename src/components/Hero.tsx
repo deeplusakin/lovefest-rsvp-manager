@@ -8,13 +8,36 @@ export const Hero = () => {
   const ref = useRef<HTMLElement>(null);
   const [currentImage, setCurrentImage] = useState(0);
   const [images, setImages] = useState<Photo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
+    layoutEffect: false // Fix for the hydration warning
   });
 
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
+
+  // Preload images
+  const preloadImages = async (imageUrls: string[]) => {
+    const loadImage = (url: string) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(url);
+        img.onerror = reject;
+      });
+    };
+
+    try {
+      await Promise.all(imageUrls.map(url => loadImage(url)));
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error preloading images:', error);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchHeroImages = async () => {
@@ -30,6 +53,8 @@ export const Hero = () => {
             photo.type === 'hero' || photo.type === 'gallery'
         );
         setImages(typedData);
+        // Preload images after fetching
+        preloadImages(typedData.map(img => img.url));
       }
     };
 
@@ -51,7 +76,10 @@ export const Hero = () => {
   }
 
   return (
-    <section ref={ref} className="min-h-screen relative flex items-center justify-center overflow-hidden -mx-[calc(50vw-50%)]">
+    <section 
+      ref={ref} 
+      className="min-h-screen relative flex items-center justify-center overflow-hidden -mx-[calc(50vw-50%)]"
+    >
       {images.map((img, index) => (
         <motion.div
           key={img.id}
@@ -59,13 +87,20 @@ export const Hero = () => {
             opacity: currentImage === index ? 1 : 0,
             scale: currentImage === index ? 1 : 1.1
           }}
-          transition={{ duration: 2.5 }}
+          initial={false}
+          transition={{ duration: 1.5 }} // Reduced from 2.5 for faster transitions
           style={{ scale }}
           className="absolute inset-0"
         >
           <div 
-            className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-2000"
-            style={{ backgroundImage: `url(${img.url})` }}
+            className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-1000"
+            style={{ 
+              backgroundImage: `url(${img.url})`,
+              willChange: 'transform' // Optimize for animations
+            }}
+            loading="eager"
+            role="img"
+            aria-label={img.title || 'Hero image'}
           />
         </motion.div>
       ))}
