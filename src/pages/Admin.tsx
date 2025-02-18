@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { RSVPList } from "@/components/admin/RSVPList";
 import { GuestForm } from "@/components/admin/GuestForm";
 import { GuestsTable } from "@/components/admin/GuestsTable";
 import { PhotoManager } from "@/components/admin/PhotoManager";
+import { ProfileSettings } from "@/components/admin/ProfileSettings";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventManagement } from "@/hooks/useEventManagement";
@@ -103,6 +105,7 @@ export const Admin = () => {
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
             <TabsTrigger value="photos">Photos</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="events" className="space-y-8">
@@ -171,6 +174,10 @@ export const Admin = () => {
 
           <TabsContent value="photos" className="space-y-8">
             <PhotoManager />
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-8">
+            <ProfileSettings />
           </TabsContent>
         </Tabs>
       </div>
