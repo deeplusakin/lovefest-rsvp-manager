@@ -8,10 +8,15 @@ export const useAdminData = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);  // Changed to false initially
+  const [isLoading, setIsLoading] = useState(true);  // Changed to true initially
 
   const fetchEvents = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No active session");
+      }
+
       const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select(`
@@ -34,16 +39,26 @@ export const useAdminData = () => {
         `)
         .order("date");
 
-      if (eventsError) throw eventsError;
+      if (eventsError) {
+        console.error("Events fetch error:", eventsError);
+        throw eventsError;
+      }
+      
       setEvents(eventsData || []);
     } catch (error: any) {
       console.error("Error fetching events:", error.message);
       toast.error("Error loading events");
+      setEvents([]);
     }
   }, []);
 
   const fetchContributions = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No active session");
+      }
+
       const { data: contributionsData, error: contributionsError } = await supabase
         .from("contributions")
         .select(`
@@ -58,9 +73,12 @@ export const useAdminData = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (contributionsError) throw contributionsError;
-      setContributions(contributionsData || []);
+      if (contributionsError) {
+        console.error("Contributions fetch error:", contributionsError);
+        throw contributionsError;
+      }
 
+      setContributions(contributionsData || []);
       const total = (contributionsData || []).reduce(
         (sum, contrib) => sum + contrib.amount,
         0
@@ -69,6 +87,8 @@ export const useAdminData = () => {
     } catch (error: any) {
       console.error("Error fetching contributions:", error.message);
       toast.error("Error loading contributions");
+      setContributions([]);
+      setTotalContributions(0);
     }
   }, []);
 
@@ -79,6 +99,7 @@ export const useAdminData = () => {
       if (!session) {
         throw new Error("No active session");
       }
+      
       await Promise.all([fetchEvents(), fetchContributions()]);
     } catch (error: any) {
       console.error("Error fetching data:", error);
