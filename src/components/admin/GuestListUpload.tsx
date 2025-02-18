@@ -5,13 +5,40 @@ import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
+import { GuestsTable } from "./GuestsTable";
 
 interface GuestListUploadProps {
   eventId: string;
 }
 
+interface GuestData {
+  first_name: string;
+  last_name: string;
+  email?: string;
+  dietary_restrictions?: string;
+}
+
 export const GuestListUpload = ({ eventId }: GuestListUploadProps) => {
   const [uploading, setUploading] = useState(false);
+
+  const validateHeaders = (headers: string[]): boolean => {
+    const requiredHeaders = ['first_name', 'last_name'];
+    const validHeaders = ['first_name', 'last_name', 'email', 'dietary_restrictions'];
+    
+    // Check if all required headers are present
+    if (!requiredHeaders.every(h => headers.includes(h))) {
+      toast.error("CSV must include first_name and last_name columns");
+      return false;
+    }
+    
+    // Check if all headers are valid
+    if (!headers.every(h => validHeaders.includes(h))) {
+      toast.error(`Invalid columns found. Valid columns are: ${validHeaders.join(', ')}`);
+      return false;
+    }
+    
+    return true;
+  };
 
   const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.[0]) return;
@@ -26,75 +53,95 @@ export const GuestListUpload = ({ eventId }: GuestListUploadProps) => {
         const rows = text.split('\n').map(row => row.split(','));
         const headers = rows[0].map(header => header.trim().toLowerCase());
         
-        const guests = rows.slice(1).map(row => {
-          const guest: any = {};
-          row.forEach((value, index) => {
-            guest[headers[index]] = value.trim();
+        if (!validateHeaders(headers)) {
+          setUploading(false);
+          return;
+        }
+
+        const guests = rows.slice(1)
+          .filter(row => row.length === headers.length && row.some(cell => cell.trim()))
+          .map(row => {
+            const guest: Record<string, string> = {};
+            row.forEach((value, index) => {
+              guest[headers[index]] = value.trim();
+            });
+            return guest;
           });
-          return guest;
-        });
+
+        if (guests.length === 0) {
+          toast.error("No valid guest data found in CSV");
+          setUploading(false);
+          return;
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
 
         for (const guest of guests) {
-          if (!guest.email) {
-            console.log('Skipping guest with no email:', guest);
+          if (!guest.first_name || !guest.last_name) {
+            console.log('Skipping guest with missing required fields:', guest);
+            errorCount++;
             continue;
           }
 
-          const { data: existingGuest, error: guestError } = await supabase
-            .from('guests')
-            .select('id')
-            .eq('email', guest.email)
-            .maybeSingle();
-
-          if (guestError) {
-            console.error('Error checking for existing guest:', guestError);
-            throw guestError;
-          }
-
-          let guestId = existingGuest?.id;
-
-          if (!guestId) {
-            const { data: newGuest, error: createError } = await supabase
+          try {
+            const { data: existingGuest, error: guestError } = await supabase
               .from('guests')
-              .insert({
-                first_name: guest.first_name,
-                last_name: guest.last_name,
-                email: guest.email,
-                dietary_restrictions: guest.dietary_restrictions,
-                invitation_code: Math.random().toString(36).substring(2, 8),
-                household_id: '00000000-0000-0000-0000-000000000000'
-              })
               .select('id')
-              .single();
+              .eq('email', guest.email || '')
+              .maybeSingle();
 
-            if (createError) {
-              console.error('Error creating new guest:', createError);
-              throw createError;
+            if (guestError) throw guestError;
+
+            let guestId = existingGuest?.id;
+
+            if (!guestId) {
+              const { data: newGuest, error: createError } = await supabase
+                .from('guests')
+                .insert({
+                  first_name: guest.first_name,
+                  last_name: guest.last_name,
+                  email: guest.email || null,
+                  dietary_restrictions: guest.dietary_restrictions || null,
+                  invitation_code: Math.random().toString(36).substring(2, 8),
+                  household_id: '00000000-0000-0000-0000-000000000000'
+                })
+                .select('id')
+                .single();
+
+              if (createError) throw createError;
+              guestId = newGuest.id;
             }
-            guestId = newGuest.id;
-          }
 
-          const { error: rsvpError } = await supabase
-            .from('guest_events')
-            .upsert({
-              guest_id: guestId,
-              event_id: eventId,
-              status: 'invited'
-            });
+            const { error: rsvpError } = await supabase
+              .from('guest_events')
+              .upsert({
+                guest_id: guestId,
+                event_id: eventId,
+                status: 'invited'
+              });
 
-          if (rsvpError) {
-            console.error('Error creating RSVP:', rsvpError);
-            throw rsvpError;
+            if (rsvpError) throw rsvpError;
+            successCount++;
+          } catch (error) {
+            console.error('Error processing guest:', guest, error);
+            errorCount++;
           }
         }
 
-        toast.success("Guest list uploaded successfully");
+        toast.success(`Processed ${successCount} guests successfully${errorCount > 0 ? `. ${errorCount} errors occurred.` : ''}`);
+        event.target.value = '';
       } catch (error: any) {
         console.error("Error uploading guest list:", error);
         toast.error("Error uploading guest list: " + error.message);
       } finally {
         setUploading(false);
       }
+    };
+
+    reader.onerror = () => {
+      toast.error("Error reading CSV file");
+      setUploading(false);
     };
 
     reader.readAsText(file);
@@ -107,10 +154,11 @@ export const GuestListUpload = ({ eventId }: GuestListUploadProps) => {
         accept=".csv"
         onChange={handleCSVUpload}
         className="max-w-xs"
+        disabled={uploading}
       />
       <Button variant="outline" disabled={uploading}>
         <Upload className="h-4 w-4 mr-2" />
-        Upload CSV
+        {uploading ? 'Uploading...' : 'Upload CSV'}
       </Button>
     </div>
   );
