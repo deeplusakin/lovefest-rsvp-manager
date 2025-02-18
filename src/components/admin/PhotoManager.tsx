@@ -1,33 +1,27 @@
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-type PhotoType = 'hero' | 'gallery';
-
-interface Photo {
-  id: string;
-  url: string;
-  title: string;
-  type: PhotoType;
-  sort_order: number;
-}
+import type { Photo } from "@/types/photos";
 
 export const PhotoManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
 
+  useEffect(() => {
+    fetchPhotos();
+  }, []);
+
   const fetchPhotos = async () => {
     const { data, error } = await supabase
       .from('photos')
       .select('*')
-      .order('sort_order', { ascending: true });
+      .order('sort_order');
 
     if (error) {
       toast.error("Error fetching photos");
@@ -37,7 +31,7 @@ export const PhotoManager = () => {
     setPhotos(data || []);
   };
 
-  const handleUpload = async (files: FileList | null, type: PhotoType) => {
+  const handleUpload = async (files: FileList | null, type: 'hero' | 'gallery') => {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
@@ -48,13 +42,13 @@ export const PhotoManager = () => {
       const fileExt = file.name.split('.').pop();
       const filePath = `${type}/${Date.now()}.${fileExt}`;
       
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('photos')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrl } = supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from('photos')
         .getPublicUrl(filePath);
 
@@ -62,7 +56,7 @@ export const PhotoManager = () => {
       const { error: dbError } = await supabase
         .from('photos')
         .insert({
-          url: publicUrl.publicUrl,
+          url: publicUrl,
           type,
           storage_path: filePath,
           title: file.name.split('.')[0],
@@ -133,7 +127,7 @@ export const PhotoManager = () => {
                 <div key={photo.id} className="relative group">
                   <img
                     src={photo.url}
-                    alt={photo.title}
+                    alt={photo.title || ''}
                     className="w-full aspect-video object-cover rounded-md"
                   />
                   <Button
@@ -168,7 +162,7 @@ export const PhotoManager = () => {
                 <div key={photo.id} className="relative group">
                   <img
                     src={photo.url}
-                    alt={photo.title}
+                    alt={photo.title || ''}
                     className="w-full aspect-square object-cover rounded-md"
                   />
                   <Button

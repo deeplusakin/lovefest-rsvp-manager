@@ -2,16 +2,12 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-interface HeroImage {
-  id: string;
-  url: string;
-}
+import type { Photo } from "@/types/photos";
 
 export const Hero = () => {
   const ref = useRef<HTMLElement>(null);
   const [currentImage, setCurrentImage] = useState(0);
-  const [images, setImages] = useState<HeroImage[]>([]);
+  const [images, setImages] = useState<Photo[]>([]);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"]
@@ -24,7 +20,7 @@ export const Hero = () => {
     const fetchHeroImages = async () => {
       const { data } = await supabase
         .from('photos')
-        .select('id, url')
+        .select('*')
         .eq('type', 'hero')
         .order('sort_order');
       

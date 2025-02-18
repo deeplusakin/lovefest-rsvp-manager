@@ -175,6 +175,36 @@ export type Database = {
         }
         Relationships: []
       }
+      photos: {
+        Row: {
+          created_at: string
+          id: string
+          sort_order: number | null
+          storage_path: string
+          title: string | null
+          type: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sort_order?: number | null
+          storage_path: string
+          title?: string | null
+          type: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sort_order?: number | null
+          storage_path?: string
+          title?: string | null
+          type?: string
+          url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

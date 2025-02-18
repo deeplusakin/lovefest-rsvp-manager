@@ -2,13 +2,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Photo {
-  id: string;
-  url: string;
-  title: string;
-  type: 'hero' | 'gallery';
-}
+import type { Photo } from "@/types/photos";
 
 const Photos = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -46,7 +40,7 @@ const Photos = () => {
             >
               <img
                 src={photo.url}
-                alt={photo.title}
+                alt={photo.title || ''}
                 className="w-full h-full object-cover"
               />
             </motion.div>
