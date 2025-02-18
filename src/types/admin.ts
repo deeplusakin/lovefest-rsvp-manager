@@ -1,10 +1,10 @@
 
 export interface GuestEvent {
-  guest_id: string;  // Added this field
+  guest_id: string;
   guest: {
     first_name: string;
     last_name: string;
-    email: string;
+    email: string | null;
     dietary_restrictions: string | null;
   };
   status: 'not_invited' | 'invited' | 'attending' | 'declined';
