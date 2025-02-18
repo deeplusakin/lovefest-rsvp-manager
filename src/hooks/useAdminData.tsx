@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Event, Contribution } from "@/types/admin";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ export const useAdminData = () => {
   const [totalContributions, setTotalContributions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       const { data: eventsData, error: eventsError } = await supabase
         .from("events")
@@ -36,7 +36,14 @@ export const useAdminData = () => {
 
       if (eventsError) throw eventsError;
       setEvents(eventsData || []);
+    } catch (error: any) {
+      console.error("Error fetching events:", error.message);
+      toast.error("Error loading events");
+    }
+  }, []);
 
+  const fetchContributions = useCallback(async () => {
+    try {
       const { data: contributionsData, error: contributionsError } = await supabase
         .from("contributions")
         .select(`
@@ -60,12 +67,16 @@ export const useAdminData = () => {
       );
       setTotalContributions(total);
     } catch (error: any) {
-      console.error("Error fetching data:", error.message);
-      toast.error("Error loading data");
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching contributions:", error.message);
+      toast.error("Error loading contributions");
     }
-  };
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.all([fetchEvents(), fetchContributions()]);
+    setIsLoading(false);
+  }, [fetchEvents, fetchContributions]);
 
   return {
     events,
@@ -73,5 +84,7 @@ export const useAdminData = () => {
     totalContributions,
     isLoading,
     fetchData,
+    fetchEvents,
+    fetchContributions,
   };
 };
