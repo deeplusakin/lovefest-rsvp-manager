@@ -8,13 +8,17 @@ import { ContributionWall } from "@/components/ContributionWall";
 
 const Index = () => {
   return (
-    <main>
-      <Hero />
-      <WeddingDetails />
-      <WeddingParty />
-      <RsvpForm />
-      <HoneymoonFund />
-      <ContributionWall />
+    <main className="relative">
+      <div className="flex">
+        <Hero />
+        <WeddingDetails />
+      </div>
+      <div className="relative z-10 bg-white">
+        <WeddingParty />
+        <RsvpForm />
+        <HoneymoonFund />
+        <ContributionWall />
+      </div>
     </main>
   );
 };

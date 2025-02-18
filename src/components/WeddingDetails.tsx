@@ -1,5 +1,5 @@
 
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, Book, Image, Users, MessageSquare, Plane, Activity, Gift } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 
@@ -7,56 +7,48 @@ export const WeddingDetails = () => {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start end", "end start"]
+    offset: ["start start", "end start"]
   });
 
-  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, -100]);
+
+  const sections = [
+    { icon: Book, title: "Our Story", content: "The tale of how we met and fell in love..." },
+    { icon: Image, title: "Photos", content: "Moments we've shared together..." },
+    { icon: Users, title: "Wedding Party", content: "Meet our wonderful wedding party..." },
+    { icon: MessageSquare, title: "Q&A", content: "Frequently asked questions about our special day..." },
+    { icon: Plane, title: "Travel", content: "Information about getting here and accommodation..." },
+    { icon: Activity, title: "Things to Do", content: "Explore the area and local attractions..." },
+    { icon: Gift, title: "Registry", content: "Help us start our new life together..." }
+  ];
 
   return (
-    <section ref={ref} className="py-24 bg-white relative overflow-hidden">
-      <motion.div 
-        style={{ y }}
-        className="container max-w-5xl"
-      >
-        <h2 className="text-4xl md:text-5xl font-serif text-center mb-16">The Details</h2>
-        <div className="grid md:grid-cols-2 gap-12">
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6"
-          >
-            <div className="p-8 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-4 mb-4">
-                <Calendar className="w-6 h-6 text-accent" />
-                <h3 className="text-2xl font-serif">Ceremony</h3>
+    <section ref={ref} className="min-h-screen relative">
+      <div className="absolute top-0 right-0 w-1/2 min-h-screen bg-white">
+        <motion.div 
+          style={{ y }}
+          className="p-12 md:p-24 space-y-16"
+        >
+          <h2 className="text-4xl md:text-5xl font-serif mb-16">The Details</h2>
+          
+          {sections.map((section, index) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="group space-y-4"
+            >
+              <div className="flex items-center gap-4">
+                <section.icon className="w-6 h-6 text-accent" />
+                <h3 className="text-2xl font-serif">{section.title}</h3>
               </div>
-              <p className="text-secondary mb-2">Saturday, September 21, 2024</p>
-              <p className="text-secondary">4:00 PM - 5:00 PM</p>
-            </div>
-            <div className="p-8 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-4 mb-4">
-                <MapPin className="w-6 h-6 text-accent" />
-                <h3 className="text-2xl font-serif">Reception</h3>
-              </div>
-              <p className="text-secondary mb-2">The Grand Hotel</p>
-              <p className="text-secondary">123 Elegance Way, Beverly Hills</p>
-            </div>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative h-[400px] md:h-full"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05"
-              alt="Venue"
-              className="absolute inset-0 w-full h-full object-cover rounded-lg"
-            />
-          </motion.div>
-        </div>
-      </motion.div>
+              <p className="text-secondary pl-10">{section.content}</p>
+              <div className="h-px bg-gray-100 mt-8" />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
     </section>
   );
 };
