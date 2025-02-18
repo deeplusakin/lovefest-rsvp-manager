@@ -21,6 +21,7 @@ export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => 
   const [addingEventToGuest, setAddingEventToGuest] = useState<string | null>(null);
   const [availableEvents, setAvailableEvents] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>("");
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   const fetchAvailableEvents = async (guestId: string) => {
     try {
@@ -80,6 +81,31 @@ export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => 
     }
   };
 
+  const handleStatusUpdate = async (guestId: string, newStatus: string) => {
+    setUpdatingStatus(guestId);
+    try {
+      const { error } = await supabase
+        .from('guest_events')
+        .update({ 
+          status: newStatus,
+          response_date: newStatus === 'invited' ? null : new Date().toISOString()
+        })
+        .eq('guest_id', guestId)
+        .eq('event_id', eventId);
+
+      if (error) throw error;
+
+      toast.success("RSVP status updated successfully");
+      // Refresh the page to show updated status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating RSVP status:', error);
+      toast.error("Error updating RSVP status");
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
   const handleAddEvent = async (guestId: string) => {
     setAddingEventToGuest(guestId);
     await fetchAvailableEvents(guestId);
@@ -105,8 +131,23 @@ export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => 
                 {guestEvent.guest.first_name} {guestEvent.guest.last_name}
               </td>
               <td className="p-2">{guestEvent.guest.email || "-"}</td>
-              <td className="p-2">{guestEvent.status}</td>
-              <td className="p-2">{guestEvent.response_date || "-"}</td>
+              <td className="p-2">
+                <Select
+                  value={guestEvent.status}
+                  onValueChange={(value) => handleStatusUpdate(guestEvent.guest_id, value)}
+                  disabled={!!updatingStatus}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="invited">Invited</SelectItem>
+                    <SelectItem value="attending">Attending</SelectItem>
+                    <SelectItem value="declined">Declined</SelectItem>
+                  </SelectContent>
+                </Select>
+              </td>
+              <td className="p-2">{guestEvent.response_date ? new Date(guestEvent.response_date).toLocaleDateString() : "-"}</td>
               <td className="p-2">{guestEvent.guest.dietary_restrictions || "-"}</td>
               <td className="p-2">
                 {addingEventToGuest === guestEvent.guest_id ? (
