@@ -21,12 +21,21 @@ interface GuestsTableProps {
 export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
   const handleDelete = async (guestId: string) => {
     try {
-      const { error } = await supabase
+      // First, delete all guest_events records for this guest
+      const { error: eventError } = await supabase
+        .from('guest_events')
+        .delete()
+        .eq('guest_id', guestId);
+
+      if (eventError) throw eventError;
+
+      // Then delete the guest record
+      const { error: guestError } = await supabase
         .from('guests')
         .delete()
         .eq('id', guestId);
 
-      if (error) throw error;
+      if (guestError) throw guestError;
       
       toast.success("Guest deleted successfully");
       onDelete();
