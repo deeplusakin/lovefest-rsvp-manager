@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const RsvpForm = () => {
+  const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,11 +55,9 @@ export const RsvpForm = () => {
       // Store guest data in local storage for the session
       localStorage.setItem("guestData", JSON.stringify(guestData));
 
-      // Show success message
+      // Show success message and redirect
       toast.success("Welcome! You can now RSVP to the events.");
-
-      // TODO: Redirect to RSVP details page
-      // This will be implemented in the next iteration
+      navigate("/rsvp");
 
     } catch (error: any) {
       toast.error(error.message);
