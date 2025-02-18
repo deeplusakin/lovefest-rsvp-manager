@@ -1,5 +1,8 @@
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -12,6 +15,12 @@ interface Guest {
   household: {
     name: string;
   };
+  household_id: string;
+}
+
+interface Household {
+  id: string;
+  name: string;
 }
 
 interface GuestsTableProps {
@@ -20,6 +29,29 @@ interface GuestsTableProps {
 }
 
 export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
+  const [households, setHouseholds] = useState<Household[]>([]);
+  const [editingHousehold, setEditingHousehold] = useState<string | null>(null);
+  const [newHouseholdName, setNewHouseholdName] = useState("");
+  const [isCreatingNewHousehold, setIsCreatingNewHousehold] = useState(false);
+
+  useEffect(() => {
+    fetchHouseholds();
+  }, []);
+
+  const fetchHouseholds = async () => {
+    const { data, error } = await supabase
+      .from('households')
+      .select('id, name')
+      .order('name');
+    
+    if (error) {
+      toast.error("Error fetching households");
+      return;
+    }
+    
+    setHouseholds(data || []);
+  };
+
   const handleDelete = async (guestId: string) => {
     try {
       // First, delete all guest_events records for this guest
@@ -46,6 +78,60 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     }
   };
 
+  const createNewHousehold = async (guestId: string) => {
+    if (!newHouseholdName.trim()) {
+      toast.error("Please enter a household name");
+      return;
+    }
+
+    try {
+      // Create new household
+      const { data: household, error: householdError } = await supabase
+        .from('households')
+        .insert({ name: newHouseholdName.trim() })
+        .select()
+        .single();
+
+      if (householdError) throw householdError;
+
+      // Update guest's household
+      const { error: updateError } = await supabase
+        .from('guests')
+        .update({ household_id: household.id })
+        .eq('id', guestId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Household created and assigned successfully");
+      setNewHouseholdName("");
+      setIsCreatingNewHousehold(false);
+      setEditingHousehold(null);
+      fetchHouseholds();
+      onDelete(); // Refresh guest list
+    } catch (error) {
+      console.error('Error creating household:', error);
+      toast.error("Error creating household");
+    }
+  };
+
+  const updateGuestHousehold = async (guestId: string, householdId: string) => {
+    try {
+      const { error } = await supabase
+        .from('guests')
+        .update({ household_id: householdId })
+        .eq('id', guestId);
+
+      if (error) throw error;
+
+      toast.success("Household updated successfully");
+      setEditingHousehold(null);
+      onDelete(); // Refresh guest list
+    } catch (error) {
+      console.error('Error updating household:', error);
+      toast.error("Error updating household");
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -65,7 +151,78 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
                 {guest.first_name} {guest.last_name}
               </td>
               <td className="p-2">{guest.email || "-"}</td>
-              <td className="p-2">{guest.household.name}</td>
+              <td className="p-2">
+                {editingHousehold === guest.id ? (
+                  isCreatingNewHousehold ? (
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        value={newHouseholdName}
+                        onChange={(e) => setNewHouseholdName(e.target.value)}
+                        placeholder="Enter household name"
+                        className="w-48"
+                      />
+                      <Button size="sm" onClick={() => createNewHousehold(guest.id)}>
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setIsCreatingNewHousehold(false);
+                          setNewHouseholdName("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 items-center">
+                      <Select
+                        defaultValue={guest.household_id}
+                        onValueChange={(value) => updateGuestHousehold(guest.id, value)}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Select household" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {households.map((household) => (
+                            <SelectItem key={household.id} value={household.id}>
+                              {household.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setIsCreatingNewHousehold(true);
+                        }}
+                      >
+                        New
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingHousehold(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <span>{guest.household.name}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingHousehold(guest.id)}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                )}
+              </td>
               <td className="p-2">{guest.invitation_code}</td>
               <td className="p-2">
                 <Button
