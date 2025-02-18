@@ -7,19 +7,21 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+interface GuestEvent {
+  event_id: string;
+  status: 'not_invited' | 'invited' | 'attending' | 'declined';
+  events: {
+    name: string;
+    date: string;
+    location: string;
+  };
+}
+
 interface Guest {
   id: string;
   first_name: string;
   last_name: string;
-  events: {
-    event_id: string;
-    is_attending: boolean | null;
-    events: {
-      name: string;
-      date: string;
-      location: string;
-    };
-  }[];
+  guest_events: GuestEvent[];
 }
 
 interface HouseholdRsvpProps {

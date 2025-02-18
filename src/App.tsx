@@ -17,20 +17,24 @@ import "@/App.css";
 function App() {
   return (
     <Router>
-      <Navigation />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/our-story" element={<OurStory />} />
-        <Route path="/photos" element={<Photos />} />
-        <Route path="/wedding-party" element={<WeddingParty />} />
-        <Route path="/q-and-a" element={<QAndA />} />
-        <Route path="/travel" element={<Travel />} />
-        <Route path="/things-to-do" element={<ThingsToDo />} />
-        <Route path="/registry" element={<Registry />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <div className="min-h-screen">
+        <Navigation />
+        <main>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/our-story" element={<OurStory />} />
+            <Route path="/photos" element={<Photos />} />
+            <Route path="/wedding-party" element={<WeddingParty />} />
+            <Route path="/q-and-a" element={<QAndA />} />
+            <Route path="/travel" element={<Travel />} />
+            <Route path="/things-to-do" element={<ThingsToDo />} />
+            <Route path="/registry" element={<Registry />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
     </Router>
   );
 }
