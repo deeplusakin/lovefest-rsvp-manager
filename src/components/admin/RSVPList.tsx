@@ -17,7 +17,11 @@ interface RSVPListProps {
 export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
   const [uploading, setUploading] = useState(false);
 
-  const handleStatusChange = async (guestId: string, eventId: string, status: string) => {
+  const handleStatusChange = async (
+    guestId: string,
+    eventId: string,
+    status: 'not_invited' | 'invited' | 'attending' | 'declined'
+  ) => {
     try {
       const { error } = await supabase
         .from('guest_events')
@@ -178,7 +182,9 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
                       <td className="p-2">
                         <Select
                           defaultValue={g.status}
-                          onValueChange={(value) => handleStatusChange(g.guest_id, event.id, value)}
+                          onValueChange={(value: 'not_invited' | 'invited' | 'attending' | 'declined') => 
+                            handleStatusChange(g.guest_id, event.id, value)
+                          }
                         >
                           <SelectTrigger className="w-[140px]">
                             <SelectValue />

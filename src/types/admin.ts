@@ -1,5 +1,6 @@
 
 export interface GuestEvent {
+  guest_id: string;  // Added this field
   guest: {
     first_name: string;
     last_name: string;

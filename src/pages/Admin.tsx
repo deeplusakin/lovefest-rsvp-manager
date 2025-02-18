@@ -70,7 +70,8 @@ export const Admin = () => {
           location,
           description,
           guest_events (
-            is_attending,
+            guest_id,
+            status,
             response_date,
             guest:guests (
               first_name,
