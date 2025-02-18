@@ -84,7 +84,7 @@ export const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-y-auto">
+    <div className="min-h-screen bg-gray-50 overflow-y-auto pt-16">
       <div className="container max-w-7xl py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-serif">Wedding Admin Dashboard</h1>
