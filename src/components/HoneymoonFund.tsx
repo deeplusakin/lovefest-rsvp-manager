@@ -1,8 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   Card,
@@ -13,23 +11,17 @@ import {
 } from "@/components/ui/card";
 
 export const HoneymoonFund = () => {
-  const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
-  const [venmoUsername, setVenmoUsername] = useState("u/Akin-Walker");
   const [isLoading, setIsLoading] = useState(false);
+  const [venmoUsername] = useState("u/Akin-Walker");
 
   const handleVenmoContribute = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const venmoUrl = `https://venmo.com/${venmoUsername}?txn=pay&note=${encodeURIComponent(
-        `Wedding Gift: ${message}`
-      )}&amount=${amount}`;
+      const venmoUrl = `https://venmo.com/${venmoUsername}?txn=pay`;
       window.open(venmoUrl, "_blank");
       toast.success("Thank you for your contribution!");
-      setAmount("");
-      setMessage("");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -56,31 +48,6 @@ export const HoneymoonFund = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleVenmoContribute} className="space-y-6">
-                <div className="space-y-2">
-                  <Input
-                    id="amount"
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="text-lg"
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message (Optional)</Label>
-                  <Input
-                    id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Write your message here"
-                    disabled={isLoading}
-                  />
-                </div>
-
                 <Button
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-serif text-lg py-6"
