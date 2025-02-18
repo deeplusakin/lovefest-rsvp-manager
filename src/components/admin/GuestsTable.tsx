@@ -8,6 +8,7 @@ interface Guest {
   first_name: string;
   last_name: string;
   email: string | null;
+  invitation_code: string;
   household: {
     name: string;
   };
@@ -53,6 +54,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
             <th className="text-left p-2">Guest</th>
             <th className="text-left p-2">Email</th>
             <th className="text-left p-2">Household</th>
+            <th className="text-left p-2">Invitation Code</th>
             <th className="text-left p-2">Actions</th>
           </tr>
         </thead>
@@ -64,6 +66,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
               </td>
               <td className="p-2">{guest.email || "-"}</td>
               <td className="p-2">{guest.household.name}</td>
+              <td className="p-2">{guest.invitation_code}</td>
               <td className="p-2">
                 <Button
                   variant="destructive"
