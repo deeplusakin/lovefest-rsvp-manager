@@ -41,22 +41,22 @@ export const HoneymoonFund = () => {
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Venmo Card */}
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Contribute via Venmo</CardTitle>
               <CardDescription>Send your gift through Venmo</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col justify-center">
               <form onSubmit={handleVenmoContribute} className="space-y-6">
                 <Button
                   type="submit"
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-serif text-lg py-6"
+                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-serif text-lg rounded-2xl py-8 shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl"
                   disabled={isLoading}
                 >
                   {isLoading ? "Processing..." : "Send Gift via Venmo"}
                 </Button>
 
-                <p className="text-sm text-center text-muted-foreground">
+                <p className="text-sm text-center text-muted-foreground mt-4">
                   Venmo username: {venmoUsername}
                 </p>
               </form>
