@@ -57,7 +57,6 @@ export const HoneymoonFund = () => {
             <CardContent>
               <form onSubmit={handleVenmoContribute} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ($)</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -84,10 +83,10 @@ export const HoneymoonFund = () => {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-serif text-lg py-6"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Processing..." : "Send via Venmo"}
+                  {isLoading ? "Processing..." : "Send Gift via Venmo"}
                 </Button>
 
                 <p className="text-sm text-center text-muted-foreground">
