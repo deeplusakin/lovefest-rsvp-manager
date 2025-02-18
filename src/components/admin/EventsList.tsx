@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/types/admin";
 import { Edit, Trash2 } from "lucide-react";
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface EventsListProps {
   events: Event[];
@@ -18,8 +19,11 @@ export const EventsList = ({ events, onEdit, onDelete }: EventsListProps) => (
           <div>
             <h3 className="text-xl font-semibold">{event.name}</h3>
             <p className="text-gray-600">
-              {new Date(event.date).toLocaleDateString()} at{" "}
-              {new Date(event.date).toLocaleTimeString()}
+              {formatInTimeZone(
+                new Date(event.date),
+                'America/New_York',
+                'MMMM d, yyyy \'at\' h:mm a zzz'
+              )}
             </p>
             <p className="text-gray-600">{event.location}</p>
             {event.description && (
