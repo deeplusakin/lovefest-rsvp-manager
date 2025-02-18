@@ -38,6 +38,10 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     setHouseholds(data || []);
   };
 
+  const generateInvitationCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
   const createNewHousehold = async () => {
     if (!newHouseholdName.trim()) {
       toast.error("Please enter a household name");
@@ -46,7 +50,10 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
     const { data, error } = await supabase
       .from('households')
-      .insert({ name: newHouseholdName.trim() })
+      .insert({ 
+        name: newHouseholdName.trim(),
+        invitation_code: generateInvitationCode()
+      })
       .select()
       .single();
 
@@ -78,7 +85,6 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           last_name: guestData.lastName,
           email: guestData.email || null,
           dietary_restrictions: guestData.dietaryRestrictions || null,
-          invitation_code: Math.random().toString(36).substring(2, 8),
           household_id: selectedHouseholdId
         });
 

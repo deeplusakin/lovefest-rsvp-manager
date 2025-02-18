@@ -40,6 +40,10 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
     return true;
   };
 
+  const generateInvitationCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
   const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.[0]) return;
     
@@ -83,7 +87,8 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
             const { data: household, error: householdError } = await supabase
               .from('households')
               .insert({
-                name: `${guest.first_name} ${guest.last_name} Household`
+                name: `${guest.first_name} ${guest.last_name} Household`,
+                invitation_code: generateInvitationCode()
               })
               .select('id')
               .single();
@@ -98,7 +103,6 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
                 last_name: guest.last_name,
                 email: guest.email || null,
                 dietary_restrictions: guest.dietary_restrictions || null,
-                invitation_code: Math.random().toString(36).substring(2, 8),
                 household_id: household.id
               })
               .select('id')
@@ -124,7 +128,7 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
 
         toast.success(`Processed ${successCount} guests successfully${errorCount > 0 ? `. ${errorCount} errors occurred.` : ''}`);
         event.target.value = '';
-        onUploadSuccess?.();  // Call the callback after successful upload
+        onUploadSuccess?.();
       } catch (error: any) {
         console.error("Error uploading guest list:", error);
         toast.error("Error uploading guest list: " + error.message);
