@@ -24,7 +24,7 @@ export const GuestStatusSelect = ({ status, onStatusChange, disabled }: GuestSta
       <SelectTrigger className="w-[140px]">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white dark:bg-gray-800 border shadow-lg">
         <SelectItem value="invited">Invited</SelectItem>
         <SelectItem value="attending">Attending</SelectItem>
         <SelectItem value="declined">Declined</SelectItem>
