@@ -79,6 +79,18 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
 
         for (const guest of guests) {
           try {
+            // First create a new household for the guest
+            const { data: household, error: householdError } = await supabase
+              .from('households')
+              .insert({
+                name: `${guest.first_name} ${guest.last_name} Household`
+              })
+              .select('id')
+              .single();
+
+            if (householdError) throw householdError;
+
+            // Then create the guest with the new household ID
             const { data: newGuest, error: guestError } = await supabase
               .from('guests')
               .insert({
@@ -87,7 +99,7 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
                 email: guest.email || null,
                 dietary_restrictions: guest.dietary_restrictions || null,
                 invitation_code: Math.random().toString(36).substring(2, 8),
-                household_id: '00000000-0000-0000-0000-000000000000' // Adding the required household_id field
+                household_id: household.id
               })
               .select('id')
               .single();
