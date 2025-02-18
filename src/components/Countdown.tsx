@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-const WEDDING_DATE = new Date('2024-09-21T16:00:00'); // Update this to your actual wedding date
+const WEDDING_DATE = new Date('2025-08-30T16:00:00'); // Updated to August 30, 2025
 
 const Countdown = () => {
   const [timeLeft, setTimeLeft] = useState({
