@@ -127,7 +127,7 @@ export type Database = {
           dietary_restrictions?: string | null
           email?: string | null
           first_name: string
-          household_id: string
+          household_id?: string
           id?: string
           invitation_code: string
           last_name: string
