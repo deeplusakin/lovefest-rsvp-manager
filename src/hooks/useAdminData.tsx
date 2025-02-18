@@ -8,7 +8,7 @@ export const useAdminData = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);  // Changed to true initially
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -43,6 +43,9 @@ export const useAdminData = () => {
         console.error("Events fetch error:", eventsError);
         throw eventsError;
       }
+
+      // Log the raw date values to debug
+      console.log("Raw event dates:", eventsData?.map(e => ({ name: e.name, date: e.date })));
       
       setEvents(eventsData || []);
     } catch (error: any) {

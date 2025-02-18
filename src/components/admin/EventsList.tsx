@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/types/admin";
 import { Edit, Trash2 } from "lucide-react";
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
 
 interface EventsListProps {
   events: Event[];
