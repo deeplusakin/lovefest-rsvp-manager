@@ -184,7 +184,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
                         <SelectTrigger className="w-48">
                           <SelectValue placeholder="Select household" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white border rounded-md shadow-md">
                           {households.map((household) => (
                             <SelectItem key={household.id} value={household.id}>
                               {household.name}
