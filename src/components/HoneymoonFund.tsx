@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 export const HoneymoonFund = () => {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
-  const [venmoUsername, setVenmoUsername] = useState("@sarah-michael-wedding");
+  const [venmoUsername, setVenmoUsername] = useState("@Akin-Walker");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleContribute = async (e: React.FormEvent) => {
@@ -17,24 +16,6 @@ export const HoneymoonFund = () => {
     setIsLoading(true);
 
     try {
-      // Get the guest data from local storage
-      const guestData = localStorage.getItem("guestData");
-      if (!guestData) {
-        throw new Error("Please RSVP first to contribute to our honeymoon fund");
-      }
-      const { id: guestId } = JSON.parse(guestData);
-
-      // Record the contribution
-      const { error } = await supabase
-        .from("contributions")
-        .insert({
-          guest_id: guestId,
-          amount: parseFloat(amount),
-          message,
-        });
-
-      if (error) throw error;
-
       // Open Venmo in a new tab
       const venmoUrl = `https://venmo.com/${venmoUsername}?txn=pay&note=${encodeURIComponent(
         `Wedding Gift: ${message}`
@@ -55,7 +36,7 @@ export const HoneymoonFund = () => {
   };
 
   return (
-    <section className="py-24 bg-gradient-to-b from-primary/10 to-background">
+    <section className="py-12 bg-gradient-to-b from-primary/10 to-background">
       <div className="container max-w-md">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-serif mb-4">Honeymoon Fund</h2>

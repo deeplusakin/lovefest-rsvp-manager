@@ -1,5 +1,6 @@
 
 import { motion } from "framer-motion";
+import { HoneymoonFund } from "@/components/HoneymoonFund";
 
 const Registry = () => {
   return (
@@ -10,9 +11,7 @@ const Registry = () => {
     >
       <div className="container max-w-4xl">
         <h1 className="text-4xl md:text-5xl font-serif text-center mb-12">Registry</h1>
-        <div className="space-y-8">
-          {/* Add registry content here */}
-        </div>
+        <HoneymoonFund />
       </div>
     </motion.div>
   );

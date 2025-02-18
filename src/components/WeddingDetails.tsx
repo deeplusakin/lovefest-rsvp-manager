@@ -29,18 +29,18 @@ export const WeddingDetails = () => {
             <div className="p-8 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-4 mb-4">
                 <Calendar className="w-6 h-6 text-accent" />
-                <h3 className="text-2xl font-serif">Ceremony</h3>
+                <h3 className="text-2xl font-serif">Ceremony & Reception</h3>
               </div>
-              <p className="text-secondary mb-2">Saturday, September 21, 2024</p>
-              <p className="text-secondary">4:00 PM - 5:00 PM</p>
+              <p className="text-secondary mb-2">Saturday, August 30, 2025</p>
+              <p className="text-secondary">4:00 PM - 10:00 PM</p>
             </div>
             <div className="p-8 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-4 mb-4">
                 <MapPin className="w-6 h-6 text-accent" />
-                <h3 className="text-2xl font-serif">Reception</h3>
+                <h3 className="text-2xl font-serif">Venue</h3>
               </div>
-              <p className="text-secondary mb-2">The Grand Hotel</p>
-              <p className="text-secondary">123 Elegance Way, Beverly Hills</p>
+              <p className="text-secondary mb-2">Main Street Ballroom</p>
+              <p className="text-secondary">8390 Main Street, Ellicott City, MD 21043</p>
             </div>
           </motion.div>
           <motion.div 
