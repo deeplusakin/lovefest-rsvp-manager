@@ -35,13 +35,19 @@ export const GuestListUpload = ({ eventId }: GuestListUploadProps) => {
         });
 
         for (const guest of guests) {
+          if (!guest.email) {
+            console.log('Skipping guest with no email:', guest);
+            continue;
+          }
+
           const { data: existingGuest, error: guestError } = await supabase
             .from('guests')
             .select('id')
             .eq('email', guest.email)
-            .single();
+            .maybeSingle();
 
-          if (guestError && guestError.code !== 'PGRST116') {
+          if (guestError) {
+            console.error('Error checking for existing guest:', guestError);
             throw guestError;
           }
 
@@ -61,7 +67,10 @@ export const GuestListUpload = ({ eventId }: GuestListUploadProps) => {
               .select('id')
               .single();
 
-            if (createError) throw createError;
+            if (createError) {
+              console.error('Error creating new guest:', createError);
+              throw createError;
+            }
             guestId = newGuest.id;
           }
 
@@ -73,13 +82,16 @@ export const GuestListUpload = ({ eventId }: GuestListUploadProps) => {
               status: 'invited'
             });
 
-          if (rsvpError) throw rsvpError;
+          if (rsvpError) {
+            console.error('Error creating RSVP:', rsvpError);
+            throw rsvpError;
+          }
         }
 
         toast.success("Guest list uploaded successfully");
       } catch (error: any) {
-        toast.error("Error uploading guest list");
-        console.error(error);
+        console.error("Error uploading guest list:", error);
+        toast.error("Error uploading guest list: " + error.message);
       } finally {
         setUploading(false);
       }
