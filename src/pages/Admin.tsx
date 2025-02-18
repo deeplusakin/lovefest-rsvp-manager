@@ -13,8 +13,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventManagement } from "@/hooks/useEventManagement";
 import { getEventStats } from "@/utils/eventStats";
-import { downloadCSV } from "@/utils/csvExport";
-import { useCallback, useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Admin = () => {
@@ -76,22 +75,6 @@ export const Admin = () => {
       fetchGuests();
     }
   }, [fetchEvents]);
-
-  const exportEventGuests = useCallback((eventId: string) => {
-    const event = events.find(e => e.id === eventId);
-    if (!event) return;
-
-    const guestData = event.guest_events.map(ge => ({
-      first_name: ge.guest.first_name,
-      last_name: ge.guest.last_name,
-      email: ge.guest.email || '',
-      status: ge.status,
-      response_date: ge.response_date || '',
-      dietary_restrictions: ge.guest.dietary_restrictions || ''
-    }));
-
-    downloadCSV(guestData, `${event.name}-guest-list`);
-  }, [events]);
 
   if (isLoading) {
     return (
@@ -162,7 +145,6 @@ export const Admin = () => {
             <RSVPList
               events={events}
               getEventStats={getEventStats}
-              onExportGuests={exportEventGuests}
             />
           </TabsContent>
 
