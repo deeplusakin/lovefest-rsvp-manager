@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { HouseholdRsvp } from "./HouseholdRsvp";
 
 export const RsvpForm = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [householdId, setHouseholdId] = useState<string | null>(null);
 
   // Handle QR code scans
   useEffect(() => {
@@ -26,50 +28,23 @@ export const RsvpForm = () => {
     setIsLoading(true);
 
     try {
-      // Authenticate as the guest using their invitation code
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: `${invitationCode}@guest.wedding.com`,
-        password: invitationCode,
-      });
-
-      if (authError) {
-        throw new Error("Invalid invitation code");
-      }
-
-      // Fetch guest details
-      const { data: guestData, error: guestError } = await supabase
-        .from("guests")
-        .select(`
-          id,
-          first_name,
-          last_name,
-          household_id,
-          events!guest_events (
-            event_id,
-            is_attending,
-            events (
-              name,
-              date,
-              location
-            )
-          )
-        `)
+      // Find the household with the given invitation code
+      const { data: householdData, error: householdError } = await supabase
+        .from("households")
+        .select("id")
         .eq("invitation_code", invitationCode)
         .single();
 
-      if (guestError || !guestData) {
-        throw new Error("Failed to fetch guest details");
+      if (householdError || !householdData) {
+        throw new Error("Invalid invitation code");
       }
 
-      // Store guest data in local storage for the session
-      localStorage.setItem("guestData", JSON.stringify(guestData));
-
-      // Show success message and redirect
-      toast.success("Welcome! You can now RSVP to the events.");
-      navigate("/rsvp");
+      setHouseholdId(householdData.id);
+      toast.success("Welcome! You can now RSVP for your household.");
 
     } catch (error: any) {
       toast.error(error.message);
+      setHouseholdId(null);
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +54,20 @@ export const RsvpForm = () => {
     e.preventDefault();
     handleLogin(code);
   };
+
+  if (householdId) {
+    return (
+      <section className="py-12 bg-white">
+        <div className="container max-w-4xl">
+          <h2 className="text-4xl md:text-5xl font-serif mb-8 text-center">RSVP for Your Household</h2>
+          <p className="text-gray-600 mb-8 text-center">
+            Please indicate whether each member of your household will be attending the events.
+          </p>
+          <HouseholdRsvp householdId={householdId} />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-24 bg-primary text-white">
