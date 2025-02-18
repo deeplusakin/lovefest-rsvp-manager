@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { Coffee, Utensils, Shop, Mountain, Music } from "lucide-react";
+import { Coffee, Utensils, ShoppingBag, Mountain, Music } from "lucide-react";
 
 const ThingsToDo = () => {
   return (
@@ -14,7 +14,7 @@ const ThingsToDo = () => {
         <div className="space-y-12">
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Shop className="w-6 h-6 text-accent" />
+              <ShoppingBag className="w-6 h-6 text-accent" />
               <h2 className="text-2xl font-serif">Historic Main Street</h2>
             </div>
             <p className="text-gray-600 mb-4">
