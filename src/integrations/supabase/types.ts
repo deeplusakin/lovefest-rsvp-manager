@@ -178,7 +178,9 @@ export type Database = {
       photos: {
         Row: {
           created_at: string
+          description: string | null
           id: string
+          role: string | null
           sort_order: number | null
           storage_path: string
           title: string | null
@@ -187,7 +189,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
+          role?: string | null
           sort_order?: number | null
           storage_path: string
           title?: string | null
@@ -196,7 +200,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
+          role?: string | null
           sort_order?: number | null
           storage_path?: string
           title?: string | null
