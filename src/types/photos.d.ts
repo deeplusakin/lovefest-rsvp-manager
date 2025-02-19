@@ -3,10 +3,12 @@ export interface Photo {
   id: string;
   url: string;
   title: string | null;
-  type: 'hero' | 'gallery';
+  type: 'hero' | 'gallery' | 'bridal-party';
   storage_path: string;
   sort_order: number;
   created_at: string;
+  role: string | null;
+  description: string | null;
 }
 
 // Add this type to properly type the Supabase response
@@ -18,4 +20,6 @@ export interface PhotoRow {
   title: string | null;
   type: string;
   url: string;
+  role: string | null;
+  description: string | null;
 }
