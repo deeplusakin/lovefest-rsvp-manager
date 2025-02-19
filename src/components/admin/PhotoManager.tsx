@@ -4,22 +4,35 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Photo, PhotoRow } from "@/types/photos";
 import { ImageCropper } from "./ImageCropper";
+import { Textarea } from "../ui/textarea";
 
 interface CropState {
   file: File;
   preview: string;
-  type: 'hero' | 'gallery';
+  type: 'hero' | 'gallery' | 'bridal-party';
+}
+
+interface BridalPartyPhotoData {
+  title: string;
+  role: string;
+  description: string;
 }
 
 export const PhotoManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [cropState, setCropState] = useState<CropState | null>(null);
+  const [bridalPartyData, setBridalPartyData] = useState<BridalPartyPhotoData>({
+    title: '',
+    role: '',
+    description: ''
+  });
 
   useEffect(() => {
     fetchPhotos();
@@ -39,13 +52,13 @@ export const PhotoManager = () => {
     if (data) {
       const typedData = data.filter(
         (photo: PhotoRow): photo is Photo => 
-          photo.type === 'hero' || photo.type === 'gallery'
+          photo.type === 'hero' || photo.type === 'gallery' || photo.type === 'bridal-party'
       );
       setPhotos(typedData);
     }
   };
 
-  const handleFileSelect = (files: FileList | null, type: 'hero' | 'gallery') => {
+  const handleFileSelect = (files: FileList | null, type: 'hero' | 'gallery' | 'bridal-party') => {
     if (!files || files.length === 0) return;
 
     const file = files[0];
@@ -62,7 +75,7 @@ export const PhotoManager = () => {
     setCropState(null);
   };
 
-  const handleUpload = async (file: File, type: 'hero' | 'gallery') => {
+  const handleUpload = async (file: File, type: 'hero' | 'gallery' | 'bridal-party') => {
     setIsUploading(true);
 
     try {
@@ -87,7 +100,9 @@ export const PhotoManager = () => {
           url: publicUrl,
           type,
           storage_path: filePath,
-          title: file.name.split('.')[0],
+          title: type === 'bridal-party' ? bridalPartyData.title : file.name.split('.')[0],
+          role: type === 'bridal-party' ? bridalPartyData.role : null,
+          description: type === 'bridal-party' ? bridalPartyData.description : null,
           sort_order: photos.filter(p => p.type === type).length
         });
 
@@ -95,6 +110,15 @@ export const PhotoManager = () => {
 
       toast.success("Photo uploaded successfully");
       fetchPhotos();
+      
+      // Reset bridal party form data
+      if (type === 'bridal-party') {
+        setBridalPartyData({
+          title: '',
+          role: '',
+          description: ''
+        });
+      }
     } catch (error: any) {
       toast.error("Error uploading photo: " + error.message);
     } finally {
@@ -134,6 +158,7 @@ export const PhotoManager = () => {
         <TabsList>
           <TabsTrigger value="hero">Hero Images</TabsTrigger>
           <TabsTrigger value="gallery">Photo Gallery</TabsTrigger>
+          <TabsTrigger value="bridal-party">Bridal Party</TabsTrigger>
         </TabsList>
 
         <TabsContent value="hero" className="space-y-6">
@@ -205,12 +230,88 @@ export const PhotoManager = () => {
               ))}
           </div>
         </TabsContent>
+
+        <TabsContent value="bridal-party" className="space-y-6">
+          <div className="grid gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={bridalPartyData.title}
+                  onChange={(e) => setBridalPartyData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Enter name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  value={bridalPartyData.role}
+                  onChange={(e) => setBridalPartyData(prev => ({ ...prev, role: e.target.value }))}
+                  placeholder="e.g., Maid of Honor, Best Man"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={bridalPartyData.description}
+                  onChange={(e) => setBridalPartyData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Tell us about this person"
+                />
+              </div>
+              <div>
+                <Label htmlFor="photo">Photo</Label>
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  disabled={isUploading}
+                  onChange={(e) => handleFileSelect(e.target.files, 'bridal-party')}
+                  className="max-w-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {photos
+                .filter(photo => photo.type === 'bridal-party')
+                .map(photo => (
+                  <div key={photo.id} className="relative group bg-gray-50 rounded-lg p-4">
+                    <img
+                      src={photo.url}
+                      alt={photo.title || ''}
+                      className="w-full aspect-[3/4] object-cover rounded-md mb-4"
+                    />
+                    <h3 className="font-semibold text-lg">{photo.title}</h3>
+                    <p className="text-accent">{photo.role}</p>
+                    <p className="text-gray-600 text-sm mt-2">{photo.description}</p>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDelete(photo)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {cropState && (
         <ImageCropper
           imageUrl={cropState.preview}
-          aspectRatio={cropState.type === 'hero' ? 16 / 9 : 1}
+          aspectRatio={
+            cropState.type === 'hero' 
+              ? 16 / 9 
+              : cropState.type === 'gallery'
+                ? 1
+                : 3 / 4
+          }
           onCropComplete={handleCropComplete}
           onCancel={() => setCropState(null)}
           open={true}
@@ -219,3 +320,4 @@ export const PhotoManager = () => {
     </Card>
   );
 };
+
