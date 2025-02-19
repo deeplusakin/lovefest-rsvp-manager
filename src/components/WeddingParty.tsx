@@ -2,7 +2,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Photo } from "@/types/photos";
+import type { Photo, PhotoRow } from "@/types/photos";
 
 export const WeddingParty = () => {
   const ref = useRef<HTMLElement>(null);
@@ -27,7 +27,13 @@ export const WeddingParty = () => {
         return;
       }
 
-      setPartyMembers(data || []);
+      // Convert the Supabase response type to our Photo type
+      const typedData = (data as PhotoRow[]).map(photo => ({
+        ...photo,
+        type: photo.type as 'hero' | 'gallery' | 'wedding-party'
+      }));
+
+      setPartyMembers(typedData);
     };
 
     fetchWeddingParty();
