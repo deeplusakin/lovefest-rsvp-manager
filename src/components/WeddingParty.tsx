@@ -27,11 +27,23 @@ export const WeddingParty = () => {
         return;
       }
 
+      console.log('Wedding party data:', data); // Debug log
+
       // Convert the Supabase response type to our Photo type
-      const typedData = (data as PhotoRow[]).map(photo => ({
-        ...photo,
-        type: photo.type as 'hero' | 'gallery' | 'wedding-party'
-      }));
+      const typedData = (data as PhotoRow[]).map(photo => {
+        // Ensure URL is properly formatted
+        const formattedUrl = photo.url.startsWith('/')
+          ? photo.url
+          : `/${photo.url}`;
+        
+        console.log('Formatted URL for photo:', formattedUrl); // Debug log
+        
+        return {
+          ...photo,
+          url: formattedUrl,
+          type: photo.type as 'hero' | 'gallery' | 'wedding-party'
+        };
+      });
 
       setPartyMembers(typedData);
     };
@@ -61,6 +73,10 @@ export const WeddingParty = () => {
                   src={member.url}
                   alt={member.title || ''}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    console.error('Image failed to load:', member.url);
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
