@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,10 +14,10 @@ import { Textarea } from "../ui/textarea";
 interface CropState {
   file: File;
   preview: string;
-  type: 'hero' | 'gallery' | 'bridal-party';
+  type: 'hero' | 'gallery' | 'wedding-party';
 }
 
-interface BridalPartyPhotoData {
+interface WeddingPartyPhotoData {
   title: string;
   role: string;
   description: string;
@@ -28,7 +27,7 @@ export const PhotoManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [cropState, setCropState] = useState<CropState | null>(null);
-  const [bridalPartyData, setBridalPartyData] = useState<BridalPartyPhotoData>({
+  const [weddingPartyData, setWeddingPartyData] = useState<WeddingPartyPhotoData>({
     title: '',
     role: '',
     description: ''
@@ -52,13 +51,13 @@ export const PhotoManager = () => {
     if (data) {
       const typedData = data.filter(
         (photo: PhotoRow): photo is Photo => 
-          photo.type === 'hero' || photo.type === 'gallery' || photo.type === 'bridal-party'
+          photo.type === 'hero' || photo.type === 'gallery' || photo.type === 'wedding-party'
       );
       setPhotos(typedData);
     }
   };
 
-  const handleFileSelect = (files: FileList | null, type: 'hero' | 'gallery' | 'bridal-party') => {
+  const handleFileSelect = (files: FileList | null, type: 'hero' | 'gallery' | 'wedding-party') => {
     if (!files || files.length === 0) return;
 
     const file = files[0];
@@ -75,11 +74,10 @@ export const PhotoManager = () => {
     setCropState(null);
   };
 
-  const handleUpload = async (file: File, type: 'hero' | 'gallery' | 'bridal-party') => {
+  const handleUpload = async (file: File, type: 'hero' | 'gallery' | 'wedding-party') => {
     setIsUploading(true);
 
     try {
-      // Upload to storage
       const fileExt = file.name.split('.').pop();
       const filePath = `${type}/${Date.now()}.${fileExt}`;
       
@@ -93,16 +91,15 @@ export const PhotoManager = () => {
         .from('photos')
         .getPublicUrl(filePath);
 
-      // Save to database
       const { error: dbError } = await supabase
         .from('photos')
         .insert({
           url: publicUrl,
           type,
           storage_path: filePath,
-          title: type === 'bridal-party' ? bridalPartyData.title : file.name.split('.')[0],
-          role: type === 'bridal-party' ? bridalPartyData.role : null,
-          description: type === 'bridal-party' ? bridalPartyData.description : null,
+          title: type === 'wedding-party' ? weddingPartyData.title : file.name.split('.')[0],
+          role: type === 'wedding-party' ? weddingPartyData.role : null,
+          description: type === 'wedding-party' ? weddingPartyData.description : null,
           sort_order: photos.filter(p => p.type === type).length
         });
 
@@ -111,9 +108,8 @@ export const PhotoManager = () => {
       toast.success("Photo uploaded successfully");
       fetchPhotos();
       
-      // Reset bridal party form data
-      if (type === 'bridal-party') {
-        setBridalPartyData({
+      if (type === 'wedding-party') {
+        setWeddingPartyData({
           title: '',
           role: '',
           description: ''
@@ -128,14 +124,12 @@ export const PhotoManager = () => {
 
   const handleDelete = async (photo: Photo) => {
     try {
-      // Delete from storage
       const { error: storageError } = await supabase.storage
         .from('photos')
         .remove([photo.storage_path]);
 
       if (storageError) throw storageError;
 
-      // Delete from database
       const { error: dbError } = await supabase
         .from('photos')
         .delete()
@@ -158,7 +152,7 @@ export const PhotoManager = () => {
         <TabsList>
           <TabsTrigger value="hero">Hero Images</TabsTrigger>
           <TabsTrigger value="gallery">Photo Gallery</TabsTrigger>
-          <TabsTrigger value="bridal-party">Bridal Party</TabsTrigger>
+          <TabsTrigger value="wedding-party">Wedding Party</TabsTrigger>
         </TabsList>
 
         <TabsContent value="hero" className="space-y-6">
@@ -231,15 +225,15 @@ export const PhotoManager = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="bridal-party" className="space-y-6">
+        <TabsContent value="wedding-party" className="space-y-6">
           <div className="grid gap-6">
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name">Name</Label>
                 <Input
                   id="name"
-                  value={bridalPartyData.title}
-                  onChange={(e) => setBridalPartyData(prev => ({ ...prev, title: e.target.value }))}
+                  value={weddingPartyData.title}
+                  onChange={(e) => setWeddingPartyData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter name"
                 />
               </div>
@@ -247,8 +241,8 @@ export const PhotoManager = () => {
                 <Label htmlFor="role">Role</Label>
                 <Input
                   id="role"
-                  value={bridalPartyData.role}
-                  onChange={(e) => setBridalPartyData(prev => ({ ...prev, role: e.target.value }))}
+                  value={weddingPartyData.role}
+                  onChange={(e) => setWeddingPartyData(prev => ({ ...prev, role: e.target.value }))}
                   placeholder="e.g., Maid of Honor, Best Man"
                 />
               </div>
@@ -256,8 +250,8 @@ export const PhotoManager = () => {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={bridalPartyData.description}
-                  onChange={(e) => setBridalPartyData(prev => ({ ...prev, description: e.target.value }))}
+                  value={weddingPartyData.description}
+                  onChange={(e) => setWeddingPartyData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Tell us about this person"
                 />
               </div>
@@ -268,7 +262,7 @@ export const PhotoManager = () => {
                   type="file"
                   accept="image/*"
                   disabled={isUploading}
-                  onChange={(e) => handleFileSelect(e.target.files, 'bridal-party')}
+                  onChange={(e) => handleFileSelect(e.target.files, 'wedding-party')}
                   className="max-w-sm"
                 />
               </div>
@@ -276,7 +270,7 @@ export const PhotoManager = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {photos
-                .filter(photo => photo.type === 'bridal-party')
+                .filter(photo => photo.type === 'wedding-party')
                 .map(photo => (
                   <div key={photo.id} className="relative group bg-gray-50 rounded-lg p-4">
                     <img
@@ -320,4 +314,3 @@ export const PhotoManager = () => {
     </Card>
   );
 };
-

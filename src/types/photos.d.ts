@@ -3,7 +3,7 @@ export interface Photo {
   id: string;
   url: string;
   title: string | null;
-  type: 'hero' | 'gallery' | 'bridal-party';
+  type: 'hero' | 'gallery' | 'wedding-party';
   storage_path: string;
   sort_order: number;
   created_at: string;
