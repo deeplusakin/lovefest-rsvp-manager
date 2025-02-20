@@ -16,7 +16,9 @@ export const PhotoUpload = ({ type, isUploading, onFileSelect }: PhotoUploadProp
 
   const handleEditComplete = async (editedFile: File) => {
     setShowEditor(false);
-    await onFileSelect(new DataTransfer().items.add(editedFile).files, type);
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(editedFile);
+    await onFileSelect(dataTransfer.files, type);
     setSelectedFile(null);
   };
 
