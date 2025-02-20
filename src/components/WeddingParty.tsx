@@ -27,23 +27,12 @@ export const WeddingParty = () => {
         return;
       }
 
-      console.log('Wedding party data:', data); // Debug log
-
       // Convert the Supabase response type to our Photo type
-      const typedData = (data as PhotoRow[]).map(photo => {
-        // Ensure URL is properly formatted
-        const formattedUrl = photo.url.startsWith('/')
-          ? photo.url
-          : `/${photo.url}`;
-        
-        console.log('Formatted URL for photo:', formattedUrl); // Debug log
-        
-        return {
-          ...photo,
-          url: formattedUrl,
-          type: photo.type as 'hero' | 'gallery' | 'wedding-party'
-        };
-      });
+      const typedData = (data as PhotoRow[]).map(photo => ({
+        ...photo,
+        url: photo.url, // Don't modify the URL - use it as is from Supabase
+        type: photo.type as 'hero' | 'gallery' | 'wedding-party'
+      }));
 
       setPartyMembers(typedData);
     };
