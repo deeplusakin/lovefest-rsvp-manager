@@ -1,4 +1,6 @@
 
+import type { Photo } from "@/types/photos";
+
 export interface WeddingPartyPhotoData {
   title: string;
   role: string;
