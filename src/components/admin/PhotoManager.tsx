@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Photo, PhotoRow } from "@/types/photos";
-import { ImageCropper } from "./ImageCropper";
 import { Textarea } from "../ui/textarea";
-
-interface CropState {
-  file: File;
-  preview: string;
-  type: 'hero' | 'gallery' | 'wedding-party';
-}
 
 interface WeddingPartyPhotoData {
   title: string;
@@ -26,7 +20,6 @@ interface WeddingPartyPhotoData {
 export const PhotoManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [cropState, setCropState] = useState<CropState | null>(null);
   const [weddingPartyData, setWeddingPartyData] = useState<WeddingPartyPhotoData>({
     title: '',
     role: '',
@@ -57,21 +50,10 @@ export const PhotoManager = () => {
     }
   };
 
-  const handleFileSelect = (files: FileList | null, type: 'hero' | 'gallery' | 'wedding-party') => {
+  const handleFileSelect = async (files: FileList | null, type: 'hero' | 'gallery' | 'wedding-party') => {
     if (!files || files.length === 0) return;
-
     const file = files[0];
-    const preview = URL.createObjectURL(file);
-    setCropState({ file, preview, type });
-  };
-
-  const handleCropComplete = async (croppedBlob: Blob) => {
-    if (!cropState) return;
-    
-    const { type, file } = cropState;
-    const croppedFile = new File([croppedBlob], file.name, { type: file.type });
-    await handleUpload(croppedFile, type);
-    setCropState(null);
+    await handleUpload(file, type);
   };
 
   const handleUpload = async (file: File, type: 'hero' | 'gallery' | 'wedding-party') => {
@@ -295,22 +277,6 @@ export const PhotoManager = () => {
           </div>
         </TabsContent>
       </Tabs>
-
-      {cropState && (
-        <ImageCropper
-          imageUrl={cropState.preview}
-          aspectRatio={
-            cropState.type === 'hero' 
-              ? 16 / 9 
-              : cropState.type === 'gallery'
-                ? 1
-                : 3 / 4
-          }
-          onCropComplete={handleCropComplete}
-          onCancel={() => setCropState(null)}
-          open={true}
-        />
-      )}
     </Card>
   );
 };
