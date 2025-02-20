@@ -12,14 +12,15 @@ import QAndA from "@/pages/QAndA";
 import Travel from "@/pages/Travel";
 import Registry from "@/pages/Registry";
 import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import "@/App.css";
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen">
+      <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main>
+        <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/our-story" element={<OurStory />} />
@@ -34,6 +35,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );
