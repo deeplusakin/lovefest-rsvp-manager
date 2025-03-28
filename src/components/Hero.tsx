@@ -1,4 +1,3 @@
-
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,7 @@ export const Hero = () => {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
 
   // Local images for fallback/initial display while Supabase loads
-  const localImages = [
+  const localImages: Photo[] = [
     {
       id: "local-1",
       url: "/lovable-uploads/a2cec386-bddb-4776-b915-5f10f11af18a.png",
@@ -163,10 +162,16 @@ export const Hero = () => {
           .order('sort_order');
         
         if (data && data.length > 0) {
-          const typedData = data.filter(
-            (photo: PhotoRow): photo is Photo => 
-              photo.type === 'hero' || photo.type === 'gallery'
-          );
+          // Filter and validate the data to ensure type compatibility
+          const typedData = data
+            .filter((photo: PhotoRow) => photo.type === 'hero')
+            .map((photo: PhotoRow): Photo => ({
+              ...photo,
+              type: 'hero', // Explicitly cast to the valid union type
+              role: photo.role,
+              description: photo.description
+            }));
+          
           setImages(typedData);
           // Preload images after fetching
           preloadImages(typedData.map(img => img.url));
