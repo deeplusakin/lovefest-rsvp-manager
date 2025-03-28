@@ -52,9 +52,26 @@ export const Hero = () => {
           (photo: PhotoRow): photo is Photo => 
             photo.type === 'hero' || photo.type === 'gallery'
         );
-        setImages(typedData);
+        
+        // Add the new uploaded image to the images array
+        const newImage: Photo = {
+          id: 'uploaded-hero-image',
+          url: '/lovable-uploads/6a440240-ea36-4ac2-8b65-920a5e6c5620.png',
+          title: 'Dearborne & Akin Formal Portrait',
+          type: 'hero',
+          storage_path: '',
+          sort_order: 0,
+          created_at: new Date().toISOString(),
+          role: null,
+          description: 'Elegant formal portrait of the couple in black attire'
+        };
+        
+        // Place the new image at the beginning of the carousel
+        const updatedImages = [newImage, ...typedData];
+        setImages(updatedImages);
+        
         // Preload images after fetching
-        preloadImages(typedData.map(img => img.url));
+        preloadImages(updatedImages.map(img => img.url));
       }
     };
 
