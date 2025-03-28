@@ -1,3 +1,4 @@
+
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -126,6 +127,62 @@ export const Hero = () => {
       type: "hero",
       storage_path: "",
       sort_order: 9,
+      created_at: "",
+      role: null,
+      description: null
+    },
+    // New images
+    {
+      id: "local-11",
+      url: "/lovable-uploads/edac78a0-8307-4f36-957e-f7a3d2cb74e7.png",
+      title: "Formal Portrait 1",
+      type: "hero",
+      storage_path: "",
+      sort_order: 10,
+      created_at: "",
+      role: null,
+      description: null
+    },
+    {
+      id: "local-12",
+      url: "/lovable-uploads/dc97e51a-018f-4803-a9c3-00071efdeaaa.png",
+      title: "Formal Portrait 2",
+      type: "hero",
+      storage_path: "",
+      sort_order: 11,
+      created_at: "",
+      role: null,
+      description: null
+    },
+    {
+      id: "local-13",
+      url: "/lovable-uploads/7fe05aff-f258-470c-b8b0-ac62681f49af.png",
+      title: "Formal Portrait 3",
+      type: "hero",
+      storage_path: "",
+      sort_order: 12,
+      created_at: "",
+      role: null,
+      description: null
+    },
+    {
+      id: "local-14",
+      url: "/lovable-uploads/9e2a3a6f-60e0-46e9-9393-9bdf329259dd.png",
+      title: "Formal Portrait 4", 
+      type: "hero",
+      storage_path: "",
+      sort_order: 13,
+      created_at: "",
+      role: null,
+      description: null
+    },
+    {
+      id: "local-15",
+      url: "/lovable-uploads/63f0fbaf-cbf4-4231-8c63-ede929a1ecb2.png",
+      title: "Formal Portrait 5",
+      type: "hero",
+      storage_path: "",
+      sort_order: 14,
       created_at: "",
       role: null,
       description: null
