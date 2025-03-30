@@ -50,7 +50,7 @@ const bridesmaids = [
     id: 6,
     name: "Charlene",
     role: "Bridesmaid",
-    image: "/lovable-uploads/5c4399a8-8df6-46e7-a8c7-895ccd0dfa6d.png",
+    image: "/lovable-uploads/289aad00-e979-4e90-9141-98db6aa1a7ed.png",
     description: "Friend since college"
   },
   {
