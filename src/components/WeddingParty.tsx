@@ -20,7 +20,7 @@ export const WeddingParty = () => {
           <div className="container max-w-6xl">
             <h2 className="text-4xl md:text-5xl font-serif text-center mb-16">Wedding Party</h2>
             <p className="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-              Meet the amazing people who will be standing by our side on our special day. We are blessed to have such wonderful friends and family supporting us.
+              Meet the amazing people who will stand by our side on our special day. We are blessed to have such wonderful friends and family supporting us.
             </p>
           </div>
         </div>
