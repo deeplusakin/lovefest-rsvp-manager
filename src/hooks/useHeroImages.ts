@@ -43,7 +43,6 @@ export const useHeroImages = () => {
           // Format the data using the utility function
           const typedData = formatPhotoData(data, 'hero');
           
-          // Ensure we start with our featured image
           setImages(typedData);
           // Preload images after fetching
           const preloaded = await preloadImages(typedData.map(img => img.url));
