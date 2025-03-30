@@ -24,9 +24,13 @@ export const HeroSlideshow = ({ images, currentImage, scale }: HeroSlideshowProp
           className="absolute inset-0"
         >
           <div 
-            className="absolute inset-0 bg-cover bg-center brightness-50 transition-all duration-1000"
+            className="absolute inset-0 bg-cover bg-center brightness-[0.65] transition-all duration-1000"
             style={{ 
               backgroundImage: `url(${img.url})`,
+              backgroundPosition: 'center center',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundColor: '#000',
               willChange: 'transform'
             }}
             aria-label={img.title || 'Hero image'}

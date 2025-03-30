@@ -19,7 +19,7 @@ export const usePhotoGallery = () => {
           .order('sort_order');
         
         if (data && data.length > 0) {
-          const typedData = formatPhotoData(data);
+          const typedData = formatPhotoData(data, 'gallery');
           setPhotos(typedData);
         } else {
           // If no data from Supabase, use local images

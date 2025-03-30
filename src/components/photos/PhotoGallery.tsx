@@ -16,13 +16,13 @@ export const PhotoGallery = ({ photos, onPhotoClick }: PhotoGalleryProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+          className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer relative"
           onClick={() => onPhotoClick(photo)}
         >
           <img
             src={photo.url}
             alt={photo.title || ''}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            className="w-full h-full object-contain bg-black transition-transform duration-300 hover:scale-105"
           />
         </motion.div>
       ))}
