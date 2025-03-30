@@ -175,33 +175,6 @@ export type Database = {
         }
         Relationships: []
       }
-      page_content: {
-        Row: {
-          content: string
-          id: string
-          last_updated: string | null
-          page_id: string
-          section_id: string
-          updated_by: string | null
-        }
-        Insert: {
-          content: string
-          id?: string
-          last_updated?: string | null
-          page_id: string
-          section_id: string
-          updated_by?: string | null
-        }
-        Update: {
-          content?: string
-          id?: string
-          last_updated?: string | null
-          page_id?: string
-          section_id?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
       photos: {
         Row: {
           created_at: string

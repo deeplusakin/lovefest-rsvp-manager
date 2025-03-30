@@ -11,7 +11,6 @@ import { GuestForm } from "@/components/admin/GuestForm";
 import { GuestsTable } from "@/components/admin/GuestsTable";
 import { PhotoManager } from "@/components/admin/PhotoManager";
 import { ProfileSettings } from "@/components/admin/ProfileSettings";
-import { ContentManager } from "@/components/admin/ContentManager";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventManagement } from "@/hooks/useEventManagement";
@@ -105,7 +104,6 @@ export const Admin = () => {
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
@@ -172,10 +170,6 @@ export const Admin = () => {
                 <GuestsTable guests={guests} onDelete={fetchGuests} />
               )}
             </Card>
-          </TabsContent>
-
-          <TabsContent value="content" className="space-y-8">
-            <ContentManager />
           </TabsContent>
 
           <TabsContent value="photos" className="space-y-8">
