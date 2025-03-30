@@ -1,5 +1,11 @@
 
 import { motion } from "framer-motion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const QAndA = () => {
   return (
@@ -53,7 +59,7 @@ const QAndA = () => {
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Is the wedding indoors or outdoors?</h3>
-              <p className="text-gray-600">The ceremony and reception are indoor, and the cocktail hour is both indoor and outdoor. Please plan your footwear and attire with this in mind.</p>
+              <p className="text-gray-600">The ceremony and reception are indoor, and the cocktail hour is both indoor and outdoor.</p>
             </div>
 
             <div>
@@ -62,8 +68,13 @@ const QAndA = () => {
             </div>
 
             <div>
+              <h3 className="font-semibold text-xl mb-2">Will you be providing room blocks for accommodations?</h3>
+              <p className="text-gray-600">We will not be providing room blocks, so please reach out to the hotel as early as possible to reserve your accommodations.</p>
+            </div>
+
+            <div>
               <h3 className="font-semibold text-xl mb-2">Whom should I contact with questions?</h3>
-              <p className="text-gray-600">If you have additional questions not addressed here, please reach out to our coordinator, Rena Bullard, at rena@eventsulove.com; 516-754-5378.</p>
+              <p className="text-gray-600">If you have additional questions, please reach out to our coordinator, Rena Bullard, at rena@eventsulove.com; 516-754-5378.</p>
             </div>
           </div>
 
