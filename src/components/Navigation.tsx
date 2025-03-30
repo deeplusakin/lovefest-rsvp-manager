@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 
 const navItems = [
+  { path: "/rsvp", label: "RSVP", icon: Mail },
   { path: "/our-story", label: "Our Story", icon: Book },
   { path: "/photos", label: "Photos", icon: Image },
   { path: "/wedding-party", label: "Wedding Party", icon: Users },
@@ -12,7 +13,6 @@ const navItems = [
   { path: "/travel", label: "Travel", icon: Plane },
   { path: "/things-to-do", label: "Things to Do", icon: Activity },
   { path: "/registry", label: "Registry", icon: Gift },
-  { path: "/rsvp", label: "RSVP", icon: Mail },
 ];
 
 export const Navigation = () => {

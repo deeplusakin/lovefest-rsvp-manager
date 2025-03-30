@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,7 @@ export const RsvpForm = () => {
       <div className="container max-w-md text-center">
         <h2 className="text-4xl md:text-5xl font-serif mb-8">RSVP</h2>
         <p className="text-gray-300 mb-8">
-          Please enter your unique code or scan your QR code to RSVP for our wedding celebration.
+          Please enter your unique code to RSVP for our wedding celebration.
         </p>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
