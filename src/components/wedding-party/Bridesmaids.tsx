@@ -29,14 +29,14 @@ const bridesmaids = [
     name: "Hectorlyne",
     role: "Bridesmaid",
     image: "/lovable-uploads/49ff2d0a-afeb-46a3-87fd-6ea0c0942a62.png",
-    description: "Childhood friend since highschool"
+    description: "Childhood friend"
   },
   {
     id: 4,
     name: "Naweh",
     role: "Bridesmaid",
     image: "/lovable-uploads/0fe0d02a-a702-4bc0-aed6-99a1b0ce3c59.png",
-    description: "Childhood friend"
+    description: "Bride's cousin"
   },
   {
     id: 5,
