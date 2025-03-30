@@ -5,6 +5,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // Updated data for groomsmen with the new images and corrected information
 const groomsmen = [
   {
+    id: 3,
+    name: "James",
+    role: "Best Man",
+    image: "/lovable-uploads/cbabbf3b-60a7-4aca-a5dd-308937677595.png",
+    description: "Groom's cousin"
+  },
+  {
     id: 1,
     name: "Willie",
     role: "Groomsman",
@@ -17,13 +24,6 @@ const groomsmen = [
     role: "Groomsman",
     image: "/lovable-uploads/a5470348-9227-41da-a7c5-f994b923d02d.png",
     description: "Groom's brother-in-law"
-  },
-  {
-    id: 3,
-    name: "James",
-    role: "Best Man",
-    image: "/lovable-uploads/cbabbf3b-60a7-4aca-a5dd-308937677595.png",
-    description: "Groom's cousin"
   },
   {
     id: 4,
