@@ -11,6 +11,7 @@ import WeddingParty from "@/pages/WeddingParty";
 import QAndA from "@/pages/QAndA";
 import Travel from "@/pages/Travel";
 import Registry from "@/pages/Registry";
+import Rsvp from "@/pages/Rsvp";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import "@/App.css";
@@ -30,6 +31,7 @@ function App() {
             <Route path="/travel" element={<Travel />} />
             <Route path="/things-to-do" element={<ThingsToDo />} />
             <Route path="/registry" element={<Registry />} />
+            <Route path="/rsvp" element={<Rsvp />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<NotFound />} />

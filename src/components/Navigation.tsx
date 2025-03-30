@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Book, Image, Users, MessageSquare, Plane, Activity, Gift, Menu, X } from "lucide-react";
+import { Book, Image, Users, MessageSquare, Plane, Activity, Gift, Menu, X, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ const navItems = [
   { path: "/travel", label: "Travel", icon: Plane },
   { path: "/things-to-do", label: "Things to Do", icon: Activity },
   { path: "/registry", label: "Registry", icon: Gift },
+  { path: "/rsvp", label: "RSVP", icon: Mail },
 ];
 
 export const Navigation = () => {
