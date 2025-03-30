@@ -12,13 +12,13 @@ const QAndA = () => {
         <h1 className="text-4xl md:text-5xl font-serif text-center mb-12">Q&A</h1>
         <div className="prose prose-lg max-w-none">
           <p className="text-gray-600 mb-8">
-            For the comfort and convenience of all our guests, we've compiled answers to some frequently asked questions:
+            For the convenience of all our guests, we've compiled answers to some frequently asked questions:
           </p>
           
           <div className="space-y-8">
             <div>
               <h3 className="font-semibold text-xl mb-2">When is the RSVP deadline?</h3>
-              <p className="text-gray-600">Please RSVP by June 6, 2025.</p>
+              <p className="text-gray-600">Please RSVP by June 13, 2025.</p>
             </div>
 
             <div>
@@ -38,7 +38,7 @@ const QAndA = () => {
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Where should I park?</h3>
-              <p className="text-gray-600">Complimentary parking is available in front of the venue. Additionally, there are numerous free parking options throughout downtown Ellicott City.</p>
+              <p className="text-gray-600">Lot D is located in front of the venue. Pay attention to the signs next to the spot to not park in restricted spots.</p>
             </div>
 
             <div>
@@ -53,17 +53,17 @@ const QAndA = () => {
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Is the wedding indoors or outdoors?</h3>
-              <p className="text-gray-600">Our ceremony will take place outdoors, followed by an indoor reception in the ballroom. Please plan your footwear and attire with this in mind.</p>
+              <p className="text-gray-600">The ceremony and reception are indoor, and the cocktail hour is both indoor and outdoor. Please plan your footwear and attire with this in mind.</p>
             </div>
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Is it okay to take pictures with our phones and cameras during the wedding?</h3>
-              <p className="text-gray-600">While we welcome you to capture personal memories, we kindly ask that no photos be shared on social media. We appreciate your respect for our privacy.</p>
+              <p className="text-gray-600">Please allow our photographers to capture professional shots without obstructing their view. We kindly request that NO pictures or videos are shared on social media. We appreciate your respect for our privacy.</p>
             </div>
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Whom should I contact with questions?</h3>
-              <p className="text-gray-600">If you have additional questions not addressed here, please reach out to our coordinator, Rena Bullard, at [insert contact information].</p>
+              <p className="text-gray-600">If you have additional questions not addressed here, please reach out to our coordinator, Rena Bullard, at rena@eventsulove.com; 516-754-5378.</p>
             </div>
           </div>
 

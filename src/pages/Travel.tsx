@@ -34,16 +34,22 @@ const Travel = () => {
             </p>
             <ul className="space-y-4">
               <li className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold mb-2">DoubleTree by Hilton Columbia</h3>
+                <p className="text-gray-600">8 minutes from venue</p>
+                <p className="text-gray-600">On-site restaurant and indoor pool</p>
+                <p className="text-gray-600">Average rates from $140-180/night</p>
+              </li>
+              <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Turf Valley Resort</h3>
                 <p className="text-gray-600">10 minutes from venue</p>
                 <p className="text-gray-600">Spacious rooms with resort amenities</p>
                 <p className="text-gray-600">Average rates from $150-200/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Hampton Inn Columbia</h3>
-                <p className="text-gray-600">15 minutes from venue</p>
-                <p className="text-gray-600">Complimentary breakfast included</p>
-                <p className="text-gray-600">Average rates from $120-160/night</p>
+                <h3 className="font-semibold mb-2">Residence Inn by Marriott</h3>
+                <p className="text-gray-600">11 minutes from venue</p>
+                <p className="text-gray-600">All-suite hotel with full kitchens</p>
+                <p className="text-gray-600">Average rates from $160-190/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Sonesta ES Suites Columbia</h3>
@@ -52,16 +58,10 @@ const Travel = () => {
                 <p className="text-gray-600">Average rates from $130-170/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold mb-2">DoubleTree by Hilton Columbia</h3>
-                <p className="text-gray-600">8 minutes from venue</p>
-                <p className="text-gray-600">On-site restaurant and indoor pool</p>
-                <p className="text-gray-600">Average rates from $140-180/night</p>
-              </li>
-              <li className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Residence Inn by Marriott</h3>
-                <p className="text-gray-600">11 minutes from venue</p>
-                <p className="text-gray-600">All-suite hotel with full kitchens</p>
-                <p className="text-gray-600">Average rates from $160-190/night</p>
+                <h3 className="font-semibold mb-2">Hampton Inn Columbia</h3>
+                <p className="text-gray-600">15 minutes from venue</p>
+                <p className="text-gray-600">Complimentary breakfast included</p>
+                <p className="text-gray-600">Average rates from $120-160/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Courtyard by Marriott</h3>
