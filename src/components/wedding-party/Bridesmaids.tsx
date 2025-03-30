@@ -45,6 +45,13 @@ const bridesmaids = [
     role: "Bridesmaid",
     image: "/lovable-uploads/5c4399a8-8df6-46e7-a8c7-895ccd0dfa6d.png",
     description: "Friend from work"
+  },
+  {
+    id: 7,
+    name: "Maya",
+    role: "Bridesmaid",
+    image: "/lovable-uploads/264e0405-d76a-4d6b-b3b7-f05a2954b3c4.png",
+    description: "College friend"
   }
 ];
 
