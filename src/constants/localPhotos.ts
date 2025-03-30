@@ -74,12 +74,23 @@ export const localGalleryImages: Photo[] = [
 // Local hero images for fallback/initial display while Supabase loads
 export const localHeroImages: Photo[] = [
   {
+    id: "hero-0",
+    url: "/lovable-uploads/2ba1957a-3efe-44a1-9ddc-ef98432ae831.png",
+    title: "Couple Portrait",
+    type: "hero",
+    storage_path: "",
+    sort_order: 0,
+    created_at: "",
+    role: null,
+    description: null
+  },
+  {
     id: "hero-1",
     url: "/lovable-uploads/a40a98cc-1d0a-455b-af47-5bfc109411e4.png",
     title: "Engagement Photo 1",
     type: "hero",
     storage_path: "",
-    sort_order: 0,
+    sort_order: 1,
     created_at: "",
     role: null,
     description: null
@@ -90,7 +101,7 @@ export const localHeroImages: Photo[] = [
     title: "Engagement Photo 2",
     type: "hero",
     storage_path: "",
-    sort_order: 1,
+    sort_order: 2,
     created_at: "",
     role: null,
     description: null
@@ -101,7 +112,7 @@ export const localHeroImages: Photo[] = [
     title: "Engagement Photo 3", 
     type: "hero",
     storage_path: "",
-    sort_order: 2,
+    sort_order: 3,
     created_at: "",
     role: null,
     description: null
@@ -112,7 +123,7 @@ export const localHeroImages: Photo[] = [
     title: "Formal Photo 1",
     type: "hero",
     storage_path: "",
-    sort_order: 3,
+    sort_order: 4,
     created_at: "",
     role: null,
     description: null
@@ -123,7 +134,7 @@ export const localHeroImages: Photo[] = [
     title: "Formal Photo 2",
     type: "hero",
     storage_path: "",
-    sort_order: 4,
+    sort_order: 5,
     created_at: "",
     role: null,
     description: null
@@ -134,7 +145,7 @@ export const localHeroImages: Photo[] = [
     title: "Formal Photo 3",
     type: "hero",
     storage_path: "",
-    sort_order: 5,
+    sort_order: 6,
     created_at: "",
     role: null,
     description: null
