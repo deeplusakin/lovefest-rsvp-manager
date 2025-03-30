@@ -47,18 +47,18 @@ const groomsmen = [
     description: "Close friend of the groom"
   },
   {
-    id: 5,
-    name: "Robert",
+    id: 9,
+    name: "Djibril",
     role: "Groomsman",
-    image: "/placeholder.svg",
-    description: "Cousin of the groom"
+    image: "/lovable-uploads/8eb78fc7-8b30-4650-8c9f-7a582ebd0747.png",
+    description: "Brother-in-law of the groom"
   },
   {
-    id: 6,
-    name: "Daniel",
+    id: 10,
+    name: "Moses",
     role: "Groomsman",
-    image: "/placeholder.svg",
-    description: "Friend from work"
+    image: "/lovable-uploads/ceaf1077-d65b-430c-9270-58fde1c429ab.png",
+    description: "Close friend of the groom"
   }
 ];
 
