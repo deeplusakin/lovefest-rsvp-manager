@@ -20,14 +20,6 @@ export const HeroContent = ({ opacity }: { opacity: any }) => {
       >
         Dearborne & Akin
       </motion.h1>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        className="text-lg font-light tracking-wide"
-      >
-        Join us for our celebration of love
-      </motion.div>
     </motion.div>
   );
 };
