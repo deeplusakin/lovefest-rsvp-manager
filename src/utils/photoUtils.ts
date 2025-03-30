@@ -2,7 +2,7 @@
 import type { Photo, PhotoRow } from "@/types/photos";
 
 // Helper function to convert Supabase data to Photo type
-export const formatPhotoData = (data: PhotoRow[], type: 'gallery' | 'hero' = 'gallery'): Photo[] => {
+export const formatPhotoData = (data: PhotoRow[], type: 'gallery' | 'hero' | 'wedding-party' = 'gallery'): Photo[] => {
   if (!data || data.length === 0) return [];
   
   // Filter and validate the data to ensure type compatibility
