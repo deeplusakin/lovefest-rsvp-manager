@@ -108,7 +108,7 @@ export const HoneymoonFund = () => {
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Contribute via Zelle</CardTitle>
-              <CardDescription>Scan the QR code via the Zelle app or use the number below: (301) 673-4364</CardDescription>
+              <CardDescription>Scan the QR code via the Zelle app</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center space-y-4">
               <div className="w-36 h-36 flex justify-center items-center">
