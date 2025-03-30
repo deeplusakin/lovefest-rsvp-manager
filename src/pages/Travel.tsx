@@ -58,16 +58,16 @@ const Travel = () => {
                 <p className="text-gray-600">Average rates from $130-170/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Hampton Inn Columbia</h3>
-                <p className="text-gray-600">15 minutes from venue</p>
-                <p className="text-gray-600">Complimentary breakfast included</p>
-                <p className="text-gray-600">Average rates from $120-160/night</p>
-              </li>
-              <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Courtyard by Marriott</h3>
                 <p className="text-gray-600">14 minutes from venue</p>
                 <p className="text-gray-600">Modern business-friendly amenities</p>
                 <p className="text-gray-600">Average rates from $130-170/night</p>
+              </li>
+              <li className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold mb-2">Hampton Inn Columbia</h3>
+                <p className="text-gray-600">15 minutes from venue</p>
+                <p className="text-gray-600">Complimentary breakfast included</p>
+                <p className="text-gray-600">Average rates from $120-160/night</p>
               </li>
             </ul>
           </section>
