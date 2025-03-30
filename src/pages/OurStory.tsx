@@ -12,23 +12,15 @@ const OurStory = () => {
         <h1 className="text-4xl md:text-5xl font-serif text-center mb-12">Our Story</h1>
         <div className="prose prose-lg max-w-none space-y-6">
           <p>
-            Akin and Dee's journey began at the tender age of eight. Shortly after Akin moved from Silver Spring to Gaithersburg, he and his sister spent a memorable summer under the care of Dee's grandmother. Dee had recently emigrated from Liberia, and during this time, a special bond formed between them: Dee found joy in watching Akin play video games, while Akin was drawn to Dee's calm and sweet demeanor.
+            The journey began in 1997 in Gaithersburg, MD where Akin and his sister spent a memorable summer under the care of Dearborne's grandmother. During that time, they enjoyed playing video games and hanging out with their siblings. Dee was drawn to Akin's gentleness, while Akin was drawn to Dee's calm and sweet demeanor.
           </p>
 
           <p>
-            After that summer, their lives took separate paths, though they remained just miles apart. Years later, fate orchestrated a remarkable reunion. Upon returning from teaching English abroad, Akin applied for a job and discovered that Dee was a fellow applicant. They exchanged numbers and, for nearly two years, were inseparable, rekindling the deep friendship they had as children.
+            After that summer, their lives took separate paths, though they remained a few miles apart. Many years later in 2011, fate orchestrated a remarkable reunion. Upon returning from teaching English abroad, Akin applied for a job and discovered that Dee, who recently graduated from the University of Maryland, was a fellow applicant. They exchanged numbers and for nearly two years, were inseparable, rekindling the deep friendship they had as children. During this time, they traveled, explored, and shared endless experiences together.
           </p>
 
           <p>
-            Life's twists and turns led them in different directions, but the memory of their bond never faded. Eventually, their paths crossed once more, and this time, they embraced the connection that had always been there.
-          </p>
-
-          <p>
-            One of their most cherished memories is their first dance together at an African restaurant called The Kitchen Near You. Despite Akin's conservative boarding school background and Dee's vibrant collegiate experiences, she was unaware of his dancing skills. That evening, as they moved to the rhythm, they playfully challenged each other on how low they could go, laughing and feeling an electrifying chemistry that spoke volumes about their connection.
-          </p>
-
-          <p>
-            When it came time to propose, Akin wanted it to be as unique as their story. They were in the midst of launching a podcast celebrating diverse cultures, which required a photoshoot. Seizing the opportunity, Akin conspired with the photographer to turn the session into a surprise proposal. Given Dee's detective-like intuition, the only way to keep it a secret was to have her unknowingly help plan her own proposal. The look of astonishment and joy on her face when Akin got down on one knee is a moment they'll both treasure forever.
+            Again, life's twists and turns led them in different directions, but the memory of their bond never faded. Eventually their paths crossed once more in 2023 and this time, they embraced the connection that had always been there. They picked up where they left off and continued their adventures. They have realized that their spirits are drawn to, and fond of each other, and that their destinies are intertwined. They thank God for the blessing of a soulmate with whom to navigate this life.
           </p>
 
           <p>
