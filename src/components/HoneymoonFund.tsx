@@ -108,7 +108,7 @@ export const HoneymoonFund = () => {
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Contribute via Zelle</CardTitle>
-              <CardDescription>Scan the QR code to send your gift through Zelle</CardDescription>
+              <CardDescription>Scan the QR code via the Zelle app or use the number below: (301) 673-4364</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center space-y-4">
               <div className="w-36 h-36 flex justify-center items-center">
@@ -119,7 +119,7 @@ export const HoneymoonFund = () => {
                 />
               </div>
               <p className="text-sm text-center text-muted-foreground">
-                Open your Zelle app and scan this QR code to contribute or find our account using the associated phone number: (301) 673-4364
+                Scan the QR code via the Zelle app or use the number below: (301) 673-4364
               </p>
             </CardContent>
           </Card>
