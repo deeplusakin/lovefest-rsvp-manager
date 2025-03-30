@@ -25,6 +25,9 @@ export const ContentList = ({
   onContentSelect,
   onCreateContent
 }: ContentListProps) => {
+  // If pages don't include q-and-a and travel, we'll add them here
+  const availablePages = [...new Set([...pages, 'q-and-a', 'travel'])];
+  
   return (
     <div className="space-y-4">
       <div className="mb-4">
@@ -35,7 +38,7 @@ export const ContentList = ({
           onChange={(e) => onPageChange(e.target.value)}
           className="w-full p-2 border rounded mt-1"
         >
-          {pages.map(page => (
+          {availablePages.map(page => (
             <option key={page} value={page}>
               {page.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </option>

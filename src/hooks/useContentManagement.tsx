@@ -18,7 +18,8 @@ export const useContentManagement = () => {
   const [activeContent, setActiveContent] = useState<PageContent | null>(null);
   const [editedContent, setEditedContent] = useState("");
   const [currentPage, setCurrentPage] = useState("our-story");
-  const [pages, setPages] = useState<string[]>([]);
+  // Initialize with common pages, including q-and-a and travel
+  const [pages, setPages] = useState<string[]>(["our-story", "q-and-a", "travel"]);
 
   const fetchContent = async () => {
     setIsLoading(true);
@@ -34,8 +35,12 @@ export const useContentManagement = () => {
       if (data) {
         setContents(data);
         
-        // Extract unique page_ids
-        const uniquePages = Array.from(new Set(data.map(item => item.page_id)));
+        // Extract unique page_ids and ensure q-and-a and travel are included
+        const uniquePages = Array.from(new Set([
+          ...data.map(item => item.page_id),
+          'q-and-a',
+          'travel'
+        ]));
         setPages(uniquePages);
         
         if (uniquePages.length > 0 && !uniquePages.includes(currentPage)) {
