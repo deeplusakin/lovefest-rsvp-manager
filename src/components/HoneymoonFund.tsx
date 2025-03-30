@@ -119,7 +119,7 @@ export const HoneymoonFund = () => {
                 />
               </div>
               <p className="text-sm text-center text-muted-foreground">
-                Open your Zelle app and scan this QR code to contribute
+                Open your Zelle app and scan this QR code to contribute or find our account using the associated phone number: (301) 673-4364
               </p>
             </CardContent>
           </Card>
