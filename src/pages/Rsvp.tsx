@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
 import { RsvpForm } from "@/components/RsvpForm";
+import { ContributionWall } from "@/components/ContributionWall";
 
 const Rsvp = () => {
   return (
@@ -10,6 +11,7 @@ const Rsvp = () => {
       className="min-h-screen"
     >
       <RsvpForm />
+      <ContributionWall />
     </motion.div>
   );
 };
