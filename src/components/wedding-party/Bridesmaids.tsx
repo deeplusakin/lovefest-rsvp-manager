@@ -5,60 +5,60 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // Bridesmaid data with the uploaded images
 const bridesmaids = [
   {
+    id: 8,
+    name: "Dyrolyn",
+    role: "Maid of Honor",
+    image: "/lovable-uploads/baa31bf1-4749-4853-a841-9dbe8b612e5d.png",
+    description: "Bride's sister"
+  },
+  {
     id: 1,
     name: "Tarlough",
     role: "Bridesmaid",
     image: "/lovable-uploads/cef65e5e-a3c7-44a3-8f57-d7fc0830e24c.png",
-    description: "Friend since college"
+    description: "Cousin of the bride"
   },
   {
     id: 2,
     name: "Dekontee",
     role: "Bridesmaid",
     image: "/lovable-uploads/e2904cc0-c103-44d5-b314-c353f0e2cf6a.png",
-    description: "Childhood friend"
+    description: "Bride's sister"
   },
   {
     id: 3,
     name: "Hectorlyne",
     role: "Bridesmaid",
     image: "/lovable-uploads/49ff2d0a-afeb-46a3-87fd-6ea0c0942a62.png",
-    description: "Cousin of the bride"
+    description: "Childhood friend since highschool"
   },
   {
     id: 4,
     name: "Naweh",
     role: "Bridesmaid",
     image: "/lovable-uploads/0fe0d02a-a702-4bc0-aed6-99a1b0ce3c59.png",
-    description: "College roommate"
+    description: "Childhood friend"
   },
   {
     id: 5,
     name: "Pamgrace",
     role: "Bridesmaid",
     image: "/lovable-uploads/7031ec37-7517-4ced-8586-c04a4a727524.png",
-    description: "Bride's sister"
+    description: "Childhood friend"
   },
   {
     id: 6,
     name: "Charlene",
     role: "Bridesmaid",
     image: "/lovable-uploads/5c4399a8-8df6-46e7-a8c7-895ccd0dfa6d.png",
-    description: "Friend from work"
+    description: "Friend since college"
   },
   {
     id: 7,
     name: "Onike",
     role: "Bridesmaid",
     image: "/lovable-uploads/264e0405-d76a-4d6b-b3b7-f05a2954b3c4.png",
-    description: "College friend"
-  },
-  {
-    id: 8,
-    name: "Dyrolyn",
-    role: "Maid of Honor",
-    image: "/lovable-uploads/baa31bf1-4749-4853-a841-9dbe8b612e5d.png",
-    description: "Best friend of the bride"
+    description: "Bride's sister-in-law"
   }
 ];
 
