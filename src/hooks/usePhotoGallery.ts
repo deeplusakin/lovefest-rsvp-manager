@@ -48,6 +48,17 @@ const localImages: Photo[] = [
     created_at: "",
     role: null,
     description: null
+  },
+  {
+    id: "local-5",
+    url: "/lovable-uploads/d6c966ac-9148-46af-8ea2-2cd0b833971a.png",
+    title: "Formal Studio Portrait",
+    type: "gallery",
+    storage_path: "",
+    sort_order: 4,
+    created_at: "",
+    role: null,
+    description: null
   }
 ];
 
