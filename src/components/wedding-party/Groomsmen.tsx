@@ -2,35 +2,35 @@
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-// Updated data for groomsmen with the new images
+// Updated data for groomsmen with the new images and corrected information
 const groomsmen = [
   {
     id: 1,
-    name: "Michael",
-    role: "Best Man",
+    name: "Willie",
+    role: "Groomsman",
     image: "/lovable-uploads/4bfd7ea2-6667-414e-8d10-0a25a7f257b9.png",
-    description: "Friend since high school"
+    description: "Groom's brother-in-law"
   },
   {
     id: 2,
-    name: "James",
+    name: "Jay",
     role: "Groomsman",
     image: "/lovable-uploads/a5470348-9227-41da-a7c5-f994b923d02d.png",
-    description: "College roommate"
+    description: "Groom's brother-in-law"
   },
   {
     id: 3,
-    name: "Chris",
-    role: "Groomsman",
+    name: "James",
+    role: "Best Man",
     image: "/lovable-uploads/cbabbf3b-60a7-4aca-a5dd-308937677595.png",
-    description: "Groom's brother"
+    description: "Groom's cousin"
   },
   {
     id: 4,
-    name: "David",
+    name: "Joharri",
     role: "Groomsman",
     image: "/lovable-uploads/3a14f142-3298-466c-a01d-0e8e323d2fb2.png",
-    description: "Childhood friend"
+    description: "Close friend of the groom"
   },
   {
     id: 5,
