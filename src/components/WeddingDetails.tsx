@@ -43,7 +43,7 @@ export const WeddingDetails = () => {
               <p className="text-secondary mb-4">8390 Main Street, Ellicott City, MD 21043</p>
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-lg font-serif mb-2">Parking Information</h4>
-                <p className="text-secondary">Complimentary parking is available in the venue's main lot. Additional parking can be found at the public garage on Main Street, just a 2-minute walk from the venue.</p>
+                <p className="text-secondary">Complimentary parking is available in the venue's main lot. Put 'Lot D Ellicott City' in the GPS.</p>
               </div>
             </div>
           </motion.div>
