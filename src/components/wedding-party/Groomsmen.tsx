@@ -84,26 +84,10 @@ export const Groomsmen = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-2xl font-serif">{groomsman.name}</h3>
-                  <p className="text-lg font-light text-gray-200">{groomsman.role}</p>
-                  <p className="text-sm text-gray-300 mt-2">{groomsman.description}</p>
-                </div>
-              </div>
-              
-              {/* Name tag at the bottom */}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-3 px-4 text-white">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8 border-2 border-primary">
-                    <AvatarImage src={groomsman.image} alt={groomsman.name} />
-                    <AvatarFallback>{groomsman.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="text-sm font-medium">{groomsman.name}</h4>
-                    <p className="text-xs text-gray-300">{groomsman.role}</p>
-                  </div>
-                </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                <h3 className="text-2xl font-serif text-white">{groomsman.name}</h3>
+                <p className="text-lg font-light text-gray-200">{groomsman.role}</p>
+                <p className="text-sm text-gray-300 mt-2">{groomsman.description}</p>
               </div>
             </motion.div>
           ))}

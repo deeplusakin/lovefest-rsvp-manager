@@ -1,6 +1,5 @@
 
 import { motion } from "framer-motion";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 // Bridesmaid data with the uploaded images
 const bridesmaids = [
@@ -87,26 +86,10 @@ export const Bridesmaids = () => {
                   }}
                 />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-2xl font-serif">{bridesmaid.name}</h3>
-                  <p className="text-lg font-light text-gray-200">{bridesmaid.role}</p>
-                  <p className="text-sm text-gray-300 mt-2">{bridesmaid.description}</p>
-                </div>
-              </div>
-              
-              {/* Name tag at the bottom */}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-3 px-4 text-white">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8 border-2 border-primary">
-                    <AvatarImage src={bridesmaid.image} alt={bridesmaid.name} />
-                    <AvatarFallback>{bridesmaid.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="text-sm font-medium">{bridesmaid.name}</h4>
-                    <p className="text-xs text-gray-300">{bridesmaid.role}</p>
-                  </div>
-                </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                <h3 className="text-2xl font-serif text-white">{bridesmaid.name}</h3>
+                <p className="text-lg font-light text-gray-200">{bridesmaid.role}</p>
+                <p className="text-sm text-gray-300 mt-2">{bridesmaid.description}</p>
               </div>
             </motion.div>
           ))}
