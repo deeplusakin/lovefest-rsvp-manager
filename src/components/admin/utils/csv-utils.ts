@@ -37,15 +37,20 @@ export const parseCSV = (csvText: string): { guests: GuestData[]; error: string 
     const guests = rows.slice(1)
       .filter(row => row.length === headers.length && row.some(cell => cell.trim()))
       .map(row => {
-        const guest = {} as GuestData;
+        // Create the guest object with the required properties explicitly typed
+        const guest: GuestData = {
+          first_name: '',
+          last_name: ''
+        };
+        
         headers.forEach((header, index) => {
-          // Type assertion needed here because we're building an object dynamically
           if (header === 'first_name' || header === 'last_name') {
             guest[header] = row[index].trim();
           } else if (header === 'email' || header === 'dietary_restrictions') {
-            guest[header] = row[index].trim() || undefined;
+            guest[header as keyof GuestData] = row[index].trim() || undefined;
           }
         });
+        
         return guest;
       });
 
