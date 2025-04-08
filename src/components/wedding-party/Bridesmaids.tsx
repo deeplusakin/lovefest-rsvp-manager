@@ -21,7 +21,7 @@ const bridesmaids = [
     id: 2,
     name: "Dekontee",
     role: "Bridesmaid",
-    image: "/lovable-uploads/e2904cc0-c103-44d5-b314-c353f0e2cf6a.png",
+    image: "/lovable-uploads/166860cc-b572-4417-9637-a8fbf73eee46.png",
     description: "Bride's sister"
   },
   {
