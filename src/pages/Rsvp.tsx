@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { RsvpForm } from "@/components/RsvpForm";
+import { RsvpContainer } from "@/components/rsvp/RsvpContainer";
 import { ContributionWall } from "@/components/ContributionWall";
 
 const Rsvp = () => {
@@ -10,7 +10,7 @@ const Rsvp = () => {
       animate={{ opacity: 1 }}
       className="min-h-screen"
     >
-      <RsvpForm />
+      <RsvpContainer />
       <ContributionWall />
     </motion.div>
   );
