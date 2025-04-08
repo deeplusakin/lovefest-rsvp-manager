@@ -1,29 +1,28 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { HouseholdField } from "./guests/HouseholdField";
+import { GuestFields } from "./guests/GuestFields";
+import { useWeddingEvent } from "./hooks/useWeddingEvent";
+import { Household } from "./types/guest";
 
-interface Household {
-  id: string;
-  name: string;
+interface GuestFormProps {
+  onSuccess?: () => void;
 }
 
-export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
+export const GuestForm = ({ onSuccess }: GuestFormProps) => {
   const [households, setHouseholds] = useState<Household[]>([]);
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string>("");
-  const [newHouseholdName, setNewHouseholdName] = useState("");
-  const [isCreatingHousehold, setIsCreatingHousehold] = useState(false);
   const [guestData, setGuestData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     dietaryRestrictions: ""
   });
-  const [weddingEventId, setWeddingEventId] = useState<string | null>(null);
+  
+  const { weddingEventId } = useWeddingEvent();
 
   const fetchHouseholds = async () => {
     const { data, error } = await supabase
@@ -39,53 +38,8 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     setHouseholds(data || []);
   };
 
-  // Fetch the Wedding event ID
-  const fetchWeddingEventId = async () => {
-    const { data, error } = await supabase
-      .from('events')
-      .select('id')
-      .ilike('name', '%wedding%')
-      .limit(1);
-    
-    if (error) {
-      console.error('Error fetching Wedding event:', error);
-      return;
-    }
-    
-    if (data && data.length > 0) {
-      setWeddingEventId(data[0].id);
-    }
-  };
-
-  const generateInvitationCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
-  const createNewHousehold = async () => {
-    if (!newHouseholdName.trim()) {
-      toast.error("Please enter a household name");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('households')
-      .insert({ 
-        name: newHouseholdName.trim(),
-        invitation_code: generateInvitationCode()
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast.error("Error creating household");
-      return;
-    }
-
-    toast.success("Household created successfully");
-    setNewHouseholdName("");
-    setIsCreatingHousehold(false);
-    setSelectedHouseholdId(data.id);
-    await fetchHouseholds();
+  const handleGuestDataChange = (field: string, value: string) => {
+    setGuestData(prev => ({ ...prev, [field]: value }));
   };
 
   const createGuest = async (e: React.FormEvent) => {
@@ -145,95 +99,27 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     }
   };
 
-  // Fetch households and wedding event when component mounts
+  // Fetch households when component mounts
   useEffect(() => {
     fetchHouseholds();
-    fetchWeddingEventId();
   }, []);
 
   return (
     <form onSubmit={createGuest} className="space-y-6">
       <div className="space-y-4">
-        <div>
-          <Label>Household</Label>
-          {!isCreatingHousehold ? (
-            <div className="flex gap-2 items-center">
-              <Select value={selectedHouseholdId} onValueChange={setSelectedHouseholdId}>
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder="Select a household" />
-                </SelectTrigger>
-                <SelectContent>
-                  {households.map((household) => (
-                    <SelectItem key={household.id} value={household.id}>
-                      {household.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreatingHousehold(true)}
-              >
-                Create New
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-2 items-center">
-              <Input
-                value={newHouseholdName}
-                onChange={(e) => setNewHouseholdName(e.target.value)}
-                placeholder="Enter household name"
-              />
-              <Button type="button" onClick={createNewHousehold}>
-                Save
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreatingHousehold(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-        </div>
+        <HouseholdField 
+          households={households}
+          selectedHouseholdId={selectedHouseholdId}
+          onHouseholdSelect={setSelectedHouseholdId}
+        />
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>First Name</Label>
-            <Input
-              required
-              value={guestData.firstName}
-              onChange={(e) => setGuestData(prev => ({ ...prev, firstName: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label>Last Name</Label>
-            <Input
-              required
-              value={guestData.lastName}
-              onChange={(e) => setGuestData(prev => ({ ...prev, lastName: e.target.value }))}
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label>Email (optional)</Label>
-          <Input
-            type="email"
-            value={guestData.email}
-            onChange={(e) => setGuestData(prev => ({ ...prev, email: e.target.value }))}
-          />
-        </div>
-
-        <div>
-          <Label>Dietary Restrictions (optional)</Label>
-          <Input
-            value={guestData.dietaryRestrictions}
-            onChange={(e) => setGuestData(prev => ({ ...prev, dietaryRestrictions: e.target.value }))}
-          />
-        </div>
+        <GuestFields
+          firstName={guestData.firstName}
+          lastName={guestData.lastName}
+          email={guestData.email}
+          dietaryRestrictions={guestData.dietaryRestrictions}
+          onChange={handleGuestDataChange}
+        />
       </div>
 
       <Button type="submit">Add Guest</Button>
