@@ -29,32 +29,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     };
   }, [audioSrc]);
 
-  useEffect(() => {
-    // Handle autoplay (with user interaction required by browsers)
-    if (autoPlay) {
-      const handleUserInteraction = () => {
-        if (audioRef.current && !isPlaying) {
-          audioRef.current.play().then(() => {
-            setIsPlaying(true);
-          }).catch(error => {
-            console.error("Autoplay failed:", error);
-          });
-          
-          // Remove event listeners after first interaction
-          document.removeEventListener('click', handleUserInteraction);
-          document.removeEventListener('touchstart', handleUserInteraction);
-        }
-      };
-      
-      document.addEventListener('click', handleUserInteraction);
-      document.addEventListener('touchstart', handleUserInteraction);
-      
-      return () => {
-        document.removeEventListener('click', handleUserInteraction);
-        document.removeEventListener('touchstart', handleUserInteraction);
-      };
-    }
-  }, [autoPlay]);
+  // Removed autoplay effect to ensure music is always paused initially
 
   const togglePlay = () => {
     if (!audioRef.current) return;

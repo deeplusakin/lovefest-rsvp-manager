@@ -39,7 +39,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
-        <MusicPlayer audioSrc="/wedding-music.mp3" autoPlay={true} />
+        <MusicPlayer audioSrc="/wedding-music.mp3" autoPlay={false} />
       </div>
     </Router>
   );
