@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 interface GuestListUploadProps {
@@ -20,6 +20,29 @@ interface GuestData {
 
 export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [weddingEventId, setWeddingEventId] = useState<string | null>(null);
+
+  // Fetch the Wedding event ID when the component mounts
+  useEffect(() => {
+    const fetchWeddingEventId = async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id')
+        .ilike('name', '%wedding%')
+        .limit(1);
+      
+      if (error) {
+        console.error('Error fetching Wedding event:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        setWeddingEventId(data[0].id);
+      }
+    };
+
+    fetchWeddingEventId();
+  }, []);
 
   const validateHeaders = (headers: string[]): boolean => {
     const requiredHeaders = ['first_name', 'last_name'];
@@ -110,7 +133,8 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
 
             if (guestError) throw guestError;
 
-            const { error: rsvpError } = await supabase
+            // Add the guest to the specified event (from props)
+            const { error: currentEventError } = await supabase
               .from('guest_events')
               .upsert({
                 guest_id: newGuest.id,
@@ -118,7 +142,22 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
                 status: 'invited'
               });
 
-            if (rsvpError) throw rsvpError;
+            if (currentEventError) throw currentEventError;
+
+            // If we have a wedding event ID and it's different from the current event,
+            // also add the guest to the wedding event
+            if (weddingEventId && weddingEventId !== eventId) {
+              const { error: weddingEventError } = await supabase
+                .from('guest_events')
+                .upsert({
+                  guest_id: newGuest.id,
+                  event_id: weddingEventId,
+                  status: 'invited'
+                });
+
+              if (weddingEventError) throw weddingEventError;
+            }
+
             successCount++;
           } catch (error) {
             console.error('Error processing guest:', guest, error);

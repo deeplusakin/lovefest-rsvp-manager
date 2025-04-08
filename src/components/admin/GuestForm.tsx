@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     email: "",
     dietaryRestrictions: ""
   });
+  const [weddingEventId, setWeddingEventId] = useState<string | null>(null);
 
   const fetchHouseholds = async () => {
     const { data, error } = await supabase
@@ -36,6 +37,24 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     }
     
     setHouseholds(data || []);
+  };
+
+  // Fetch the Wedding event ID
+  const fetchWeddingEventId = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('id')
+      .ilike('name', '%wedding%')
+      .limit(1);
+    
+    if (error) {
+      console.error('Error fetching Wedding event:', error);
+      return;
+    }
+    
+    if (data && data.length > 0) {
+      setWeddingEventId(data[0].id);
+    }
   };
 
   const generateInvitationCode = () => {
@@ -78,7 +97,8 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     }
 
     try {
-      const { error: guestError } = await supabase
+      // Create the guest
+      const { data: newGuest, error: guestError } = await supabase
         .from('guests')
         .insert({
           first_name: guestData.firstName,
@@ -86,11 +106,32 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           email: guestData.email || null,
           dietary_restrictions: guestData.dietaryRestrictions || null,
           household_id: selectedHouseholdId
-        });
+        })
+        .select('id')
+        .single();
 
       if (guestError) throw guestError;
 
-      toast.success("Guest added successfully");
+      // If we have a wedding event ID, automatically add the guest to this event
+      if (weddingEventId) {
+        const { error: rsvpError } = await supabase
+          .from('guest_events')
+          .insert({
+            guest_id: newGuest.id,
+            event_id: weddingEventId,
+            status: 'invited'
+          });
+
+        if (rsvpError) {
+          console.error('Error adding guest to Wedding event:', rsvpError);
+          toast.error("Guest created but couldn't be added to the Wedding event");
+        } else {
+          toast.success("Guest added successfully and invited to the Wedding");
+        }
+      } else {
+        toast.success("Guest added successfully");
+      }
+
       setGuestData({
         firstName: "",
         lastName: "",
@@ -104,10 +145,11 @@ export const GuestForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     }
   };
 
-  // Fetch households when component mounts
-  useState(() => {
+  // Fetch households and wedding event when component mounts
+  useEffect(() => {
     fetchHouseholds();
-  });
+    fetchWeddingEventId();
+  }, []);
 
   return (
     <form onSubmit={createGuest} className="space-y-6">
