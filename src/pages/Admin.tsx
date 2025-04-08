@@ -8,7 +8,7 @@ import { EventForm } from "@/components/admin/EventForm";
 import { EventsList } from "@/components/admin/EventsList";
 import { RSVPList } from "@/components/admin/RSVPList";
 import { GuestForm } from "@/components/admin/GuestForm";
-import { GuestsTable } from "@/components/admin/GuestsTable";
+import { GuestsTable } from "@/components/admin/guests/GuestsTable";
 import { PhotoManager } from "@/components/admin/PhotoManager";
 import { ProfileSettings } from "@/components/admin/ProfileSettings";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
