@@ -35,8 +35,11 @@ const Travel = () => {
                 Click here
               </a> to book. Alternatively, you can call the Hilton reservation line at 1-800-455-8667 and use the SRP code C-92Q for the "Walker Wedding Block".
             </p>
-            <p className="text-gray-600 mb-6 font-medium">
+            <p className="text-gray-600 mb-4 font-medium">
               Please note, the cutoff date for booking at the discounted rate is August 8, 2025, until 11:59 PM.
+            </p>
+            <p className="text-gray-600 mb-6 font-medium">
+              The discounted room rates range from $145 to $185 per night.
             </p>
             <p className="text-gray-600 mb-4">
               Here are some other quality, affordable accommodation options near the venue:
@@ -46,7 +49,7 @@ const Travel = () => {
                 <h3 className="font-semibold mb-2">DoubleTree by Hilton Columbia</h3>
                 <p className="text-gray-600">8 minutes from venue</p>
                 <p className="text-gray-600">On-site restaurant and indoor pool</p>
-                <p className="text-gray-600">Average rates from $140-180/night</p>
+                <p className="text-gray-600">Discounted wedding rates from $145-185/night</p>
               </li>
               <li className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Turf Valley Resort</h3>
