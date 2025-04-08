@@ -7,11 +7,14 @@ import { GuestSubmitSection } from "./components/GuestSubmitSection";
 import { useGuestUpload } from "./hooks/useGuestUpload";
 import { GuestData, GuestListUploadProps } from "./types/csv-types";
 import { parseCSV } from "./utils/csv-utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadProps) => {
   const [parsedGuests, setParsedGuests] = useState<GuestData[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
+  const [replaceExisting, setReplaceExisting] = useState(true);
   
   const { uploadGuests, uploading } = useGuestUpload(eventId, onUploadSuccess);
 
@@ -39,7 +42,7 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
   };
 
   const handleSubmit = async () => {
-    await uploadGuests(parsedGuests);
+    await uploadGuests(parsedGuests, replaceExisting);
     setParsedGuests([]);
     setCsvFile(null);
     
@@ -75,6 +78,15 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
       
       <CSVFormatError error={csvError} />
       
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="replace-mode" 
+          checked={replaceExisting} 
+          onCheckedChange={setReplaceExisting} 
+        />
+        <Label htmlFor="replace-mode">Replace all existing guest records</Label>
+      </div>
+
       <GuestSubmitSection 
         guestCount={parsedGuests.length} 
         onSubmit={handleSubmit}

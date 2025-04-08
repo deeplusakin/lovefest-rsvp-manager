@@ -60,7 +60,10 @@ export const RsvpContainer = () => {
           <p className="text-gray-600 mb-8 text-center">
             Please indicate whether each member of your household will be attending the events.
           </p>
-          <HouseholdRsvp householdId={householdId} />
+          
+          <HouseholdRsvp 
+            householdId={householdId} 
+          />
           
           {!isSubmitted ? (
             <div className="mt-8 flex justify-center">

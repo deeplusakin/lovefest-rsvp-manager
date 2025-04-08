@@ -31,7 +31,7 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
     fetchWeddingEventId();
   }, []);
 
-  const uploadGuests = async (guests: GuestData[]) => {
+  const uploadGuests = async (guests: GuestData[], replaceExisting: boolean = true) => {
     if (guests.length === 0) {
       toast.error("No guest data to upload");
       return;
@@ -42,6 +42,104 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
     let errorCount = 0;
 
     try {
+      // If we're replacing existing guests for this event, first remove them
+      if (replaceExisting) {
+        // Get all guests currently associated with this event
+        const { data: existingGuestEvents, error: fetchError } = await supabase
+          .from('guest_events')
+          .select('guest_id')
+          .eq('event_id', eventId);
+        
+        if (fetchError) {
+          console.error('Error fetching existing guest events:', fetchError);
+          throw fetchError;
+        }
+
+        if (existingGuestEvents && existingGuestEvents.length > 0) {
+          // Remove all guest_events associations for this event
+          const { error: deleteError } = await supabase
+            .from('guest_events')
+            .delete()
+            .eq('event_id', eventId);
+          
+          if (deleteError) {
+            console.error('Error removing existing guest events:', deleteError);
+            throw deleteError;
+          }
+
+          // Also delete the guests themselves if they're no longer needed
+          // Note: This will only delete guests that don't have any other event associations
+          for (const guestEvent of existingGuestEvents) {
+            // Check if this guest is associated with any other events
+            const { data: otherEvents, error: otherEventsError } = await supabase
+              .from('guest_events')
+              .select('event_id')
+              .eq('guest_id', guestEvent.guest_id)
+              .neq('event_id', eventId);
+            
+            if (otherEventsError) {
+              console.error('Error checking other events for guest:', otherEventsError);
+              continue;
+            }
+            
+            // If the guest isn't associated with any other events, delete them
+            if (!otherEvents || otherEvents.length === 0) {
+              // Get household ID first (so we can check if it should be deleted)
+              const { data: guestData, error: guestError } = await supabase
+                .from('guests')
+                .select('household_id')
+                .eq('id', guestEvent.guest_id)
+                .single();
+              
+              if (guestError) {
+                console.error('Error fetching guest household:', guestError);
+                continue;
+              }
+              
+              const householdId = guestData?.household_id;
+              
+              // Delete the guest
+              const { error: deleteGuestError } = await supabase
+                .from('guests')
+                .delete()
+                .eq('id', guestEvent.guest_id);
+              
+              if (deleteGuestError) {
+                console.error('Error deleting guest:', deleteGuestError);
+                continue;
+              }
+              
+              // If there are no other guests in this household, delete it too
+              if (householdId) {
+                const { data: otherGuests, error: otherGuestsError } = await supabase
+                  .from('guests')
+                  .select('id')
+                  .eq('household_id', householdId);
+                
+                if (otherGuestsError) {
+                  console.error('Error checking other guests for household:', otherGuestsError);
+                  continue;
+                }
+                
+                if (!otherGuests || otherGuests.length === 0) {
+                  const { error: deleteHouseholdError } = await supabase
+                    .from('households')
+                    .delete()
+                    .eq('id', householdId);
+                  
+                  if (deleteHouseholdError) {
+                    console.error('Error deleting household:', deleteHouseholdError);
+                  }
+                }
+              }
+            }
+          }
+          
+          toast.success(`Removed ${existingGuestEvents.length} existing guest associations from this event`);
+        }
+      }
+
+      // Now add the new guests
       for (const guest of guests) {
         try {
           // First create a new household for the guest
@@ -103,7 +201,11 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
         }
       }
 
-      toast.success(`Processed ${successCount} guests successfully${errorCount > 0 ? `. ${errorCount} errors occurred.` : ''}`);
+      const message = replaceExisting 
+        ? `Replaced guest list: ${successCount} guests added successfully` 
+        : `Processed ${successCount} guests successfully`;
+        
+      toast.success(`${message}${errorCount > 0 ? `. ${errorCount} errors occurred.` : ''}`);
       onUploadSuccess?.();
     } catch (error: any) {
       console.error("Error uploading guest list:", error);

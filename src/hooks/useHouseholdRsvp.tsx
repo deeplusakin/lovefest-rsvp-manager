@@ -17,6 +17,9 @@ interface Guest {
   id: string;
   first_name: string;
   last_name: string;
+  email?: string | null;
+  phone?: string | null;
+  dietary_restrictions?: string | null;
   guest_events: GuestEvent[];
 }
 
@@ -27,6 +30,13 @@ export const useHouseholdRsvp = (householdId: string) => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [guestDetails, setGuestDetails] = useState<{
+    [guestId: string]: {
+      email?: string | null;
+      phone?: string | null;
+      dietary_restrictions?: string | null;
+    }
+  }>({});
 
   useEffect(() => {
     fetchHouseholdGuests();
@@ -40,6 +50,9 @@ export const useHouseholdRsvp = (householdId: string) => {
           id,
           first_name,
           last_name,
+          email,
+          phone,
+          dietary_restrictions,
           guest_events (
             event_id,
             status,
@@ -58,13 +71,23 @@ export const useHouseholdRsvp = (householdId: string) => {
       
       // Initialize responses state
       const initialResponses: Record<string, Record<string, string>> = {};
+      const initialGuestDetails: { [guestId: string]: any } = {};
+      
       guests?.forEach(guest => {
         initialResponses[guest.id] = {};
         guest.guest_events?.forEach(event => {
           initialResponses[guest.id][event.event_id] = event.status;
         });
+        
+        initialGuestDetails[guest.id] = {
+          email: guest.email,
+          phone: guest.phone,
+          dietary_restrictions: guest.dietary_restrictions
+        };
       });
+      
       setResponses(initialResponses);
+      setGuestDetails(initialGuestDetails);
       
     } catch (error: any) {
       toast.error("Error fetching household members");
@@ -111,6 +134,22 @@ export const useHouseholdRsvp = (householdId: string) => {
     }
   };
 
+  const handleGuestDetailChange = (
+    guestId: string,
+    field: 'email' | 'phone' | 'dietary_restrictions',
+    value: string
+  ) => {
+    setGuestDetails(prev => ({
+      ...prev,
+      [guestId]: {
+        ...prev[guestId],
+        [field]: value
+      }
+    }));
+    
+    setHasChanges(true);
+  };
+
   const handleSubmitMessage = async () => {
     if (!message.trim()) return;
     setIsSubmitting(true);
@@ -153,11 +192,23 @@ export const useHouseholdRsvp = (householdId: string) => {
     setIsSubmitting(true);
     
     try {
-      // Final submission logic could go here
-      // For example, you might want to add a status field to the household
-      // to mark it as "responded" or send a confirmation email
+      // Update guest details in the database
+      for (const guestId in guestDetails) {
+        const { error } = await supabase
+          .from('guests')
+          .update({
+            email: guestDetails[guestId].email,
+            phone: guestDetails[guestId].phone,
+            dietary_restrictions: guestDetails[guestId].dietary_restrictions
+          })
+          .eq('id', guestId);
+          
+        if (error) {
+          console.error(`Error updating guest ${guestId}:`, error);
+          throw error;
+        }
+      }
       
-      // For now, we'll just show a success message
       toast.success("Your RSVP has been successfully submitted!");
       setHasChanges(false);
     } catch (error: any) {
@@ -176,7 +227,9 @@ export const useHouseholdRsvp = (householdId: string) => {
     setMessage,
     isSubmitting,
     hasChanges,
+    guestDetails,
     handleRsvpChange,
+    handleGuestDetailChange,
     handleSubmitMessage,
     handleSubmitRsvp
   };
