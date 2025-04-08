@@ -69,7 +69,11 @@ const QAndA = () => {
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Will you be providing room blocks for accommodations?</h3>
-              <p className="text-gray-600">We will not be providing room blocks, so please reach out to the hotel as early as possible to reserve your accommodations.</p>
+              <p className="text-gray-600">
+                Yes! We have a room block for guests at the DoubleTree by Hilton Hotel in Columbia. <a href="https://www.hilton.com/en/attend-my-event/bwichdt-92q-58896d92-1264-420f-8b61-193e3496d6d9/" className="text-accent underline" target="_blank" rel="noopener noreferrer">Click here</a> to book. 
+                Alternatively, you can call the Hilton reservation line at 1-800-455-8667 and use the SRP code C-92Q for the "Walker Wedding Block". 
+                Please note, the cutoff date for booking at the discounted rate is August 8, 2025, until 11:59 PM.
+              </p>
             </div>
 
             <div>
