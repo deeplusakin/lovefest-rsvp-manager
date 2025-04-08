@@ -56,7 +56,7 @@ const bridesmaids = [
     id: 7,
     name: "Onike",
     role: "Bridesmaid",
-    image: "/lovable-uploads/264e0405-d76a-4d6b-b3b7-f05a2954b3c4.png",
+    image: "/lovable-uploads/9d486789-1af7-4c16-bad9-c2f74eb96d45.png",
     description: "Bride's sister-in-law"
   }
 ];
