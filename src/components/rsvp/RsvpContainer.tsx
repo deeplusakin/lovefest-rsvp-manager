@@ -12,6 +12,7 @@ export const RsvpContainer = () => {
   const [searchParams] = useSearchParams();
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Handle QR code scans
   useEffect(() => {
@@ -29,6 +30,7 @@ export const RsvpContainer = () => {
 
   const onHouseholdFound = (id: string) => {
     setHouseholdId(id);
+    setIsSubmitted(false);
   };
 
   const handleSubmitRsvp = () => {
@@ -37,11 +39,17 @@ export const RsvpContainer = () => {
     // Simulate submission completion
     setTimeout(() => {
       setIsSubmitting(false);
+      setIsSubmitted(true);
       toast.success("Your RSVP has been successfully submitted. Thank you!");
       
-      // Redirect to the main page after successful submission
-      navigate("/");
+      // Don't redirect after submission so they can update if needed
     }, 1500);
+  };
+
+  const handleUpdateRsvp = () => {
+    // Allow users to update their RSVP by going back to the invitation code form
+    setHouseholdId(null);
+    setIsSubmitted(false);
   };
 
   if (householdId) {
@@ -54,17 +62,36 @@ export const RsvpContainer = () => {
           </p>
           <HouseholdRsvp householdId={householdId} />
           
-          <div className="mt-8 flex justify-center">
-            <Button 
-              onClick={handleSubmitRsvp} 
-              disabled={isSubmitting}
-              size="lg"
-              className="flex items-center gap-2"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
-              {!isSubmitting && <Check className="h-4 w-4" />}
-            </Button>
-          </div>
+          {!isSubmitted ? (
+            <div className="mt-8 flex justify-center">
+              <Button 
+                onClick={handleSubmitRsvp} 
+                disabled={isSubmitting}
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+                {!isSubmitting && <Check className="h-4 w-4" />}
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-8 flex flex-col items-center space-y-4">
+              <div className="text-center bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-center mb-2">
+                  <Check className="h-5 w-5 text-green-500 mr-2" />
+                  <span className="text-green-700 font-medium">Your RSVP has been submitted successfully</span>
+                </div>
+                <p className="text-green-600">Thank you for your response!</p>
+              </div>
+              <Button 
+                onClick={handleUpdateRsvp} 
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                Update RSVP
+              </Button>
+            </div>
+          )}
         </div>
       </section>
     );
