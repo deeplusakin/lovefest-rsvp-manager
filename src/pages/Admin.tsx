@@ -51,10 +51,15 @@ export const Admin = () => {
         first_name,
         last_name,
         email,
+        phone,
+        dietary_restrictions,
         household:households (
+          id,
           name,
-          invitation_code
-        )
+          invitation_code,
+          address
+        ),
+        household_id
       `)
       .order('last_name');
 
