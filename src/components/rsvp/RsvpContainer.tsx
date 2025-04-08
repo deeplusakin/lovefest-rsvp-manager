@@ -3,10 +3,15 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { HouseholdRsvp } from "@/components/HouseholdRsvp";
 import { RsvpForm } from "./RsvpForm";
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { toast } from "sonner";
 
 export const RsvpContainer = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle QR code scans
   useEffect(() => {
@@ -26,6 +31,19 @@ export const RsvpContainer = () => {
     setHouseholdId(id);
   };
 
+  const handleSubmitRsvp = () => {
+    setIsSubmitting(true);
+    
+    // Simulate submission completion
+    setTimeout(() => {
+      setIsSubmitting(false);
+      toast.success("Your RSVP has been successfully submitted. Thank you!");
+      
+      // Redirect to the main page after successful submission
+      navigate("/");
+    }, 1500);
+  };
+
   if (householdId) {
     return (
       <section className="py-12 bg-white">
@@ -35,6 +53,18 @@ export const RsvpContainer = () => {
             Please indicate whether each member of your household will be attending the events.
           </p>
           <HouseholdRsvp householdId={householdId} />
+          
+          <div className="mt-8 flex justify-center">
+            <Button 
+              onClick={handleSubmitRsvp} 
+              disabled={isSubmitting}
+              size="lg"
+              className="flex items-center gap-2"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+              {!isSubmitting && <Check className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       </section>
     );

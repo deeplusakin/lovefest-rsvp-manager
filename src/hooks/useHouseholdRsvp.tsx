@@ -26,6 +26,7 @@ export const useHouseholdRsvp = (householdId: string) => {
   const [responses, setResponses] = useState<Record<string, Record<string, string>>>({});
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     fetchHouseholdGuests();
@@ -82,6 +83,8 @@ export const useHouseholdRsvp = (householdId: string) => {
           [eventId]: status
         }
       }));
+      
+      setHasChanges(true);
 
       const guest = guests.find(g => g.id === guestId);
       const event = guest?.guest_events.find(ge => ge.event_id === eventId)?.events;
@@ -137,8 +140,28 @@ export const useHouseholdRsvp = (householdId: string) => {
 
       toast.success("Thank you for your message!");
       setMessage("");
+      setHasChanges(true);
     } catch (error: any) {
       toast.error("Failed to submit message");
+      console.error('Error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitRsvp = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Final submission logic could go here
+      // For example, you might want to add a status field to the household
+      // to mark it as "responded" or send a confirmation email
+      
+      // For now, we'll just show a success message
+      toast.success("Your RSVP has been successfully submitted!");
+      setHasChanges(false);
+    } catch (error: any) {
+      toast.error("Failed to submit RSVP");
       console.error('Error:', error);
     } finally {
       setIsSubmitting(false);
@@ -152,7 +175,9 @@ export const useHouseholdRsvp = (householdId: string) => {
     message,
     setMessage,
     isSubmitting,
+    hasChanges,
     handleRsvpChange,
-    handleSubmitMessage
+    handleSubmitMessage,
+    handleSubmitRsvp
   };
 };
