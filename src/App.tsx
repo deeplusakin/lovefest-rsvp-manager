@@ -14,6 +14,7 @@ import Registry from "@/pages/Registry";
 import Rsvp from "@/pages/Rsvp";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import MusicPlayer from "@/components/MusicPlayer";
 import "@/App.css";
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
+        <MusicPlayer audioSrc="/wedding-music.mp3" autoPlay={true} />
       </div>
     </Router>
   );
