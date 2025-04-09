@@ -59,6 +59,18 @@ export const useEventManagement = (onSuccess: () => void) => {
     }
 
     try {
+      // First delete all guest_events records for this event
+      const { error: guestEventError } = await supabase
+        .from('guest_events')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (guestEventError) {
+        console.error("Error deleting guest events:", guestEventError);
+        throw guestEventError;
+      }
+
+      // Then delete the event itself
       const { error } = await supabase
         .from('events')
         .delete()
@@ -69,6 +81,7 @@ export const useEventManagement = (onSuccess: () => void) => {
       toast.success("Event deleted successfully");
       onSuccess();
     } catch (error: any) {
+      console.error("Delete error:", error);
       toast.error("Error deleting event: " + error.message);
     }
   };
