@@ -25,11 +25,23 @@ interface GuestsTableProps {
 }
 
 export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
-  // Sort guests alphabetically by last name, then by first name
-  const sortedGuests = [...guests].sort((a, b) => {
-    const lastNameComparison = a.last_name.localeCompare(b.last_name);
-    if (lastNameComparison !== 0) return lastNameComparison;
-    return a.first_name.localeCompare(b.first_name);
+  // Sort guests alphabetically by last name
+  const sortedGuests = [...guests].sort((a, b) => a.last_name.localeCompare(b.last_name));
+  
+  // Group guests by household
+  const guestsByHousehold: Record<string, Guest[]> = {};
+  sortedGuests.forEach((guest) => {
+    if (!guestsByHousehold[guest.household_id]) {
+      guestsByHousehold[guest.household_id] = [];
+    }
+    guestsByHousehold[guest.household_id].push(guest);
+  });
+  
+  // Sort households by first guest's last name for consistent ordering
+  const sortedHouseholdIds = Object.keys(guestsByHousehold).sort((a, b) => {
+    const aGuest = guestsByHousehold[a][0];
+    const bGuest = guestsByHousehold[b][0];
+    return aGuest.last_name.localeCompare(bGuest.last_name);
   });
   
   // For managing household edit state
@@ -173,6 +185,88 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     }
   };
   
+  const createNewHousehold = async (guestId: string) => {
+    if (!newHouseholdName.trim()) {
+      toast.error("Please enter a household name");
+      return;
+    }
+
+    try {
+      // Create new household with a random invitation code
+      const { data: household, error: householdError } = await supabase
+        .from('households')
+        .insert({ 
+          name: newHouseholdName.trim(),
+          invitation_code: Math.random().toString(36).substring(2, 8).toUpperCase()
+        })
+        .select()
+        .single();
+
+      if (householdError) throw householdError;
+
+      // Update guest's household
+      const { error: updateError } = await supabase
+        .from('guests')
+        .update({ household_id: household.id })
+        .eq('id', guestId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Household created and assigned successfully");
+      setNewHouseholdName("");
+      setIsCreatingNewHousehold(false);
+      setEditingHousehold(null);
+      fetchHouseholds();
+      onDelete(); // Refresh guest list
+    } catch (error) {
+      console.error('Error creating household:', error);
+      toast.error("Error creating household");
+    }
+  };
+
+  const updateGuestHousehold = async (guestId: string, householdId: string) => {
+    try {
+      const { error } = await supabase
+        .from('guests')
+        .update({ household_id: householdId })
+        .eq('id', guestId);
+
+      if (error) throw error;
+
+      toast.success("Household updated successfully");
+      setEditingHousehold(null);
+      onDelete(); // Refresh guest list
+    } catch (error) {
+      console.error('Error updating household:', error);
+      toast.error("Error updating household");
+    }
+  };
+
+  // Get all guests for calculating selection states
+  const allGuests = sortedHouseholdIds.flatMap(id => guestsByHousehold[id]);
+  const isAllGuestsSelected = allGuests.length > 0 && selectedGuests.length === allGuests.length;
+  
+  // Get unique households for bulk selection
+  const uniqueHouseholds = sortedHouseholdIds;
+  const isAllHouseholdsSelected = uniqueHouseholds.length > 0 && 
+    selectedHouseholds.length === uniqueHouseholds.length;
+
+  const handleSelectAllGuests = (checked: boolean) => {
+    if (checked) {
+      setSelectedGuests(allGuests.map(g => g.id));
+    } else {
+      setSelectedGuests([]);
+    }
+  };
+
+  const handleSelectAllHouseholds = (checked: boolean) => {
+    if (checked) {
+      setSelectedHouseholds(uniqueHouseholds);
+    } else {
+      setSelectedHouseholds([]);
+    }
+  };
+
   const handleBulkDelete = (type: 'guests' | 'households') => {
     setBulkDeleteType(type);
     setShowDeleteConfirm(true);
@@ -253,72 +347,6 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     }
   };
 
-  const isAllGuestsSelected = sortedGuests.length > 0 && selectedGuests.length === sortedGuests.length;
-  
-  // Get unique households for bulk selection
-  const uniqueHouseholds = Array.from(
-    new Set(sortedGuests.map(guest => guest.household_id))
-  );
-  const isAllHouseholdsSelected = uniqueHouseholds.length > 0 && 
-    selectedHouseholds.length === uniqueHouseholds.length;
-
-  const createNewHousehold = async (guestId: string) => {
-    if (!newHouseholdName.trim()) {
-      toast.error("Please enter a household name");
-      return;
-    }
-
-    try {
-      // Create new household with a random invitation code
-      const { data: household, error: householdError } = await supabase
-        .from('households')
-        .insert({ 
-          name: newHouseholdName.trim(),
-          invitation_code: Math.random().toString(36).substring(2, 8).toUpperCase()
-        })
-        .select()
-        .single();
-
-      if (householdError) throw householdError;
-
-      // Update guest's household
-      const { error: updateError } = await supabase
-        .from('guests')
-        .update({ household_id: household.id })
-        .eq('id', guestId);
-
-      if (updateError) throw updateError;
-
-      toast.success("Household created and assigned successfully");
-      setNewHouseholdName("");
-      setIsCreatingNewHousehold(false);
-      setEditingHousehold(null);
-      fetchHouseholds();
-      onDelete(); // Refresh guest list
-    } catch (error) {
-      console.error('Error creating household:', error);
-      toast.error("Error creating household");
-    }
-  };
-
-  const updateGuestHousehold = async (guestId: string, householdId: string) => {
-    try {
-      const { error } = await supabase
-        .from('guests')
-        .update({ household_id: householdId })
-        .eq('id', guestId);
-
-      if (error) throw error;
-
-      toast.success("Household updated successfully");
-      setEditingHousehold(null);
-      onDelete(); // Refresh guest list
-    } catch (error) {
-      console.error('Error updating household:', error);
-      toast.error("Error updating household");
-    }
-  };
-
   return (
     <>
       <div className="mb-4 flex justify-between items-center">
@@ -351,13 +379,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
               <TableHead className="w-[50px]">
                 <Checkbox 
                   checked={isAllGuestsSelected}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedGuests(sortedGuests.map(g => g.id));
-                    } else {
-                      setSelectedGuests([]);
-                    }
-                  }}
+                  onCheckedChange={handleSelectAllGuests}
                 />
               </TableHead>
               <TableHead>Guest</TableHead>
@@ -367,13 +389,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
                   Household
                   <Checkbox 
                     checked={isAllHouseholdsSelected}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedHouseholds(uniqueHouseholds);
-                      } else {
-                        setSelectedHouseholds([]);
-                      }
-                    }}
+                    onCheckedChange={handleSelectAllHouseholds}
                   />
                 </div>
               </TableHead>
@@ -382,32 +398,56 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedGuests.map((guest) => (
-              <GuestRow
-                key={guest.id}
-                guest={guest}
-                isSelected={selectedGuests.includes(guest.id)}
-                onSelectGuest={handleSelectGuest}
-                onSelectHousehold={handleSelectHousehold}
-                isHouseholdSelected={selectedHouseholds.includes(guest.household_id)}
-                onEditGuest={(guest) => setEditingGuest({ ...guest })}
-                onEditHousehold={setEditingHousehold}
-                onEditHouseholdData={openHouseholdEdit}
-                onDeleteGuest={handleDelete}
-                editingHousehold={editingHousehold}
-                isCreatingNewHousehold={isCreatingNewHousehold}
-                newHouseholdName={newHouseholdName}
-                setNewHouseholdName={setNewHouseholdName}
-                onCreateNewHousehold={createNewHousehold}
-                onCancelEditHousehold={() => {
-                  setEditingHousehold(null);
-                  setIsCreatingNewHousehold(false);
-                  setNewHouseholdName("");
-                }}
-                households={households}
-                onUpdateGuestHousehold={updateGuestHousehold}
-                onStartCreateNewHousehold={() => setIsCreatingNewHousehold(true)}
-              />
+            {sortedHouseholdIds.map((householdId) => (
+              <React.Fragment key={householdId}>
+                {/* Household header */}
+                <TableRow className="bg-gray-50">
+                  <TableCell colSpan={6} className="font-medium">
+                    Household: {guestsByHousehold[householdId][0].household.name}
+                  </TableCell>
+                </TableRow>
+                
+                {/* Guests in this household */}
+                {guestsByHousehold[householdId].map((guest) => (
+                  <GuestRow
+                    key={guest.id}
+                    guest={guest}
+                    isSelected={selectedGuests.includes(guest.id)}
+                    onSelectGuest={(id, checked) => {
+                      if (checked) {
+                        setSelectedGuests(prev => [...prev, id]);
+                      } else {
+                        setSelectedGuests(prev => prev.filter(guestId => guestId !== id));
+                      }
+                    }}
+                    onSelectHousehold={(id, checked) => {
+                      if (checked) {
+                        setSelectedHouseholds(prev => [...prev, id]);
+                      } else {
+                        setSelectedHouseholds(prev => prev.filter(hId => hId !== id));
+                      }
+                    }}
+                    isHouseholdSelected={selectedHouseholds.includes(guest.household_id)}
+                    onEditGuest={(guest) => setEditingGuest({ ...guest })}
+                    onEditHousehold={setEditingHousehold}
+                    onEditHouseholdData={openHouseholdEdit}
+                    onDeleteGuest={(id) => handleDelete(id)}
+                    editingHousehold={editingHousehold}
+                    isCreatingNewHousehold={isCreatingNewHousehold}
+                    newHouseholdName={newHouseholdName}
+                    setNewHouseholdName={setNewHouseholdName}
+                    onCreateNewHousehold={createNewHousehold}
+                    onCancelEditHousehold={() => {
+                      setEditingHousehold(null);
+                      setIsCreatingNewHousehold(false);
+                      setNewHouseholdName("");
+                    }}
+                    households={households}
+                    onUpdateGuestHousehold={updateGuestHousehold}
+                    onStartCreateNewHousehold={() => setIsCreatingNewHousehold(true)}
+                  />
+                ))}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
