@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { EventsList } from "@/components/admin/EventsList";
@@ -90,9 +91,10 @@ export const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-4">
-        <div className="md:hidden mb-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex flex-1 h-screen overflow-hidden">
+        {/* Mobile menu */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-background p-4 border-b">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -113,22 +115,22 @@ export const Admin = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="hidden md:flex flex-col pr-4 w-64 flex-shrink-0">
-            <div className="space-y-3">
-              <div className="pb-2">
-                <h3 className="font-semibold text-lg">Admin Dashboard</h3>
-                <p className="text-sm text-muted-foreground">
-                  Wedding Management
-                </p>
-              </div>
-              <div className="flex flex-col space-y-1">
+
+        {/* Sidebar */}
+        <div className="hidden md:flex flex-col w-64 border-r bg-card h-screen">
+          <div className="p-6 flex flex-col h-full">
+            <div>
+              <h3 className="font-semibold text-lg">Admin Dashboard</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Wedding Management
+              </p>
+              <div className="space-y-1">
                 {sidebarItems.map((item) => (
                   <Button
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "justify-start",
+                      "justify-start w-full",
                       currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
                     )}
                     onClick={() => setCurrentTab(item.id)}
@@ -139,7 +141,7 @@ export const Admin = () => {
                 ))}
               </div>
             </div>
-            <div className="mt-auto pt-4">
+            <div className="mt-auto pt-6">
               <Button
                 variant="ghost"
                 className="justify-start w-full"
@@ -150,11 +152,20 @@ export const Admin = () => {
               </Button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto">
-            <div className="bg-card rounded-lg p-6 h-full">
-              {renderContent()}
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Mobile padding to avoid content being hidden behind the mobile menu */}
+          <div className="md:hidden h-16"></div>
+          
+          <ScrollArea className="flex-1 h-full">
+            <div className="p-6">
+              <div className="bg-card rounded-lg shadow-sm p-6">
+                {renderContent()}
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         </div>
       </div>
     </div>
