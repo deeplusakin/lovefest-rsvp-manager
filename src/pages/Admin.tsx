@@ -91,8 +91,8 @@ export const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex flex-1 h-screen overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col pt-6">
+      <div className="flex flex-1 h-full overflow-auto">
         {/* Mobile menu */}
         <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-background p-4 border-b">
           <DropdownMenu>
@@ -117,7 +117,7 @@ export const Admin = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="hidden md:flex flex-col w-64 border-r bg-card h-screen">
+        <div className="hidden md:flex flex-col w-64 border-r bg-card min-h-[calc(100vh-1.5rem)]">
           <div className="p-6 flex flex-col h-full">
             <div>
               <h3 className="font-semibold text-lg">Admin Dashboard</h3>
@@ -155,13 +155,13 @@ export const Admin = () => {
         </div>
 
         {/* Main content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-auto flex flex-col">
           {/* Mobile padding to avoid content being hidden behind the mobile menu */}
           <div className="md:hidden h-16"></div>
           
-          <ScrollArea className="flex-1 h-full">
-            <div className="p-6">
-              <div className="bg-card rounded-lg shadow-sm p-6">
+          <ScrollArea className="flex-1">
+            <div className="p-6 md:pt-0">
+              <div className="bg-card rounded-lg shadow-sm p-6 mb-6">
                 {renderContent()}
               </div>
             </div>
