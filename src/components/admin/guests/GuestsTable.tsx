@@ -1,10 +1,12 @@
+
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Guest, Household } from "../types/guest";
-import { GuestTableRow } from "./GuestTableRow";
+import { GuestRow } from "./GuestRow";
 import { GuestEditDialog } from "./GuestEditDialog";
 import { HouseholdEditDialog } from "./HouseholdEditDialog";
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { useHouseholds } from "../hooks/useHouseholds";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,20 +18,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle, 
-} from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil } from "lucide-react";
 
 interface GuestsTableProps {
   guests: Guest[];
@@ -54,7 +43,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [bulkDeleteType, setBulkDeleteType] = useState<'guests' | 'households'>('guests');
 
-  const { fetchHouseholds } = useHouseholds();
+  const { households, fetchHouseholds } = useHouseholds();
 
   const handleDelete = async (guestId: string) => {
     try {
@@ -161,7 +150,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     }
   };
 
-  // New functions for bulk operations
+  // Functions for bulk operations
   const handleSelectGuest = (guestId: string, checked: boolean) => {
     if (checked) {
       setSelectedGuests(prev => [...prev, guestId]);
@@ -388,130 +377,36 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
           </TableHeader>
           <TableBody>
             {guests.map((guest) => (
-              <TableRow key={guest.id}>
-                <TableCell>
-                  <Checkbox 
-                    checked={selectedGuests.includes(guest.id)}
-                    onCheckedChange={(checked) => 
-                      handleSelectGuest(guest.id, checked === true)
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2 items-center">
-                    <span>{guest.first_name} {guest.last_name}</span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setEditingGuest({ ...guest })}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-                <TableCell>{guest.email || "-"}</TableCell>
-                <TableCell>
-                  {editingHousehold === guest.id ? (
-                    isCreatingNewHousehold ? (
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          value={newHouseholdName}
-                          onChange={(e) => setNewHouseholdName(e.target.value)}
-                          placeholder="Enter household name"
-                          className="w-48"
-                        />
-                        <Button size="sm" onClick={() => createNewHousehold(guest.id)}>
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setIsCreatingNewHousehold(false);
-                            setNewHouseholdName("");
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2 items-center">
-                        <Select
-                          defaultValue={guest.household_id}
-                          onValueChange={(value) => updateGuestHousehold(guest.id, value)}
-                        >
-                          <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Select household" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border rounded-md shadow-md">
-                            {fetchHouseholds && Array.isArray(fetchHouseholds) ? fetchHouseholds.map((household: any) => (
-                              <SelectItem key={household.id} value={household.id}>
-                                {household.name}
-                              </SelectItem>
-                            )) : null}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setIsCreatingNewHousehold(true);
-                          }}
-                        >
-                          New
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingHousehold(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex gap-2 items-center">
-                      <span>{guest.household.name}</span>
-                      <Checkbox 
-                        checked={selectedHouseholds.includes(guest.household_id)}
-                        onCheckedChange={(checked) => 
-                          handleSelectHousehold(guest.household_id, checked === true)
-                        }
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingHousehold(guest.id)}
-                      >
-                        Change
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openHouseholdEdit(guest.household_id)}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>{guest.household.invitation_code}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(guest.id)}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <GuestRow
+                key={guest.id}
+                guest={guest}
+                isSelected={selectedGuests.includes(guest.id)}
+                onSelectGuest={handleSelectGuest}
+                onSelectHousehold={handleSelectHousehold}
+                isHouseholdSelected={selectedHouseholds.includes(guest.household_id)}
+                onEditGuest={(guest) => setEditingGuest({ ...guest })}
+                onEditHousehold={setEditingHousehold}
+                onEditHouseholdData={openHouseholdEdit}
+                onDeleteGuest={handleDelete}
+                editingHousehold={editingHousehold}
+                isCreatingNewHousehold={isCreatingNewHousehold}
+                newHouseholdName={newHouseholdName}
+                setNewHouseholdName={setNewHouseholdName}
+                onCreateNewHousehold={createNewHousehold}
+                onCancelEditHousehold={() => {
+                  setEditingHousehold(null);
+                  setIsCreatingNewHousehold(false);
+                  setNewHouseholdName("");
+                }}
+                households={households}
+                onUpdateGuestHousehold={updateGuestHousehold}
+                onStartCreateNewHousehold={() => setIsCreatingNewHousehold(true)}
+              />
             ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* Guest Edit Dialog */}
       <GuestEditDialog
         guest={editingGuest}
         onClose={() => setEditingGuest(null)}
@@ -519,7 +414,6 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
         onGuestChange={handleGuestChange}
       />
 
-      {/* Household Edit Dialog */}
       <HouseholdEditDialog
         household={editingHouseholdData}
         onClose={() => setEditingHouseholdData(null)}
@@ -527,30 +421,13 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
         onHouseholdChange={handleHouseholdChange}
       />
 
-      {/* Bulk Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Bulk Delete</AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkDeleteType === 'guests' ? (
-                `Are you sure you want to delete ${selectedGuests.length} selected guests? This action cannot be undone.`
-              ) : (
-                `Are you sure you want to delete ${selectedHouseholds.length} selected households? This will also delete all guests in these households. This action cannot be undone.`
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmBulkDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={confirmBulkDelete}
+        type={bulkDeleteType}
+        count={bulkDeleteType === 'guests' ? selectedGuests.length : selectedHouseholds.length}
+      />
     </>
   );
 };
