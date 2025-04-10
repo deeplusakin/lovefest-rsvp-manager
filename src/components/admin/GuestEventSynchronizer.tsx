@@ -44,7 +44,7 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       const newGuestEvents = guestsWithoutEvent.map((item) => ({
         guest_id: item.guest_id,
         event_id: eventId,
-        status: 'invited' as RsvpStatus // Using the imported type to ensure type safety
+        status: 'invited' as RsvpStatus // Explicitly cast as RsvpStatus type
       }));
       
       const { error: insertError } = await supabase
