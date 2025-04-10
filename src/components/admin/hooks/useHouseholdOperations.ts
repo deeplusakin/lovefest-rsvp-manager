@@ -18,7 +18,7 @@ export const useHouseholdOperations = (onDelete: () => void) => {
   const fetchAllHouseholds = async () => {
     const { data, error } = await supabase
       .from('households')
-      .select('id, name')
+      .select('id, name, invitation_code, address')
       .order('name');
     
     if (!error && data) {
