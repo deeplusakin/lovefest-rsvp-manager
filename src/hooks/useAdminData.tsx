@@ -78,6 +78,7 @@ export const useAdminData = () => {
           amount,
           message,
           created_at,
+          guest_id,
           guests (
             first_name,
             last_name
@@ -90,9 +91,12 @@ export const useAdminData = () => {
         throw contributionsError;
       }
 
-      setContributions(contributionsData || []);
-      const total = (contributionsData || []).reduce(
-        (sum, contrib) => sum + contrib.amount,
+      // Filter out contributions where guests might be null (if a guest was deleted)
+      const validContributions = contributionsData?.filter(contrib => contrib.guests) || [];
+      setContributions(validContributions);
+      
+      const total = validContributions.reduce(
+        (sum, contrib) => sum + Number(contrib.amount),
         0
       );
       setTotalContributions(total);
