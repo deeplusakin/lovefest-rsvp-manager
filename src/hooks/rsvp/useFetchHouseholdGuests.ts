@@ -2,7 +2,40 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Guest, RsvpResponses, GuestDetailsMap } from "@/types/rsvp";
+
+export interface Guest {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  dietary_restrictions: string | null;
+  guest_events: {
+    event_id: string;
+    status: 'invited' | 'attending' | 'declined';
+    events: {
+      name: string;
+      date: string;
+      location: string;
+    }
+  }[];
+}
+
+export interface RsvpResponses {
+  [guestId: string]: {
+    [eventId: string]: string;
+  };
+}
+
+export interface GuestDetail {
+  email: string | null;
+  phone: string | null;
+  dietary_restrictions: string | null;
+}
+
+export interface GuestDetailsMap {
+  [guestId: string]: GuestDetail;
+}
 
 export const useFetchHouseholdGuests = (householdId: string) => {
   const [guests, setGuests] = useState<Guest[]>([]);

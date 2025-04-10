@@ -4,16 +4,15 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
-import { RsvpStatus } from "./types/guest-events";
 
 interface GuestEventSynchronizerProps {
   eventId: string;
   onSyncComplete: () => void;
 }
 
-// Define the correct return type for our RPC function
+// The RPC function returns a UUID type for guest_id
 interface GetGuestsWithoutEventResponse {
-  guest_id: string;
+  guest_id: string; // UUID represented as string in TypeScript
 }
 
 export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSynchronizerProps) => {
@@ -23,12 +22,11 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
     setIsSyncing(true);
     
     try {
-      // Step 1: Get all guests that don't have a record for this event
-      // Using a more explicit typing approach for RPC functions
+      // Get all guests that don't have a record for this event
       const { data, error: guestsError } = await supabase
         .rpc('get_guests_without_event', {
           event_id_param: eventId
-        }) as { data: GetGuestsWithoutEventResponse[] | null, error: any };
+        });
       
       if (guestsError) throw guestsError;
 
@@ -40,11 +38,11 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
         return;
       }
       
-      // Step 2: Create guest_events records for these guests
+      // Create guest_events records for these guests
       const newGuestEvents = guestsWithoutEvent.map((item) => ({
         guest_id: item.guest_id,
         event_id: eventId,
-        status: 'invited' as RsvpStatus // Explicitly cast as RsvpStatus type
+        status: 'invited'
       }));
       
       const { error: insertError } = await supabase

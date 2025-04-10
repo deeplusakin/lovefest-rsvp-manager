@@ -28,16 +28,8 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           .single();
 
         if (profileError) {
-          // Log the specific error for debugging
           console.error('Profile fetch error:', profileError);
-          
-          // If the error is about network connectivity, show a specific message
-          if (profileError.message === 'Failed to fetch') {
-            toast.error("Network error: Unable to verify admin status. Please check your connection.");
-          } else {
-            toast.error("Error verifying admin access");
-          }
-          
+          toast.error("Error verifying admin access");
           await supabase.auth.signOut();
           navigate('/login');
           return;
@@ -50,19 +42,11 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           return;
         }
 
-        // If we get here, the user is authenticated and is an admin
         onAuthenticated();
         
       } catch (error: any) {
         console.error('Auth check error:', error);
-        
-        // Handle network errors specifically
-        if (error.message === 'Failed to fetch') {
-          toast.error("Network error: Please check your connection");
-        } else {
-          toast.error("Please log in to continue");
-        }
-        
+        toast.error("Please log in to continue");
         navigate('/login');
       }
     };
