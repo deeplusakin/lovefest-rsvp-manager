@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +26,6 @@ import { useAdminData } from "@/hooks/useAdminData";
 export const Admin = () => {
   const [currentTab, setCurrentTab] = useState('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   const { events, contributions, totalContributions, isLoading, fetchData } = useAdminData();
 
@@ -87,71 +86,74 @@ export const Admin = () => {
   ];
 
   if (!isAuthenticated) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="md:hidden">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Menu <span className="ml-2">▼</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Admin Dashboard</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {sidebarItems.map((item) => (
-              <DropdownMenuItem key={item.id} onClick={() => setCurrentTab(item.id)}>
-                {item.label}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="hidden md:flex flex-col pr-6 w-64 flex-shrink-0">
-          <div className="space-y-3">
-            <div className="pb-2">
-              <h3 className="font-semibold text-lg">Admin Dashboard</h3>
-              <p className="text-sm text-muted-foreground">
-                Wedding Management
-              </p>
-            </div>
-            <div className="flex flex-col space-y-1">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-4">
+        <div className="md:hidden mb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Menu <span className="ml-2">▼</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-background">
+              <DropdownMenuLabel>Admin Dashboard</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               {sidebarItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  className={cn(
-                    "justify-start",
-                    currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
-                  )}
-                  onClick={() => setCurrentTab(item.id)}
-                >
+                <DropdownMenuItem key={item.id} onClick={() => setCurrentTab(item.id)}>
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
-                </Button>
+                </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="hidden md:flex flex-col pr-4 w-64 flex-shrink-0">
+            <div className="space-y-3">
+              <div className="pb-2">
+                <h3 className="font-semibold text-lg">Admin Dashboard</h3>
+                <p className="text-sm text-muted-foreground">
+                  Wedding Management
+                </p>
+              </div>
+              <div className="flex flex-col space-y-1">
+                {sidebarItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant="ghost"
+                    className={cn(
+                      "justify-start",
+                      currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
+                    )}
+                    onClick={() => setCurrentTab(item.id)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-auto pt-4">
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleSignOut}
+              >
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
             </div>
           </div>
-          <div className="mt-auto pb-4">
-            <Button
-              variant="ghost"
-              className="justify-start w-full"
-              onClick={handleSignOut}
-            >
-              <SettingsIcon className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-        <div className="flex-1">
-          <div className="py-6">
-            {renderContent()}
+          <div className="flex-1 overflow-auto">
+            <div className="bg-card rounded-lg p-6 h-full">
+              {renderContent()}
+            </div>
           </div>
         </div>
       </div>
