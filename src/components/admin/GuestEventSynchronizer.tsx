@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAdminData } from "@/hooks/useAdminData";
 import { RefreshCw } from "lucide-react";
+import { RsvpStatus } from "./types/guest-events";
 
 interface GuestEventSynchronizerProps {
   eventId: string;
@@ -44,7 +44,7 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       const newGuestEvents = guestsWithoutEvent.map((item) => ({
         guest_id: item.guest_id,
         event_id: eventId,
-        status: 'invited' as const // Use 'as const' to ensure TypeScript knows this is a literal type
+        status: 'invited' as RsvpStatus // Using the imported type to ensure type safety
       }));
       
       const { error: insertError } = await supabase
