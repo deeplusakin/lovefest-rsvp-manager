@@ -9,12 +9,15 @@ import { GuestData, GuestListUploadProps } from "./types/csv-types";
 import { parseCSV } from "./utils/csv-utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadProps) => {
   const [parsedGuests, setParsedGuests] = useState<GuestData[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [replaceExisting, setReplaceExisting] = useState(true);
+  const [preserveRsvps, setPreserveRsvps] = useState(true);
   
   const { uploadGuests, uploading } = useGuestUpload(eventId, onUploadSuccess);
 
@@ -42,7 +45,7 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
   };
 
   const handleSubmit = async () => {
-    await uploadGuests(parsedGuests, replaceExisting);
+    await uploadGuests(parsedGuests, replaceExisting, preserveRsvps);
     setParsedGuests([]);
     setCsvFile(null);
     
@@ -78,13 +81,33 @@ export const GuestListUpload = ({ eventId, onUploadSuccess }: GuestListUploadPro
       
       <CSVFormatError error={csvError} />
       
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="replace-mode" 
-          checked={replaceExisting} 
-          onCheckedChange={setReplaceExisting} 
-        />
-        <Label htmlFor="replace-mode">Replace all existing guest records</Label>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="replace-mode" 
+            checked={replaceExisting} 
+            onCheckedChange={setReplaceExisting} 
+          />
+          <Label htmlFor="replace-mode">Replace all existing guest records</Label>
+        </div>
+        
+        {replaceExisting && (
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="preserve-rsvps" 
+              checked={preserveRsvps} 
+              onCheckedChange={setPreserveRsvps} 
+            />
+            <Label htmlFor="preserve-rsvps">Preserve RSVP responses for existing guests</Label>
+          </div>
+        )}
+        
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            The Guest List is treated as the source of truth. Uploading will sync all guests to the RSVP system.
+          </AlertDescription>
+        </Alert>
       </div>
 
       <GuestSubmitSection 

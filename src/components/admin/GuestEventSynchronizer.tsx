@@ -28,7 +28,7 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       const { data, error: guestsError } = await supabase
         .rpc('get_guests_without_event', {
           event_id_param: eventId
-        });
+        }) as { data: GuestWithoutEvent[] | null, error: any };
       
       if (guestsError) throw guestsError;
 

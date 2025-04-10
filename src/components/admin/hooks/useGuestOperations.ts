@@ -20,6 +20,17 @@ export const useGuestOperations = (onDelete: () => void) => {
 
       if (eventError) throw eventError;
 
+      // Delete any contributions made by this guest
+      const { error: contributionsError } = await supabase
+        .from('contributions')
+        .delete()
+        .eq('guest_id', guestId);
+
+      if (contributionsError && contributionsError.code !== 'PGRST116') {
+        // PGRST116 means no rows found, which is fine
+        console.warn('Error deleting guest contributions:', contributionsError);
+      }
+
       // Then delete the guest record
       const { error: guestError } = await supabase
         .from('guests')
@@ -51,6 +62,16 @@ export const useGuestOperations = (onDelete: () => void) => {
           .in('guest_id', selectedGuests);
 
         if (eventError) throw eventError;
+
+        // Delete any contributions made by these guests
+        const { error: contributionsError } = await supabase
+          .from('contributions')
+          .delete()
+          .in('guest_id', selectedGuests);
+
+        if (contributionsError && contributionsError.code !== 'PGRST116') {
+          console.warn('Error deleting guest contributions:', contributionsError);
+        }
 
         // Then delete the guest records
         const { error: guestError } = await supabase
@@ -84,6 +105,16 @@ export const useGuestOperations = (onDelete: () => void) => {
               .in('guest_id', guestIds);
               
             if (eventError) throw eventError;
+
+            // Delete any contributions made by these guests
+            const { error: contributionsError } = await supabase
+              .from('contributions')
+              .delete()
+              .in('guest_id', guestIds);
+
+            if (contributionsError && contributionsError.code !== 'PGRST116') {
+              console.warn('Error deleting household guest contributions:', contributionsError);
+            }
             
             // 3. Delete the guest records
             const { error: guestError } = await supabase
