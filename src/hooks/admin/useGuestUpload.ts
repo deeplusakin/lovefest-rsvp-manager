@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { GuestData } from "../components/admin/types/csv-types";
-import { generateInvitationCode } from "../utils/csv-utils";
-import { RsvpStatus } from "../components/admin/types/guest-events";
+import { GuestData } from "@/components/admin/types/csv-types";
+import { generateInvitationCode } from "@/components/admin/utils/csv-utils";
+import { RsvpStatus } from "@/components/admin/types/guest-events";
 
 export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) => {
   const [uploading, setUploading] = useState(false);

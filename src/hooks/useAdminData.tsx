@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Event, Contribution } from "@/types/admin";
+import { Event, Contribution, GuestEvent } from "@/types/admin";
 import { toast } from "sonner";
 
 export const useAdminData = () => {
@@ -47,7 +47,16 @@ export const useAdminData = () => {
       // Log the raw date values to debug
       console.log("Raw event dates:", eventsData?.map(e => ({ name: e.name, date: e.date })));
       
-      setEvents(eventsData || []);
+      // Cast the status field to the proper type
+      const typedEventsData = eventsData?.map(event => ({
+        ...event,
+        guest_events: event.guest_events.map(ge => ({
+          ...ge,
+          status: ge.status as GuestEvent['status']
+        }))
+      })) as Event[];
+      
+      setEvents(typedEventsData || []);
     } catch (error: any) {
       console.error("Error fetching events:", error.message);
       toast.error("Error loading events");
