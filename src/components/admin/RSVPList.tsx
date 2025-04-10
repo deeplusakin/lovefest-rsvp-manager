@@ -12,6 +12,7 @@ import { downloadCSV } from "@/utils/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GuestEventSynchronizer } from "./GuestEventSynchronizer";
+import { RsvpListDelete } from "./RsvpListDelete";
 
 interface RSVPListProps {
   events: Event[];
@@ -27,6 +28,10 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
   }, [fetchEvents]);
 
   const handleSyncComplete = useCallback(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  const handleDeleteComplete = useCallback(() => {
     fetchEvents();
   }, [fetchEvents]);
 
@@ -141,6 +146,10 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
               <GuestEventSynchronizer 
                 eventId={event.id} 
                 onSyncComplete={handleSyncComplete}
+              />
+              <RsvpListDelete
+                eventId={event.id}
+                onDeleteComplete={handleDeleteComplete}
               />
               <Button variant="outline" onClick={() => handleExportGuests(event.id)}>
                 <Download className="mr-2 h-4 w-4" />
