@@ -11,6 +11,11 @@ interface GuestEventSynchronizerProps {
   onSyncComplete: () => void;
 }
 
+// Define the correct return type for our RPC function
+type GuestWithoutEvent = {
+  guest_id: string;
+}
+
 export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSynchronizerProps) => {
   const [isSyncing, setIsSyncing] = useState(false);
   
@@ -19,17 +24,18 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
     
     try {
       // Step 1: Get all guests that don't have a record for this event
+      // Add proper typing to the RPC function call
       const { data: guestsWithoutEvent, error: guestsError } = await supabase
-        .rpc('get_guests_without_event', {
+        .rpc<GuestWithoutEvent[]>('get_guests_without_event', {
           event_id_param: eventId
         });
       
       if (guestsError) throw guestsError;
 
-      // Properly type the response data as an array of guest IDs
-      const guestIds = guestsWithoutEvent as { guest_id: string }[];
+      // Ensure we have a valid array to work with even if null is returned
+      const guestIds = guestsWithoutEvent || [];
 
-      if (!guestIds || guestIds.length === 0) {
+      if (guestIds.length === 0) {
         toast.info("All guests are already in the RSVP list");
         return;
       }
