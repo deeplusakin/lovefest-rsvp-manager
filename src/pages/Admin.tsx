@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon } from 'lucide-react';
+import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { EventsList } from "@/components/admin/EventsList";
 import { EventStatistics } from "@/components/admin/EventStatistics";
@@ -22,12 +22,14 @@ import { GuestManagement } from "@/components/admin/GuestManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export const Admin = () => {
   const [currentTab, setCurrentTab] = useState('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const { events, contributions, totalContributions, isLoading, fetchData, fetchEvents } = useAdminData();
+  const { events, contributions, totalContributions, isLoading, isError, fetchData, fetchEvents } = useAdminData();
 
   // Check authentication status when component mounts
   useAdminAuth(() => {
@@ -52,7 +54,7 @@ export const Admin = () => {
     const totalInvited = event.guest_events?.length || 0;
     const responded = event.guest_events?.filter(ge => ge.status !== 'invited').length || 0;
     const attending = event.guest_events?.filter(ge => ge.status === 'attending').length || 0;
-    const notAttending = event.guest_events?.filter(ge => ge.status === 'not_attending').length || 0;
+    const notAttending = event.guest_events?.filter(ge => ge.status === 'declined').length || 0;
 
     return {
       totalInvited,
@@ -63,6 +65,25 @@ export const Admin = () => {
   };
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center p-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            There was a problem loading the data. Please try again or check your connection.
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
     switch (currentTab) {
       case 'events':
         return <EventsList events={events} onEdit={() => {}} onDelete={() => {}} />;
@@ -94,7 +115,14 @@ export const Admin = () => {
   ];
 
   if (!isAuthenticated) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen bg-background">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p>Verifying credentials...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

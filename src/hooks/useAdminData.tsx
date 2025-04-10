@@ -9,12 +9,14 @@ export const useAdminData = () => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   const fetchEvents = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error("No active session");
+        console.log("Skipping events fetch - no active session");
+        return;
       }
 
       const { data: eventsData, error: eventsError } = await supabase
@@ -57,10 +59,15 @@ export const useAdminData = () => {
       })) as Event[];
       
       setEvents(typedEventsData || []);
+      setIsError(false);
     } catch (error: any) {
       console.error("Error fetching events:", error.message);
-      toast.error("Error loading events");
       setEvents([]);
+      setIsError(true);
+      // Only show toast if we're not on the login page
+      if (window.location.pathname !== '/login') {
+        toast.error("Error loading events");
+      }
     }
   }, []);
 
@@ -68,7 +75,8 @@ export const useAdminData = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error("No active session");
+        console.log("Skipping contributions fetch - no active session");
+        return;
       }
 
       const { data: contributionsData, error: contributionsError } = await supabase
@@ -100,26 +108,43 @@ export const useAdminData = () => {
         0
       );
       setTotalContributions(total);
+      setIsError(false);
     } catch (error: any) {
       console.error("Error fetching contributions:", error.message);
-      toast.error("Error loading contributions");
+      // Only show toast if we're not on the login page
+      if (window.location.pathname !== '/login') {
+        toast.error("Error loading contributions");
+      }
       setContributions([]);
       setTotalContributions(0);
+      setIsError(true);
     }
   }, []);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
-        throw new Error("No active session");
+        // If not on login page, show the error
+        if (window.location.pathname !== '/login') {
+          console.error("No active session");
+          toast.error("Please log in to access admin data");
+        }
+        setIsLoading(false);
+        return;
       }
       
       await Promise.all([fetchEvents(), fetchContributions()]);
     } catch (error: any) {
       console.error("Error fetching data:", error);
-      toast.error("Please log in to access admin data");
+      
+      // Only show toast if we're not on the login page
+      if (window.location.pathname !== '/login') {
+        toast.error("Please log in to access admin data");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -130,6 +155,7 @@ export const useAdminData = () => {
     contributions,
     totalContributions,
     isLoading,
+    isError,
     fetchData,
     fetchEvents,
     fetchContributions,
