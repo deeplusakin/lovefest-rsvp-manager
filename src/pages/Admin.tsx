@@ -1,6 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useRouter } from 'next/router';
-import { useSession, signOut } from "next-auth/react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,11 +9,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Shell } from "@/components/Shell";
-import { siteConfig } from "@/config/site";
-import { Icons } from "@/components/icons";
-import { DashboardIcon, ImageIcon, UsersIcon, CalendarIcon, PiggyBankIcon, SettingsIcon, BarChartIcon } from 'lucide-react';
+} from "@/components/ui/dropdown-menu";
+import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { EventsList } from "@/components/admin/EventsList";
 import { EventStatistics } from "@/components/admin/EventStatistics";
@@ -22,42 +19,60 @@ import { PhotoManager } from "@/components/admin/PhotoManager";
 import { ContributionsList } from "@/components/admin/ContributionsList";
 import { ProfileSettings } from "@/components/admin/ProfileSettings";
 import { GuestManagement } from "@/components/admin/GuestManagement";
+import { supabase } from "@/integrations/supabase/client";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminData } from "@/hooks/useAdminData";
 
 export const Admin = () => {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [currentTab, setCurrentTab] = useState('events');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
+  const { events, contributions, totalContributions, isLoading, fetchData } = useAdminData();
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push('/login');
-    }
-  }, [status, router]);
+  // Check authentication status when component mounts
+  useAdminAuth(() => {
+    setIsAuthenticated(true);
+    fetchData();
+  });
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
-  if (status === "unauthenticated") {
-    return <div>Redirecting to login...</div>;
-  }
+  const getEventStats = (event) => {
+    const totalInvited = event.guest_events?.length || 0;
+    const responded = event.guest_events?.filter(ge => ge.status !== 'invited').length || 0;
+    const attending = event.guest_events?.filter(ge => ge.status === 'attending').length || 0;
+    const notAttending = event.guest_events?.filter(ge => ge.status === 'not_attending').length || 0;
+
+    return {
+      totalInvited,
+      responded,
+      attending,
+      notAttending
+    };
+  };
 
   const renderContent = () => {
     switch (currentTab) {
       case 'events':
-        return <EventsList />;
+        return <EventsList events={events} onEdit={() => {}} onDelete={() => {}} />;
       case 'guests':
         return <GuestManagement />;
       case 'rsvps':
-        return <RSVPList />;
+        return <RSVPList events={events} getEventStats={getEventStats} />;
       case 'photos':
         return <PhotoManager />;
       case 'contributions':
-        return <ContributionsList />;
+        return <ContributionsList contributions={contributions} totalContributions={totalContributions} />;
       case 'profile':
         return <ProfileSettings />;
+      case 'statistics':
+        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
       default:
-        return <EventStatistics />;
+        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
     }
   };
 
@@ -71,13 +86,17 @@ export const Admin = () => {
     { id: 'profile', label: 'Profile', icon: SettingsIcon },
   ];
 
+  if (!isAuthenticated) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <Shell>
+    <div className="container mx-auto px-4 py-8">
       <div className="md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
-              Menu <Icons.chevronDown className="ml-2 h-4 w-4" />
+              Menu <span className="ml-2">▼</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -89,58 +108,54 @@ export const Admin = () => {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="hidden md:flex flex-col pr-6 w-64 flex-shrink-0">
-        <div className="space-y-3">
-          <div className="pb-2">
-            <h3 className="font-semibold text-lg">Admin Dashboard</h3>
-            <p className="text-sm text-muted-foreground">
-              {siteConfig.name} Management
-            </p>
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="hidden md:flex flex-col pr-6 w-64 flex-shrink-0">
+          <div className="space-y-3">
+            <div className="pb-2">
+              <h3 className="font-semibold text-lg">Admin Dashboard</h3>
+              <p className="text-sm text-muted-foreground">
+                Wedding Management
+              </p>
+            </div>
+            <div className="flex flex-col space-y-1">
+              {sidebarItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  className={cn(
+                    "justify-start",
+                    currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
+                  )}
+                  onClick={() => setCurrentTab(item.id)}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-col space-y-1">
-            {sidebarItems.map((item) => (
-              <Button
-                key={item.id}
-                variant="ghost"
-                className={cn(
-                  "justify-start",
-                  currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
-                )}
-                onClick={() => setCurrentTab(item.id)}
-              >
-                <item.icon className="mr-2 h-4 w-4" />
-                {item.label}
-              </Button>
-            ))}
+          <div className="mt-auto pb-4">
+            <Button
+              variant="ghost"
+              className="justify-start w-full"
+              onClick={handleSignOut}
+            >
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </div>
-        <div className="mt-auto pb-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="justify-start w-full">
-                <Icons.user className="mr-2 h-4 w-4" />
-                {session?.user?.name}
-                <Icons.chevronDown className="ml-auto h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex-1">
+          <div className="py-6">
+            {renderContent()}
+          </div>
         </div>
       </div>
-      <div className="flex-1">
-        <div className="py-6">
-          {renderContent()}
-        </div>
-      </div>
-    </Shell>
+    </div>
   );
 };
 
