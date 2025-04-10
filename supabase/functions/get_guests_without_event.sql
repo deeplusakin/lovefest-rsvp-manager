@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION public.get_guests_without_event(event_id_param UUID)
 RETURNS TABLE(guest_id UUID) AS $$
 BEGIN
   RETURN QUERY
-    SELECT g.id
+    SELECT g.id AS guest_id
     FROM guests g
     WHERE NOT EXISTS (
       SELECT 1

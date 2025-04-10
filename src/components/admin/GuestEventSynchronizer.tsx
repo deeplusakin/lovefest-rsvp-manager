@@ -26,16 +26,19 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       
       if (guestsError) throw guestsError;
 
-      if (!guestsWithoutEvent || guestsWithoutEvent.length === 0) {
+      // Properly type the response data as an array of guest IDs
+      const guestIds = guestsWithoutEvent as { guest_id: string }[];
+
+      if (!guestIds || guestIds.length === 0) {
         toast.info("All guests are already in the RSVP list");
         return;
       }
       
       // Step 2: Create guest_events records for these guests
-      const newGuestEvents = guestsWithoutEvent.map((guestId: string) => ({
-        guest_id: guestId,
+      const newGuestEvents = guestIds.map((item) => ({
+        guest_id: item.guest_id,
         event_id: eventId,
-        status: 'invited'
+        status: 'invited' as const
       }));
       
       const { error: insertError } = await supabase
