@@ -37,6 +37,16 @@ export const AdminContent = ({
   getEventStats
 }: AdminContentProps) => {
 
+  // Create a properly typed empty event to use as fallback
+  const emptyEvent: Event = {
+    id: '',
+    name: '',
+    date: '',
+    location: '',
+    description: null,
+    guest_events: []
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center p-12">
@@ -86,8 +96,8 @@ export const AdminContent = ({
     case 'profile':
       return <ProfileSettings />;
     case 'statistics':
-      return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+      return <EventStatistics stats={getEventStats(events[0] || emptyEvent)} />;
     default:
-      return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+      return <EventStatistics stats={getEventStats(events[0] || emptyEvent)} />;
   }
 };
