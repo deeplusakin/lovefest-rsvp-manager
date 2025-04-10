@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,6 +25,13 @@ interface GuestsTableProps {
 }
 
 export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
+  // Sort guests alphabetically by last name, then by first name
+  const sortedGuests = [...guests].sort((a, b) => {
+    const lastNameComparison = a.last_name.localeCompare(b.last_name);
+    if (lastNameComparison !== 0) return lastNameComparison;
+    return a.first_name.localeCompare(b.first_name);
+  });
+  
   // For managing household edit state
   const [editingHousehold, setEditingHousehold] = useState<string | null>(null);
   const [isCreatingNewHousehold, setIsCreatingNewHousehold] = useState(false);
@@ -247,11 +253,11 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     }
   };
 
-  const isAllGuestsSelected = guests.length > 0 && selectedGuests.length === guests.length;
+  const isAllGuestsSelected = sortedGuests.length > 0 && selectedGuests.length === sortedGuests.length;
   
   // Get unique households for bulk selection
   const uniqueHouseholds = Array.from(
-    new Set(guests.map(guest => guest.household_id))
+    new Set(sortedGuests.map(guest => guest.household_id))
   );
   const isAllHouseholdsSelected = uniqueHouseholds.length > 0 && 
     selectedHouseholds.length === uniqueHouseholds.length;
@@ -347,7 +353,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
                   checked={isAllGuestsSelected}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSelectedGuests(guests.map(g => g.id));
+                      setSelectedGuests(sortedGuests.map(g => g.id));
                     } else {
                       setSelectedGuests([]);
                     }
@@ -376,7 +382,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {guests.map((guest) => (
+            {sortedGuests.map((guest) => (
               <GuestRow
                 key={guest.id}
                 guest={guest}
