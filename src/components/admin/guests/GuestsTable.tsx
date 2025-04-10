@@ -49,6 +49,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     isCreatingNewHousehold,
     newHouseholdName,
     editingHouseholdData,
+    allHouseholds,
     setEditingHousehold,
     setIsCreatingNewHousehold,
     setNewHouseholdName,
@@ -145,6 +146,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
             });
           }
         }}
+        allHouseholds={allHouseholds}
       />
 
       <DeleteConfirmDialog

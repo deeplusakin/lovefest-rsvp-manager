@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,14 +17,33 @@ interface HouseholdFieldProps {
 export const HouseholdField = ({ households, selectedHouseholdId, onHouseholdSelect }: HouseholdFieldProps) => {
   const [newHouseholdName, setNewHouseholdName] = useState("");
   const [isCreatingHousehold, setIsCreatingHousehold] = useState(false);
+  const [isNameDuplicate, setIsNameDuplicate] = useState(false);
   
   const generateInvitationCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
+  // Check if name already exists when typing
+  useEffect(() => {
+    if (!newHouseholdName.trim()) {
+      setIsNameDuplicate(false);
+      return;
+    }
+    
+    const nameExists = households.some(
+      household => household.name.toLowerCase() === newHouseholdName.trim().toLowerCase()
+    );
+    setIsNameDuplicate(nameExists);
+  }, [newHouseholdName, households]);
+
   const createNewHousehold = async () => {
     if (!newHouseholdName.trim()) {
       toast.error("Please enter a household name");
+      return;
+    }
+
+    if (isNameDuplicate) {
+      toast.error("A household with this name already exists");
       return;
     }
 
@@ -74,22 +93,32 @@ export const HouseholdField = ({ households, selectedHouseholdId, onHouseholdSel
           </Button>
         </div>
       ) : (
-        <div className="flex gap-2 items-center">
-          <Input
-            value={newHouseholdName}
-            onChange={(e) => setNewHouseholdName(e.target.value)}
-            placeholder="Enter household name"
-          />
-          <Button type="button" onClick={createNewHousehold}>
-            Save
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsCreatingHousehold(false)}
-          >
-            Cancel
-          </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2 items-center">
+            <Input
+              value={newHouseholdName}
+              onChange={(e) => setNewHouseholdName(e.target.value)}
+              placeholder="Enter household name"
+              className={isNameDuplicate ? "border-red-500" : ""}
+            />
+            <Button 
+              type="button" 
+              onClick={createNewHousehold}
+              disabled={!newHouseholdName.trim() || isNameDuplicate}
+            >
+              Save
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsCreatingHousehold(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+          {isNameDuplicate && (
+            <p className="text-sm text-red-500">A household with this name already exists</p>
+          )}
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Household } from "../types/guest";
@@ -9,10 +9,37 @@ export const useHouseholdOperations = (onDelete: () => void) => {
   const [isCreatingNewHousehold, setIsCreatingNewHousehold] = useState(false);
   const [newHouseholdName, setNewHouseholdName] = useState("");
   const [editingHouseholdData, setEditingHouseholdData] = useState<Household | null>(null);
+  const [allHouseholds, setAllHouseholds] = useState<Household[]>([]);
+
+  useEffect(() => {
+    fetchAllHouseholds();
+  }, []);
+
+  const fetchAllHouseholds = async () => {
+    const { data, error } = await supabase
+      .from('households')
+      .select('id, name')
+      .order('name');
+    
+    if (!error && data) {
+      setAllHouseholds(data);
+    }
+  };
+
+  const isHouseholdNameDuplicate = (name: string, excludeId?: string) => {
+    return allHouseholds.some(
+      h => h.id !== excludeId && h.name.toLowerCase() === name.toLowerCase()
+    );
+  };
 
   const createNewHousehold = async (guestId: string) => {
     if (!newHouseholdName.trim()) {
       toast.error("Please enter a household name");
+      return;
+    }
+
+    if (isHouseholdNameDuplicate(newHouseholdName)) {
+      toast.error("A household with this name already exists");
       return;
     }
 
@@ -41,6 +68,7 @@ export const useHouseholdOperations = (onDelete: () => void) => {
       setNewHouseholdName("");
       setIsCreatingNewHousehold(false);
       setEditingHousehold(null);
+      await fetchAllHouseholds();
       onDelete(); // Refresh guest list
     } catch (error) {
       console.error('Error creating household:', error);
@@ -68,6 +96,16 @@ export const useHouseholdOperations = (onDelete: () => void) => {
 
   const updateHousehold = async () => {
     if (!editingHouseholdData) return;
+    
+    if (!editingHouseholdData.name.trim()) {
+      toast.error("Household name cannot be empty");
+      return;
+    }
+
+    if (isHouseholdNameDuplicate(editingHouseholdData.name, editingHouseholdData.id)) {
+      toast.error("A household with this name already exists");
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -82,6 +120,7 @@ export const useHouseholdOperations = (onDelete: () => void) => {
 
       toast.success("Household updated successfully");
       setEditingHouseholdData(null);
+      await fetchAllHouseholds();
       onDelete(); // Refresh guest list to show updated household information
     } catch (error) {
       console.error('Error updating household:', error);
@@ -89,7 +128,7 @@ export const useHouseholdOperations = (onDelete: () => void) => {
     }
   };
 
-  const openHouseholdEdit = (householdId: string, households: any[]) => {
+  const openHouseholdEdit = (householdId: string, households: Household[]) => {
     const household = households.find(h => h.id === householdId);
     if (household) {
       setEditingHouseholdData({ ...household });
@@ -101,6 +140,7 @@ export const useHouseholdOperations = (onDelete: () => void) => {
     isCreatingNewHousehold,
     newHouseholdName,
     editingHouseholdData,
+    allHouseholds,
     setEditingHousehold,
     setIsCreatingNewHousehold,
     setNewHouseholdName,

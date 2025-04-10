@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ interface HouseholdEditDialogProps {
   onClose: () => void;
   onSave: () => void;
   onHouseholdChange: (field: keyof Household, value: string) => void;
+  allHouseholds?: Household[];
 }
 
 export const HouseholdEditDialog: React.FC<HouseholdEditDialogProps> = ({
@@ -17,7 +18,24 @@ export const HouseholdEditDialog: React.FC<HouseholdEditDialogProps> = ({
   onClose,
   onSave,
   onHouseholdChange,
+  allHouseholds = [],
 }) => {
+  const [isNameDuplicate, setIsNameDuplicate] = useState(false);
+  
+  useEffect(() => {
+    if (!household || !household.name) {
+      setIsNameDuplicate(false);
+      return;
+    }
+    
+    const nameExists = allHouseholds.some(
+      h => h.id !== household.id && 
+      h.name.toLowerCase() === household.name.toLowerCase()
+    );
+    
+    setIsNameDuplicate(nameExists);
+  }, [household, allHouseholds]);
+  
   if (!household) return null;
 
   return (
@@ -32,7 +50,11 @@ export const HouseholdEditDialog: React.FC<HouseholdEditDialogProps> = ({
             <Input 
               value={household.name || ''}
               onChange={(e) => onHouseholdChange('name', e.target.value)}
+              className={isNameDuplicate ? "border-red-500" : ""}
             />
+            {isNameDuplicate && (
+              <p className="text-sm text-red-500 mt-1">A household with this name already exists</p>
+            )}
           </div>
           
           <div>
@@ -55,7 +77,12 @@ export const HouseholdEditDialog: React.FC<HouseholdEditDialogProps> = ({
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={onSave}>Save Changes</Button>
+            <Button 
+              onClick={onSave}
+              disabled={isNameDuplicate || !household.name.trim()}
+            >
+              Save Changes
+            </Button>
           </div>
         </div>
       </DialogContent>
