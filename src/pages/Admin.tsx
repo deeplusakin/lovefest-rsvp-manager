@@ -1,192 +1,146 @@
-
-import { Link } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useRouter } from 'next/router';
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle } from "lucide-react";
-import { EventForm } from "@/components/admin/EventForm";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Shell } from "@/components/Shell";
+import { siteConfig } from "@/config/site";
+import { Icons } from "@/components/icons";
+import { DashboardIcon, ImageIcon, UsersIcon, CalendarIcon, PiggyBankIcon, SettingsIcon, BarChartIcon } from 'lucide-react';
+import { cn } from "@/lib/utils";
 import { EventsList } from "@/components/admin/EventsList";
+import { EventStatistics } from "@/components/admin/EventStatistics";
 import { RSVPList } from "@/components/admin/RSVPList";
-import { GuestForm } from "@/components/admin/GuestForm";
-import { GuestsTable } from "@/components/admin/guests/GuestsTable";
 import { PhotoManager } from "@/components/admin/PhotoManager";
+import { ContributionsList } from "@/components/admin/ContributionsList";
 import { ProfileSettings } from "@/components/admin/ProfileSettings";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useAdminData } from "@/hooks/useAdminData";
-import { useEventManagement } from "@/hooks/useEventManagement";
-import { getEventStats } from "@/utils/eventStats";
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { GuestManagement } from "@/components/admin/GuestManagement";
 
 export const Admin = () => {
-  const {
-    events,
-    isLoading,
-    fetchData,
-    fetchEvents,
-  } = useAdminData();
-
-  const {
-    showEventForm,
-    setShowEventForm,
-    editingEvent,
-    eventFormData,
-    setEventFormData,
-    handleCreateEvent,
-    handleUpdateEvent,
-    handleDeleteEvent,
-    startEditEvent,
-  } = useEventManagement(fetchData);
-
-  const [showGuestForm, setShowGuestForm] = useState(false);
-  const [guests, setGuests] = useState<any[]>([]);
-
-  useAdminAuth(fetchData);
-
-  const fetchGuests = async () => {
-    const { data, error } = await supabase
-      .from('guests')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        email,
-        phone,
-        dietary_restrictions,
-        household:households (
-          id,
-          name,
-          invitation_code,
-          address
-        ),
-        household_id
-      `)
-      .order('last_name');
-
-    if (error) {
-      console.error('Error fetching guests:', error);
-      return;
-    }
-
-    setGuests(data || []);
-  };
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [currentTab, setCurrentTab] = useState('events');
 
   useEffect(() => {
-    fetchGuests();
-  }, []);
-
-  const handleTabChange = useCallback((value: string) => {
-    if (value === "events") {
-      fetchEvents();
-    } else if (value === "guests") {
-      fetchGuests();
+    if (status === "unauthenticated") {
+      router.push('/login');
     }
-  }, [fetchEvents]);
+  }, [status, router]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (status === "loading") {
+    return <div>Loading...</div>;
   }
 
+  if (status === "unauthenticated") {
+    return <div>Redirecting to login...</div>;
+  }
+
+  const renderContent = () => {
+    switch (currentTab) {
+      case 'events':
+        return <EventsList />;
+      case 'guests':
+        return <GuestManagement />;
+      case 'rsvps':
+        return <RSVPList />;
+      case 'photos':
+        return <PhotoManager />;
+      case 'contributions':
+        return <ContributionsList />;
+      case 'profile':
+        return <ProfileSettings />;
+      default:
+        return <EventStatistics />;
+    }
+  };
+
+  const sidebarItems = [
+    { id: 'events', label: 'Events', icon: CalendarIcon },
+    { id: 'guests', label: 'Guests', icon: UsersIcon },
+    { id: 'rsvps', label: 'RSVPs', icon: DashboardIcon },
+    { id: 'photos', label: 'Photos', icon: ImageIcon },
+    { id: 'contributions', label: 'Contributions', icon: PiggyBankIcon },
+    { id: 'statistics', label: 'Statistics', icon: BarChartIcon },
+    { id: 'profile', label: 'Profile', icon: SettingsIcon },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 overflow-y-auto pt-16">
-      <div className="container max-w-7xl py-12">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-serif">Wedding Admin Dashboard</h1>
-          <Link to="/">
-            <Button variant="outline" className="gap-2">
-              <Home className="h-4 w-4" />
-              Return Home
+    <Shell>
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Menu <Icons.chevronDown className="ml-2 h-4 w-4" />
             </Button>
-          </Link>
-        </div>
-
-        <Tabs defaultValue="events" onValueChange={handleTabChange} className="space-y-8">
-          <TabsList>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="rsvps">RSVPs</TabsTrigger>
-            <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="photos">Photos</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="events" className="space-y-8">
-            <Card className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-serif">Manage Events</h2>
-                {!showEventForm && (
-                  <Button onClick={() => setShowEventForm(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Event
-                  </Button>
-                )}
-              </div>
-              {showEventForm ? (
-                <EventForm
-                  onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
-                  eventFormData={eventFormData}
-                  setEventFormData={setEventFormData}
-                  editingEvent={editingEvent}
-                  onCancel={() => {
-                    setShowEventForm(false);
-                    setEventFormData({
-                      name: "",
-                      date: "",
-                      location: "",
-                      description: "",
-                    });
-                  }}
-                />
-              ) : (
-                <EventsList
-                  events={events}
-                  onEdit={startEditEvent}
-                  onDelete={handleDeleteEvent}
-                />
-              )}
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="rsvps" className="space-y-8">
-            <RSVPList
-              events={events}
-              getEventStats={getEventStats}
-            />
-          </TabsContent>
-
-          <TabsContent value="guests" className="space-y-8">
-            <Card className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-serif">Manage Guests</h2>
-                <Button onClick={() => setShowGuestForm(!showGuestForm)}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  {showGuestForm ? 'Cancel' : 'Add Guest'}
-                </Button>
-              </div>
-              {showGuestForm ? (
-                <GuestForm onSuccess={() => {
-                  fetchGuests();
-                  setShowGuestForm(false);
-                }} />
-              ) : (
-                <GuestsTable guests={guests} onDelete={fetchGuests} />
-              )}
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="photos" className="space-y-8">
-            <PhotoManager />
-          </TabsContent>
-
-          <TabsContent value="profile" className="space-y-8">
-            <ProfileSettings />
-          </TabsContent>
-        </Tabs>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Admin Dashboard</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {sidebarItems.map((item) => (
+              <DropdownMenuItem key={item.id} onClick={() => setCurrentTab(item.id)}>
+                {item.label}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </div>
+      <div className="hidden md:flex flex-col pr-6 w-64 flex-shrink-0">
+        <div className="space-y-3">
+          <div className="pb-2">
+            <h3 className="font-semibold text-lg">Admin Dashboard</h3>
+            <p className="text-sm text-muted-foreground">
+              {siteConfig.name} Management
+            </p>
+          </div>
+          <div className="flex flex-col space-y-1">
+            {sidebarItems.map((item) => (
+              <Button
+                key={item.id}
+                variant="ghost"
+                className={cn(
+                  "justify-start",
+                  currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
+                )}
+                onClick={() => setCurrentTab(item.id)}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-auto pb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="justify-start w-full">
+                <Icons.user className="mr-2 h-4 w-4" />
+                {session?.user?.name}
+                <Icons.chevronDown className="ml-auto h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="flex-1">
+        <div className="py-6">
+          {renderContent()}
+        </div>
+      </div>
+    </Shell>
   );
 };
 
