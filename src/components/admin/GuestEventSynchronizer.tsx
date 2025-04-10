@@ -42,7 +42,7 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       const newGuestEvents = guestsWithoutEvent.map((item) => ({
         guest_id: item.guest_id,
         event_id: eventId,
-        status: 'invited'
+        status: 'invited' as const
       }));
       
       const { error: insertError } = await supabase

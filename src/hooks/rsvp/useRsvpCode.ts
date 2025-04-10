@@ -21,7 +21,7 @@ export function useRsvpCode() {
       }
 
       toast.success("Welcome! You can now RSVP for your household.");
-      return data; // This returns the household_id
+      return data as string; // This returns the household_id
 
     } catch (error: any) {
       toast.error(error.message);

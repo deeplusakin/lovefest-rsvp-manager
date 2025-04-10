@@ -49,7 +49,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
 
   const fetchHouseholdGuests = async () => {
     try {
-      const { data: guests, error } = await supabase
+      const { data, error } = await supabase
         .from('guests')
         .select(`
           id,
@@ -72,13 +72,23 @@ export const useFetchHouseholdGuests = (householdId: string) => {
 
       if (error) throw error;
 
-      setGuests(guests || []);
+      // Type-safe assignment by explicitly casting only status fields we support
+      const typeSafeGuests = data?.map(guest => ({
+        ...guest,
+        guest_events: guest.guest_events?.map(event => ({
+          ...event,
+          // Ensure status is one of our allowed types
+          status: event.status === 'not_invited' ? 'invited' : event.status as 'invited' | 'attending' | 'declined'
+        })) || []
+      })) || [];
+      
+      setGuests(typeSafeGuests);
       
       // Initialize responses state
       const initialResponses: RsvpResponses = {};
       const initialGuestDetails: GuestDetailsMap = {};
       
-      guests?.forEach(guest => {
+      typeSafeGuests.forEach(guest => {
         initialResponses[guest.id] = {};
         guest.guest_events?.forEach(event => {
           initialResponses[guest.id][event.event_id] = event.status;
