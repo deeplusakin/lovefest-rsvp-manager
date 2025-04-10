@@ -44,7 +44,7 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       const newGuestEvents = guestsWithoutEvent.map((item) => ({
         guest_id: item.guest_id,
         event_id: eventId,
-        status: 'invited' as const
+        status: 'invited' as const // Use 'as const' to ensure TypeScript knows this is a literal type
       }));
       
       const { error: insertError } = await supabase

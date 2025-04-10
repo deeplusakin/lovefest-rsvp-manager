@@ -231,12 +231,16 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
             const eventStatus = existingGuestRsvps?.[eventId]?.status || 'invited';
             const responseDate = existingGuestRsvps?.[eventId]?.response_date || null;
             
+            // Ensure we're using a valid RSVP status by casting to allowed type
+            const validStatus = (eventStatus === 'attending' || eventStatus === 'declined' || 
+                               eventStatus === 'not_invited') ? eventStatus : 'invited';
+            
             const { error: currentEventError } = await supabase
               .from('guest_events')
               .upsert({
                 guest_id: newGuest.id,
                 event_id: eventId,
-                status: eventStatus,
+                status: validStatus,
                 response_date: responseDate
               });
 
@@ -248,12 +252,16 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
               const weddingEventStatus = existingGuestRsvps?.[weddingEventId]?.status || 'invited';
               const weddingResponseDate = existingGuestRsvps?.[weddingEventId]?.response_date || null;
               
+              // Ensure we're using a valid RSVP status for wedding event
+              const validWeddingStatus = (weddingEventStatus === 'attending' || weddingEventStatus === 'declined' || 
+                                       weddingEventStatus === 'not_invited') ? weddingEventStatus : 'invited';
+              
               const { error: weddingEventError } = await supabase
                 .from('guest_events')
                 .upsert({
                   guest_id: newGuest.id,
                   event_id: weddingEventId,
-                  status: weddingEventStatus,
+                  status: validWeddingStatus,
                   response_date: weddingResponseDate
                 });
 
