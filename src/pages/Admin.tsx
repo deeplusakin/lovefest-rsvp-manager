@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { EventsList } from "@/components/admin/EventsList";
@@ -27,7 +27,7 @@ export const Admin = () => {
   const [currentTab, setCurrentTab] = useState('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const { events, contributions, totalContributions, isLoading, fetchData } = useAdminData();
+  const { events, contributions, totalContributions, isLoading, fetchData, fetchEvents } = useAdminData();
 
   // Check authentication status when component mounts
   useAdminAuth(() => {
@@ -38,6 +38,14 @@ export const Admin = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const handleGuestTabChange = (tabId: string) => {
+    // If switching from guests to RSVPs, refresh the event data
+    if (currentTab === 'guests' && tabId === 'rsvps') {
+      fetchEvents();
+    }
+    setCurrentTab(tabId);
   };
 
   const getEventStats = (event) => {
@@ -59,7 +67,7 @@ export const Admin = () => {
       case 'events':
         return <EventsList events={events} onEdit={() => {}} onDelete={() => {}} />;
       case 'guests':
-        return <GuestManagement />;
+        return <GuestManagement onGuestsChange={fetchEvents} />;
       case 'rsvps':
         return <RSVPList events={events} getEventStats={getEventStats} />;
       case 'photos':
@@ -104,7 +112,7 @@ export const Admin = () => {
               <DropdownMenuLabel>Admin Dashboard</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {sidebarItems.map((item) => (
-                <DropdownMenuItem key={item.id} onClick={() => setCurrentTab(item.id)}>
+                <DropdownMenuItem key={item.id} onClick={() => handleGuestTabChange(item.id)}>
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
                 </DropdownMenuItem>
@@ -132,7 +140,7 @@ export const Admin = () => {
                       "justify-start w-full",
                       currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
                     )}
-                    onClick={() => setCurrentTab(item.id)}
+                    onClick={() => handleGuestTabChange(item.id)}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.label}

@@ -7,25 +7,47 @@ export const useWeddingEvent = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWeddingEventId = async () => {
-      setIsLoading(true);
+    fetchWeddingEvent();
+  }, []);
+
+  const fetchWeddingEvent = async () => {
+    try {
+      // Find the main wedding event
+      // We're assuming the first event with "wedding" in the name (case insensitive) is the main wedding event
       const { data, error } = await supabase
         .from('events')
-        .select('id')
+        .select('id, name')
         .ilike('name', '%wedding%')
         .limit(1);
       
-      if (error) {
-        console.error('Error fetching Wedding event:', error);
-      } else if (data && data.length > 0) {
-        setWeddingEventId(data[0].id);
-      }
+      if (error) throw error;
       
+      if (data && data.length > 0) {
+        setWeddingEventId(data[0].id);
+      } else {
+        // As a fallback, just get the first event
+        const { data: allEvents, error: allEventsError } = await supabase
+          .from('events')
+          .select('id')
+          .order('created_at', { ascending: true })
+          .limit(1);
+          
+        if (allEventsError) throw allEventsError;
+        
+        if (allEvents && allEvents.length > 0) {
+          setWeddingEventId(allEvents[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching wedding event:', error);
+    } finally {
       setIsLoading(false);
-    };
+    }
+  };
 
-    fetchWeddingEventId();
-  }, []);
-
-  return { weddingEventId, isLoading };
+  return {
+    weddingEventId,
+    isLoading,
+    fetchWeddingEvent
+  };
 };

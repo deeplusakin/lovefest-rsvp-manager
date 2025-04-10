@@ -11,6 +11,7 @@ import { useAdminData } from "@/hooks/useAdminData";
 import { downloadCSV } from "@/utils/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { GuestEventSynchronizer } from "./GuestEventSynchronizer";
 
 interface RSVPListProps {
   events: Event[];
@@ -21,6 +22,10 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
   const { fetchEvents } = useAdminData();
 
   const handleUploadSuccess = useCallback(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  const handleSyncComplete = useCallback(() => {
     fetchEvents();
   }, [fetchEvents]);
 
@@ -82,10 +87,16 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
         <Card key={event.id} className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-2xl font-serif">{event.name}</h3>
-            <Button variant="outline" onClick={() => handleExportGuests(event.id)}>
-              <Download className="mr-2 h-4 w-4" />
-              Export Guest List
-            </Button>
+            <div className="flex space-x-2">
+              <GuestEventSynchronizer 
+                eventId={event.id} 
+                onSyncComplete={handleSyncComplete}
+              />
+              <Button variant="outline" onClick={() => handleExportGuests(event.id)}>
+                <Download className="mr-2 h-4 w-4" />
+                Export Guest List
+              </Button>
+            </div>
           </div>
           
           <EventStatistics stats={getEventStats(event)} />

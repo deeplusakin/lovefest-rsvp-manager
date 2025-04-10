@@ -10,7 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RefreshCw, UserPlus, Users } from "lucide-react";
 import { useWeddingEvent } from "./hooks/useWeddingEvent";
 
-export const GuestManagement = () => {
+interface GuestManagementProps {
+  onGuestsChange?: () => void;
+}
+
+export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -37,6 +41,11 @@ export const GuestManagement = () => {
       if (error) throw error;
       
       setGuests(data as Guest[]);
+      
+      // Notify parent component that guests have changed
+      if (onGuestsChange) {
+        onGuestsChange();
+      }
     } catch (error) {
       console.error('Error fetching guests:', error);
     } finally {
@@ -50,6 +59,13 @@ export const GuestManagement = () => {
 
   const toggleAddForm = () => {
     setShowAddForm(!showAddForm);
+  };
+
+  const handleGuestSuccess = () => {
+    fetchGuests();
+    if (onGuestsChange) {
+      onGuestsChange();
+    }
   };
 
   return (
@@ -79,7 +95,7 @@ export const GuestManagement = () => {
         </div>
       </div>
 
-      <HouseholdConsolidation onSuccess={fetchGuests} />
+      <HouseholdConsolidation onSuccess={handleGuestSuccess} />
       
       {showAddForm && (
         <Card>
@@ -88,7 +104,7 @@ export const GuestManagement = () => {
             <CardDescription>Enter the details for a new guest</CardDescription>
           </CardHeader>
           <CardContent>
-            <GuestForm onSuccess={fetchGuests} />
+            <GuestForm onSuccess={handleGuestSuccess} />
           </CardContent>
         </Card>
       )}
@@ -98,7 +114,7 @@ export const GuestManagement = () => {
           <RefreshCw className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <GuestsTable guests={guests} onDelete={fetchGuests} />
+        <GuestsTable guests={guests} onDelete={handleGuestSuccess} />
       )}
     </div>
   );
