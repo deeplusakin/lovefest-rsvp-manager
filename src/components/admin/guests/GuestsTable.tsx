@@ -12,6 +12,7 @@ import { useHouseholdOperations } from "../hooks/useHouseholdOperations";
 import { useGuestEdit } from "../hooks/useGuestEdit";
 import { GuestBulkActions } from "./GuestBulkActions";
 import { GuestTableHeader } from "./GuestTableHeader";
+import { useGuestGroups } from "../hooks/useGuestGroups";
 
 interface GuestsTableProps {
   guests: Guest[];
@@ -19,26 +20,14 @@ interface GuestsTableProps {
 }
 
 export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
-  // Sort guests alphabetically by last name
-  const sortedGuests = [...guests].sort((a, b) => a.last_name.localeCompare(b.last_name));
-  
-  // Group guests by household
-  const guestsByHousehold: Record<string, Guest[]> = {};
-  sortedGuests.forEach((guest) => {
-    if (!guestsByHousehold[guest.household_id]) {
-      guestsByHousehold[guest.household_id] = [];
-    }
-    guestsByHousehold[guest.household_id].push(guest);
-  });
-  
-  // Sort households by first guest's last name for consistent ordering
-  const sortedHouseholdIds = Object.keys(guestsByHousehold).sort((a, b) => {
-    const aGuest = guestsByHousehold[a][0];
-    const bGuest = guestsByHousehold[b][0];
-    return aGuest.last_name.localeCompare(bGuest.last_name);
-  });
-  
   const { households, fetchHouseholds } = useHouseholds();
+  
+  const { 
+    sortedHouseholdIds, 
+    guestsByHousehold, 
+    allGuests,
+    uniqueHouseholds 
+  } = useGuestGroups(guests);
   
   const {
     selectedGuests,
@@ -77,12 +66,10 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
     updateGuest
   } = useGuestEdit(onDelete);
 
-  // Get all guests for calculating selection states
-  const allGuests = sortedHouseholdIds.flatMap(id => guestsByHousehold[id]);
-  const isAllGuestsSelected = allGuests.length > 0 && selectedGuests.length === allGuests.length;
+  // Calculate selection states
+  const isAllGuestsSelected = allGuests.length > 0 && 
+    selectedGuests.length === allGuests.length;
   
-  // Get unique households for bulk selection
-  const uniqueHouseholds = sortedHouseholdIds;
   const isAllHouseholdsSelected = uniqueHouseholds.length > 0 && 
     selectedHouseholds.length === uniqueHouseholds.length;
 
@@ -106,7 +93,6 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
           <TableBody>
             {sortedHouseholdIds.map((householdId) => (
               <React.Fragment key={householdId}>
-                {/* Render household section */}
                 {guestsByHousehold[householdId].map((guest) => (
                   <GuestRow
                     key={guest.id}
