@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,13 +28,21 @@ export const Admin = () => {
   const [currentTab, setCurrentTab] = useState('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+  
+  // Initialize data fetching only when user is authenticated
   const { events, contributions, totalContributions, isLoading, isError, fetchData, fetchEvents } = useAdminData();
 
   // Check authentication status when component mounts
   useAdminAuth(() => {
     setIsAuthenticated(true);
-    fetchData();
   });
+
+  // Only fetch data once authentication is confirmed
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated, fetchData]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -65,22 +72,38 @@ export const Admin = () => {
   };
 
   const renderContent = () => {
-    if (isLoading) {
+    if (!isAuthenticated) {
       return (
         <div className="flex justify-center items-center p-12">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-2">Verifying authentication...</p>
+        </div>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <div className="flex flex-col justify-center items-center p-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p>Loading data...</p>
         </div>
       );
     }
 
     if (isError) {
       return (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            There was a problem loading the data. Please try again or check your connection.
-          </AlertDescription>
-        </Alert>
+        <div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              There was a problem loading the data. Please try again or check your connection.
+            </AlertDescription>
+          </Alert>
+          <Button onClick={fetchData} variant="outline" className="mt-4">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
       );
     }
 
@@ -113,17 +136,6 @@ export const Admin = () => {
     { id: 'statistics', label: 'Statistics', icon: BarChartIcon },
     { id: 'profile', label: 'Profile', icon: SettingsIcon },
   ];
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p>Verifying credentials...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col pt-10">

@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Event, Contribution, GuestEvent } from "@/types/admin";
 import { toast } from "sonner";
@@ -10,8 +10,21 @@ export const useAdminData = () => {
   const [totalContributions, setTotalContributions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
+
+  // Check session first before attempting any data fetches
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setHasSession(!!session);
+    };
+    
+    checkSession();
+  }, []);
 
   const fetchEvents = useCallback(async () => {
+    if (hasSession === false) return; // Skip if we know there's no session
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -64,14 +77,19 @@ export const useAdminData = () => {
       console.error("Error fetching events:", error.message);
       setEvents([]);
       setIsError(true);
-      // Only show toast if we're not on the login page
-      if (window.location.pathname !== '/login') {
-        toast.error("Error loading events");
+      
+      // Only show toast if we're on the admin page and not on login
+      if (window.location.pathname === '/admin') {
+        toast.error("Error loading events", {
+          id: "events-error", // Add a unique ID to prevent duplicate toasts
+        });
       }
     }
-  }, []);
+  }, [hasSession]);
 
   const fetchContributions = useCallback(async () => {
+    if (hasSession === false) return; // Skip if we know there's no session
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -111,28 +129,33 @@ export const useAdminData = () => {
       setIsError(false);
     } catch (error: any) {
       console.error("Error fetching contributions:", error.message);
-      // Only show toast if we're not on the login page
-      if (window.location.pathname !== '/login') {
-        toast.error("Error loading contributions");
+      
+      // Only show toast if we're on the admin page and not on login
+      if (window.location.pathname === '/admin') {
+        toast.error("Error loading contributions", {
+          id: "contributions-error", // Add a unique ID to prevent duplicate toasts
+        });
       }
       setContributions([]);
       setTotalContributions(0);
       setIsError(true);
     }
-  }, []);
+  }, [hasSession]);
 
   const fetchData = useCallback(async () => {
+    if (hasSession === null) return; // Wait until we know session state
+    if (hasSession === false) {
+      setIsLoading(false);
+      return; // Skip if we know there's no session
+    }
+    
     setIsLoading(true);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // If not on login page, show the error
-        if (window.location.pathname !== '/login') {
-          console.error("No active session");
-          toast.error("Please log in to access admin data");
-        }
+        console.log("No active session");
         setIsLoading(false);
         return;
       }
@@ -141,14 +164,23 @@ export const useAdminData = () => {
     } catch (error: any) {
       console.error("Error fetching data:", error);
       
-      // Only show toast if we're not on the login page
-      if (window.location.pathname !== '/login') {
-        toast.error("Please log in to access admin data");
+      // Only show toast if we're on the admin page and not on login
+      if (window.location.pathname === '/admin') {
+        toast.error("Error loading admin data", {
+          id: "admin-data-error", // Add a unique ID to prevent duplicate toasts
+        });
       }
     } finally {
       setIsLoading(false);
     }
-  }, [fetchEvents, fetchContributions]);
+  }, [fetchEvents, fetchContributions, hasSession]);
+
+  // Trigger fetchData when hasSession changes
+  useEffect(() => {
+    if (hasSession !== null) {
+      fetchData();
+    }
+  }, [hasSession, fetchData]);
 
   return {
     events,

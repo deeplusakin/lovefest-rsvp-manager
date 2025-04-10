@@ -37,7 +37,9 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           console.error('Profile fetch error:', profileError);
           // Only show toast if we're not on login page
           if (location.pathname !== '/login') {
-            toast.error("Error verifying admin access");
+            toast.error("Error verifying admin access", {
+              id: "admin-verify-error", // Add unique ID to prevent duplicates
+            });
           }
           await supabase.auth.signOut();
           navigate('/login');
@@ -45,20 +47,27 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
         }
 
         if (!profile?.is_admin) {
-          toast.error("Unauthorized access: Admin privileges required");
+          toast.error("Unauthorized access: Admin privileges required", {
+            id: "admin-unauthorized", // Add unique ID to prevent duplicates
+          });
           await supabase.auth.signOut();
           navigate('/login');
           return;
         }
 
-        onAuthenticated();
+        // Only call onAuthenticated if we're on the admin page
+        if (location.pathname === '/admin') {
+          onAuthenticated();
+        }
         
       } catch (error: any) {
         console.error('Auth check error:', error);
         
         // Only show toast if we're not on login page
         if (location.pathname !== '/login') {
-          toast.error("Please log in to continue");
+          toast.error("Please log in to continue", {
+            id: "auth-required", // Add unique ID to prevent duplicates
+          });
           navigate('/login');
         }
       } finally {
@@ -70,7 +79,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
     checkAuth();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session && location.pathname !== '/login') {
         navigate('/login');
       } else if (session) {
