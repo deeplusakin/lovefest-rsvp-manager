@@ -139,14 +139,26 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
         }
       }
 
-      // Now add the new guests
-      for (const guest of guests) {
+      // Group guests by household
+      const households: Record<string, GuestData[]> = {};
+      
+      // First, group guests by their last name (assuming people with the same last name are in the same household)
+      guests.forEach(guest => {
+        const householdKey = guest.last_name.trim().toLowerCase();
+        if (!households[householdKey]) {
+          households[householdKey] = [];
+        }
+        households[householdKey].push(guest);
+      });
+
+      // Now process each household
+      for (const [householdKey, householdGuests] of Object.entries(households)) {
         try {
-          // First create a new household for the guest
+          // Create one household for all guests with the same last name
           const { data: household, error: householdError } = await supabase
             .from('households')
             .insert({
-              name: `${guest.first_name} ${guest.last_name} Household`,
+              name: `${householdGuests[0].last_name} Household`,
               invitation_code: generateInvitationCode()
             })
             .select('id')
@@ -154,50 +166,53 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
 
           if (householdError) throw householdError;
 
-          // Then create the guest with the new household ID
-          const { data: newGuest, error: guestError } = await supabase
-            .from('guests')
-            .insert({
-              first_name: guest.first_name,
-              last_name: guest.last_name,
-              email: guest.email || null,
-              dietary_restrictions: guest.dietary_restrictions || null,
-              household_id: household.id
-            })
-            .select('id')
-            .single();
+          // Add all guests to this household
+          for (const guest of householdGuests) {
+            // Create the guest with the household ID
+            const { data: newGuest, error: guestError } = await supabase
+              .from('guests')
+              .insert({
+                first_name: guest.first_name,
+                last_name: guest.last_name,
+                email: guest.email || null,
+                dietary_restrictions: guest.dietary_restrictions || null,
+                household_id: household.id
+              })
+              .select('id')
+              .single();
 
-          if (guestError) throw guestError;
+            if (guestError) throw guestError;
 
-          // Add the guest to the specified event (from props)
-          const { error: currentEventError } = await supabase
-            .from('guest_events')
-            .upsert({
-              guest_id: newGuest.id,
-              event_id: eventId,
-              status: 'invited'
-            });
-
-          if (currentEventError) throw currentEventError;
-
-          // If we have a wedding event ID and it's different from the current event,
-          // also add the guest to the wedding event
-          if (weddingEventId && weddingEventId !== eventId) {
-            const { error: weddingEventError } = await supabase
+            // Add the guest to the specified event (from props)
+            const { error: currentEventError } = await supabase
               .from('guest_events')
               .upsert({
                 guest_id: newGuest.id,
-                event_id: weddingEventId,
+                event_id: eventId,
                 status: 'invited'
               });
 
-            if (weddingEventError) throw weddingEventError;
-          }
+            if (currentEventError) throw currentEventError;
 
-          successCount++;
+            // If we have a wedding event ID and it's different from the current event,
+            // also add the guest to the wedding event
+            if (weddingEventId && weddingEventId !== eventId) {
+              const { error: weddingEventError } = await supabase
+                .from('guest_events')
+                .upsert({
+                  guest_id: newGuest.id,
+                  event_id: weddingEventId,
+                  status: 'invited'
+                });
+
+              if (weddingEventError) throw weddingEventError;
+            }
+
+            successCount++;
+          }
         } catch (error) {
-          console.error('Error processing guest:', guest, error);
-          errorCount++;
+          console.error('Error processing household:', householdKey, error);
+          errorCount += householdGuests.length;
         }
       }
 
