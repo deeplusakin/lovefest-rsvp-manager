@@ -83,7 +83,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       const controller = new AbortController();
       
       // Combine the signal from options with our abort controller
-      const originalSignal = options.signal;
+      const originalSignal = options?.signal;
       const { signal } = controller;
       
       if (originalSignal) {
@@ -97,7 +97,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       }, 8000);
       
       // Create options with the combined signal
-      const fetchOptions = {
+      const fetchOptions: RequestInit = {
         ...options,
         signal
       };
@@ -134,7 +134,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       // Add request to our queue
       const isAuthRequest = 
         (typeof url === 'string' && url.includes('/auth')) || 
-        (options.method === 'POST' && typeof url === 'string' && url.includes('/token'));
+        ((options as RequestInit)?.method === 'POST' && typeof url === 'string' && url.includes('/token'));
         
       return requestQueue.add(() => executeRequest(), isAuthRequest);
     }

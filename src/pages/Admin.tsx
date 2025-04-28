@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAdminAuthContext } from "@/hooks/useAdminAuth";
+import { useAdminAuthContext, AdminAuthProvider } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventStats } from "@/hooks/useEventStats";
 import { Sidebar } from "@/components/admin/Sidebar";
@@ -114,7 +113,7 @@ const AdminDashboard = () => {
   );
 };
 
-// Wrap the dashboard with our auth provider - no change here
+// Wrap the dashboard with our auth provider
 export const Admin = () => {
   return (
     <AdminAuthProvider>
