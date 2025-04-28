@@ -25,8 +25,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
         controller.abort();
       }, 15000); // 15 second timeout
       
-      return fetch(...args, { signal: controller.signal })
-        .finally(() => clearTimeout(timeout));
+      // Fix: Explicitly handle the parameters to avoid TypeScript spread argument error
+      const [url, options = {}] = args;
+      return fetch(url, { 
+        ...options, 
+        signal: controller.signal 
+      }).finally(() => clearTimeout(timeout));
     }
   }
 });
