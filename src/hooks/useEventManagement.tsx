@@ -29,14 +29,21 @@ export const useEventManagement = (onSuccess: () => void) => {
       onSuccess();
     } catch (error: any) {
       toast.error("Error creating event: " + error.message);
+      console.error("Create event error:", error);
     }
   };
 
   const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingEvent) return;
+    if (!editingEvent) {
+      toast.error("No event selected for editing");
+      return;
+    }
 
     try {
+      console.log("Updating event with ID:", editingEvent.id);
+      console.log("Form data:", eventFormData);
+      
       const { error } = await supabase
         .from('events')
         .update(eventFormData)
@@ -47,9 +54,11 @@ export const useEventManagement = (onSuccess: () => void) => {
       toast.success("Event updated successfully");
       setEditingEvent(null);
       setEventFormData({ name: "", date: "", location: "", description: "" });
+      setShowEventForm(false);
       onSuccess();
     } catch (error: any) {
       toast.error("Error updating event: " + error.message);
+      console.error("Update event error:", error);
     }
   };
 
@@ -87,14 +96,27 @@ export const useEventManagement = (onSuccess: () => void) => {
   };
 
   const startEditEvent = (event: Event) => {
+    console.log("Starting edit for event:", event);
     setEditingEvent(event);
+    
+    // Format the date for datetime-local input
+    // The date from the database needs to be formatted as YYYY-MM-DDThh:mm
+    let formattedDate = "";
+    if (event.date) {
+      try {
+        formattedDate = new Date(event.date).toISOString().slice(0, 16);
+      } catch (error) {
+        console.error("Error formatting date:", error);
+        formattedDate = "";
+      }
+    }
+    
     setEventFormData({
-      name: event.name,
-      date: new Date(event.date).toISOString().slice(0, 16),
-      location: event.location,
+      name: event.name || "",
+      date: formattedDate,
+      location: event.location || "",
       description: event.description || "",
     });
-    setShowEventForm(true);
   };
 
   return {

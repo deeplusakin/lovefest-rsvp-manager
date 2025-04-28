@@ -1,5 +1,5 @@
 
-import { RefreshCw, Loader2, AlertCircle, PlusCircle } from 'lucide-react';
+import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EventsList } from "@/components/admin/EventsList";
@@ -60,6 +60,17 @@ export const AdminContent = ({
     guest_events: []
   };
 
+  const handleEventEdit = (event: Event) => {
+    console.log("Editing event:", event);
+    startEditEvent(event);
+    setShowEventForm(true);
+  };
+
+  const handleEventFormCancel = () => {
+    setShowEventForm(false);
+    setEventFormData({ name: "", date: "", location: "", description: "" });
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center p-12">
@@ -105,19 +116,13 @@ export const AdminContent = ({
             eventFormData={eventFormData}
             setEventFormData={setEventFormData}
             editingEvent={editingEvent}
-            onCancel={() => {
-              setShowEventForm(false);
-              setEventFormData({ name: "", date: "", location: "", description: "" });
-            }}
+            onCancel={handleEventFormCancel}
           />
         </div>
       ) : (
         <EventsList 
           events={events} 
-          onEdit={(event) => {
-            startEditEvent(event);
-            setShowEventForm(true);
-          }} 
+          onEdit={handleEventEdit} 
           onDelete={handleDeleteEvent} 
         />
       );
