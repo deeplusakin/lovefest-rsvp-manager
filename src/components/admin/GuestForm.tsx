@@ -7,7 +7,6 @@ import { HouseholdField } from "./guests/HouseholdField";
 import { GuestFields } from "./guests/GuestFields";
 import { useWeddingEvent } from "./hooks/useWeddingEvent";
 import { Household } from "./types/guest";
-import { useGuestData } from "@/hooks/useGuestData";
 
 interface GuestFormProps {
   onSuccess?: () => void;
@@ -22,27 +21,21 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
     email: "",
     dietaryRestrictions: ""
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { weddingEventId } = useWeddingEvent();
-  const { invalidateCache } = useGuestData();
 
   const fetchHouseholds = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('households')
-        .select('*')
-        .order('name');
-      
-      if (error) {
-        throw error;
-      }
-      
-      setHouseholds(data || []);
-    } catch (error) {
-      console.error('Error fetching households:', error);
+    const { data, error } = await supabase
+      .from('households')
+      .select('*')
+      .order('name');
+    
+    if (error) {
       toast.error("Error fetching households");
+      return;
     }
+    
+    setHouseholds(data || []);
   };
 
   const handleGuestDataChange = (field: string, value: string) => {
@@ -57,8 +50,6 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
       return;
     }
 
-    setIsSubmitting(true);
-    
     try {
       // Create the guest
       const { data: newGuest, error: guestError } = await supabase
@@ -95,26 +86,16 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
         toast.success("Guest added successfully");
       }
 
-      // Clear form data
       setGuestData({
         firstName: "",
         lastName: "",
         email: "",
         dietaryRestrictions: ""
       });
-      
-      // Invalidate cache to ensure fresh data
-      invalidateCache();
-      
-      // Call the onSuccess callback
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess?.();
     } catch (error) {
       console.error('Error creating guest:', error);
       toast.error("Error creating guest");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -141,9 +122,7 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
         />
       </div>
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Adding..." : "Add Guest"}
-      </Button>
+      <Button type="submit">Add Guest</Button>
     </form>
   );
 };

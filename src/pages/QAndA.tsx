@@ -29,7 +29,7 @@ const QAndA = () => {
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Can I bring a date?</h3>
-              <p className="text-gray-600">We kindly request that only the individuals that populate when you enter your invitation code attend. Our guest list is carefully curated, and we appreciate your understanding.</p>
+              <p className="text-gray-600">We kindly request that only the individuals explicitly named on your invitation attend. Our guest list is carefully curated, and we appreciate your understanding.</p>
             </div>
 
             <div>
@@ -39,12 +39,12 @@ const QAndA = () => {
 
             <div>
               <h3 className="font-semibold text-xl mb-2">What will the weather be like?</h3>
-              <p className="text-gray-600">Late August in Ellicott City, Maryland, is typically hot and mostly cloudy, with average high temperatures ranging from 82°F to 86°F. We recommend dressing accordingly. The dress code is formal.</p>
+              <p className="text-gray-600">Late August in Ellicott City, Maryland, is typically hot and mostly cloudy, with average high temperatures ranging from 82°F to 86°F. We recommend dressing accordingly and staying hydrated.</p>
             </div>
 
             <div>
               <h3 className="font-semibold text-xl mb-2">Where should I park?</h3>
-              <p className="text-gray-600">The best parking is in Lot D located in front of the venue.</p>
+              <p className="text-gray-600">Lot D is located in front of the venue. Pay attention to the signs next to the spot to not park in restricted spots.</p>
             </div>
 
             <div>
@@ -90,4 +90,3 @@ const QAndA = () => {
 };
 
 export default QAndA;
-

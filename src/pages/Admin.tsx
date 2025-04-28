@@ -1,44 +1,43 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAdminAuthContext, AdminAuthProvider } from "@/hooks/useAdminAuth";
-import { useAdminData } from "@/hooks/useAdminData";
-import { useEventStats } from "@/hooks/useEventStats";
-import { Sidebar } from "@/components/admin/Sidebar";
-import { AdminContent } from "@/components/admin/AdminContent";
-import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { EventsList } from "@/components/admin/EventsList";
+import { EventStatistics } from "@/components/admin/EventStatistics";
+import { RSVPList } from "@/components/admin/RSVPList";
+import { PhotoManager } from "@/components/admin/PhotoManager";
+import { ContributionsList } from "@/components/admin/ContributionsList";
+import { ProfileSettings } from "@/components/admin/ProfileSettings";
+import { GuestManagement } from "@/components/admin/GuestManagement";
+import { supabase } from "@/integrations/supabase/client";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminData } from "@/hooks/useAdminData";
 
-const AdminDashboard = () => {
+export const Admin = () => {
   const [currentTab, setCurrentTab] = useState('events');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  
-  console.time('admin-page-load');
-  
-  // Get auth status from context with improved logout function
-  const { isAdmin, isCheckingAuth, logout } = useAdminAuthContext();
-  
-  // Initialize data fetching only when user is authenticated
-  const { events, contributions, totalContributions, isLoading, isError, fetchData, fetchEvents } = useAdminData();
-  const { getEventStats } = useEventStats();
+  const { events, contributions, totalContributions, isLoading, fetchData, fetchEvents } = useAdminData();
 
-  // Log when page is fully loaded
-  useEffect(() => {
-    if (!isCheckingAuth && !isLoading) {
-      console.timeEnd('admin-page-load');
-    }
-  }, [isCheckingAuth, isLoading]);
+  // Check authentication status when component mounts
+  useAdminAuth(() => {
+    setIsAuthenticated(true);
+    fetchData();
+  });
 
   const handleSignOut = async () => {
-    try {
-      toast.loading("Signing out...");
-      // Use the improved logout function from context
-      await logout();
-    } catch (error) {
-      console.error("Sign out error:", error);
-      toast.error("Error signing out. Please try again.");
-    }
+    await supabase.auth.signOut();
+    navigate('/login');
   };
 
   const handleGuestTabChange = (tabId: string) => {
@@ -49,31 +48,118 @@ const AdminDashboard = () => {
     setCurrentTab(tabId);
   };
 
-  const handleRetryData = () => {
-    fetchData();
+  const getEventStats = (event) => {
+    const totalInvited = event.guest_events?.length || 0;
+    const responded = event.guest_events?.filter(ge => ge.status !== 'invited').length || 0;
+    const attending = event.guest_events?.filter(ge => ge.status === 'attending').length || 0;
+    const notAttending = event.guest_events?.filter(ge => ge.status === 'not_attending').length || 0;
+
+    return {
+      totalInvited,
+      responded,
+      attending,
+      notAttending
+    };
   };
 
-  // If still checking auth, show a more informative loading state
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-lg">Verifying authentication...</p>
-          <p className="text-sm text-muted-foreground">This may take a moment</p>
-        </div>
-      </div>
-    );
+  const renderContent = () => {
+    switch (currentTab) {
+      case 'events':
+        return <EventsList events={events} onEdit={() => {}} onDelete={() => {}} />;
+      case 'guests':
+        return <GuestManagement onGuestsChange={fetchEvents} />;
+      case 'rsvps':
+        return <RSVPList events={events} getEventStats={getEventStats} />;
+      case 'photos':
+        return <PhotoManager />;
+      case 'contributions':
+        return <ContributionsList contributions={contributions} totalContributions={totalContributions} />;
+      case 'profile':
+        return <ProfileSettings />;
+      case 'statistics':
+        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+      default:
+        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+    }
+  };
+
+  const sidebarItems = [
+    { id: 'events', label: 'Events', icon: CalendarIcon },
+    { id: 'guests', label: 'Guests', icon: UsersIcon },
+    { id: 'rsvps', label: 'RSVPs', icon: DashboardIcon },
+    { id: 'photos', label: 'Photos', icon: ImageIcon },
+    { id: 'contributions', label: 'Contributions', icon: PiggyBankIcon },
+    { id: 'statistics', label: 'Statistics', icon: BarChartIcon },
+    { id: 'profile', label: 'Profile', icon: SettingsIcon },
+  ];
+
+  if (!isAuthenticated) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col pt-10">
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar 
-          currentTab={currentTab} 
-          onTabChange={handleGuestTabChange} 
-          onSignOut={handleSignOut} 
-        />
+        {/* Mobile menu */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-background p-4 border-b">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Menu <span className="ml-2">▼</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-background">
+              <DropdownMenuLabel>Admin Dashboard</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {sidebarItems.map((item) => (
+                <DropdownMenuItem key={item.id} onClick={() => handleGuestTabChange(item.id)}>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Sidebar */}
+        <div className="hidden md:flex flex-col w-64 border-r bg-card min-h-screen">
+          <div className="p-6 flex flex-col h-full">
+            <div>
+              <h3 className="font-semibold text-lg">Admin Dashboard</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Wedding Management
+              </p>
+              <div className="space-y-1">
+                {sidebarItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant="ghost"
+                    className={cn(
+                      "justify-start w-full",
+                      currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
+                    )}
+                    onClick={() => handleGuestTabChange(item.id)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-auto pt-6">
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleSignOut}
+              >
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Main content */}
         <div className="flex-1 flex flex-col overflow-auto pb-20">
@@ -82,43 +168,12 @@ const AdminDashboard = () => {
           
           <div className="p-6 md:pt-4">
             <div className="bg-card rounded-lg shadow-sm p-6 mb-12">
-              {isError && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    There was a problem loading the data. 
-                  </AlertDescription>
-                  <Button onClick={handleRetryData} variant="outline" className="ml-2">
-                    Retry
-                  </Button>
-                </Alert>
-              )}
-              <AdminContent
-                currentTab={currentTab}
-                isAuthenticated={isAdmin}
-                isLoading={isLoading}
-                isError={isError}
-                events={events}
-                contributions={contributions}
-                totalContributions={totalContributions}
-                fetchData={fetchData}
-                fetchEvents={fetchEvents}
-                getEventStats={getEventStats}
-              />
+              {renderContent()}
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
-
-// Wrap the dashboard with our auth provider
-export const Admin = () => {
-  return (
-    <AdminAuthProvider>
-      <AdminDashboard />
-    </AdminAuthProvider>
   );
 };
 

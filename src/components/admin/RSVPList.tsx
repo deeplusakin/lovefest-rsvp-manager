@@ -1,19 +1,17 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw } from "lucide-react";
+import { Download } from "lucide-react";
 import { Event, EventStats } from "@/types/admin";
 import { EventStatistics } from "./EventStatistics";
 import { GuestListUpload } from "./GuestListUpload";
 import { GuestEventsTable } from "./GuestEventsTable";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback } from "react";
 import { useAdminData } from "@/hooks/useAdminData";
-import { useGuestData } from "@/hooks/useGuestData";
 import { downloadCSV } from "@/utils/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GuestEventSynchronizer } from "./GuestEventSynchronizer";
-import { RsvpListDelete } from "./RsvpListDelete";
 
 interface RSVPListProps {
   events: Event[];
@@ -22,68 +20,14 @@ interface RSVPListProps {
 
 export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
   const { fetchEvents } = useAdminData();
-  const { invalidateCache: invalidateGuestCache } = useGuestData();
-  const [isSyncing, setIsSyncing] = useState<Record<string, boolean>>({});
-
-  // Make sure guest cache is invalidated when we navigate to this component
-  useEffect(() => {
-    invalidateGuestCache();
-  }, [invalidateGuestCache]);
 
   const handleUploadSuccess = useCallback(() => {
-    invalidateGuestCache();
     fetchEvents();
-  }, [fetchEvents, invalidateGuestCache]);
+  }, [fetchEvents]);
 
   const handleSyncComplete = useCallback(() => {
-    invalidateGuestCache();
     fetchEvents();
-  }, [fetchEvents, invalidateGuestCache]);
-
-  const handleDeleteComplete = useCallback(() => {
-    invalidateGuestCache();
-    fetchEvents();
-  }, [fetchEvents, invalidateGuestCache]);
-
-  // Function to sync and clean up outdated RSVPs
-  const handleSyncAndCleanup = async (eventId: string) => {
-    setIsSyncing(prev => ({ ...prev, [eventId]: true }));
-    try {
-      // 1. Find all guest_events records for this event where the guest no longer exists
-      const { data: orphanedRsvps, error: orphanedError } = await supabase
-        .from('guest_events')
-        .select('guest_id')
-        .eq('event_id', eventId)
-        .not('guest_id', 'in', `(select id from guests)`);
-
-      if (orphanedError) throw orphanedError;
-
-      if (orphanedRsvps && orphanedRsvps.length > 0) {
-        const orphanedGuestIds = orphanedRsvps.map(rsvp => rsvp.guest_id);
-        
-        // Delete orphaned RSVP records
-        const { error: deleteError } = await supabase
-          .from('guest_events')
-          .delete()
-          .eq('event_id', eventId)
-          .in('guest_id', orphanedGuestIds);
-
-        if (deleteError) throw deleteError;
-        
-        toast.success(`Cleaned up ${orphanedRsvps.length} outdated RSVP records`);
-      } else {
-        toast.info("No outdated RSVP records found");
-      }
-      
-      invalidateGuestCache();
-      fetchEvents();
-    } catch (error) {
-      console.error('Error cleaning up RSVPs:', error);
-      toast.error("Error cleaning up outdated RSVP records");
-    } finally {
-      setIsSyncing(prev => ({ ...prev, [eventId]: false }));
-    }
-  };
+  }, [fetchEvents]);
 
   const handleExportGuests = async (eventId: string) => {
     try {
@@ -140,27 +84,13 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
   return (
     <>
       {events.map(event => (
-        <Card key={event.id} className="p-6 mb-8">
+        <Card key={event.id} className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-2xl font-serif">{event.name}</h3>
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleSyncAndCleanup(event.id)}
-                disabled={isSyncing[event.id]}
-                className="flex items-center gap-1"
-              >
-                <RefreshCw className={`h-4 w-4 ${isSyncing[event.id] ? 'animate-spin' : ''}`} />
-                Clean Up RSVPs
-              </Button>
               <GuestEventSynchronizer 
                 eventId={event.id} 
                 onSyncComplete={handleSyncComplete}
-              />
-              <RsvpListDelete
-                eventId={event.id}
-                onDeleteComplete={handleDeleteComplete}
               />
               <Button variant="outline" onClick={() => handleExportGuests(event.id)}>
                 <Download className="mr-2 h-4 w-4" />
@@ -171,18 +101,12 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
           
           <EventStatistics stats={getEventStats(event)} />
 
-          <div className="flex justify-between items-center mb-4 mt-8">
+          <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-semibold">Guest List</h4>
-            <div className="flex space-x-2">
-              <GuestListUpload 
-                eventId={event.id} 
-                onUploadSuccess={handleUploadSuccess}
-              />
-            </div>
-          </div>
-
-          <div className="mt-2 mb-4 text-sm text-gray-500">
-            <p>The Guest List is the source of truth for RSVPs. Use the "Sync Guest List" button to add any missing guests to the RSVP list, and "Clean Up RSVPs" to remove records for deleted guests.</p>
+            <GuestListUpload 
+              eventId={event.id} 
+              onUploadSuccess={handleUploadSuccess}
+            />
           </div>
 
           <GuestEventsTable guests={event.guest_events} eventId={event.id} />

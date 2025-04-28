@@ -77,21 +77,21 @@ export type Database = {
           event_id: string
           guest_id: string
           response_date: string | null
-          status: string
+          status: Database["public"]["Enums"]["rsvp_status"]
         }
         Insert: {
           created_at?: string
           event_id: string
           guest_id: string
           response_date?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
         }
         Update: {
           created_at?: string
           event_id?: string
           guest_id?: string
           response_date?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
         }
         Relationships: [
           {
@@ -126,7 +126,7 @@ export type Database = {
           dietary_restrictions?: string | null
           email?: string | null
           first_name: string
-          household_id: string
+          household_id?: string
           id?: string
           last_name: string
           phone?: string | null
@@ -264,20 +264,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_invitation_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_guests_without_event: {
-        Args: { event_id_param: string }
-        Returns: {
-          guest_id: string
-        }[]
-      }
-      validate_invitation_code: {
-        Args: { code: string }
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
       rsvp_status: "not_invited" | "invited" | "attending" | "declined"

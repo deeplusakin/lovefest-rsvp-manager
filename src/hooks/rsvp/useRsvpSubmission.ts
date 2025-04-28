@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { GuestDetailsMap } from "./useFetchHouseholdGuests";
+import { GuestDetailsMap } from "@/types/rsvp";
 
 interface UseRsvpSubmissionProps {
   guestDetails: GuestDetailsMap;

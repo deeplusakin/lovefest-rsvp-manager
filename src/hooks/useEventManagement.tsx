@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Event, EventFormData } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 export const useEventManagement = (onSuccess: () => void) => {
   const [showEventForm, setShowEventForm] = useState(false);
@@ -30,21 +29,14 @@ export const useEventManagement = (onSuccess: () => void) => {
       onSuccess();
     } catch (error: any) {
       toast.error("Error creating event: " + error.message);
-      console.error("Create event error:", error);
     }
   };
 
   const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingEvent) {
-      toast.error("No event selected for editing");
-      return;
-    }
+    if (!editingEvent) return;
 
     try {
-      console.log("Updating event with ID:", editingEvent.id);
-      console.log("Form data:", eventFormData);
-      
       const { error } = await supabase
         .from('events')
         .update(eventFormData)
@@ -55,11 +47,9 @@ export const useEventManagement = (onSuccess: () => void) => {
       toast.success("Event updated successfully");
       setEditingEvent(null);
       setEventFormData({ name: "", date: "", location: "", description: "" });
-      setShowEventForm(false);
       onSuccess();
     } catch (error: any) {
       toast.error("Error updating event: " + error.message);
-      console.error("Update event error:", error);
     }
   };
 
@@ -97,35 +87,14 @@ export const useEventManagement = (onSuccess: () => void) => {
   };
 
   const startEditEvent = (event: Event) => {
-    console.log("Starting edit for event:", event);
     setEditingEvent(event);
-    
-    // Format the date for datetime-local input
-    let formattedDate = "";
-    
-    if (event.date) {
-      try {
-        // Parse the UTC date string from the database
-        const utcDate = new Date(event.date);
-        console.log("Original UTC date from DB:", utcDate.toISOString());
-        
-        // The datetime-local input requires the format YYYY-MM-DDThh:mm in local time
-        // Since the form expects the time in local timezone but needs to be displayed
-        // as if it's in Eastern Time, we can use the raw ISO string
-        formattedDate = utcDate.toISOString().slice(0, 16);
-        console.log("Formatted date for input:", formattedDate);
-      } catch (error) {
-        console.error("Error formatting date:", error);
-        formattedDate = "";
-      }
-    }
-    
     setEventFormData({
-      name: event.name || "",
-      date: formattedDate,
-      location: event.location || "",
+      name: event.name,
+      date: new Date(event.date).toISOString().slice(0, 16),
+      location: event.location,
       description: event.description || "",
     });
+    setShowEventForm(true);
   };
 
   return {

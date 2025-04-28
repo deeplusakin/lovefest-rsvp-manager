@@ -11,14 +11,6 @@ if (!root) throw new Error('Root element not found');
 createRoot(root).render(
   <React.StrictMode>
     <App />
-    <Toaster 
-      position="top-right" 
-      closeButton 
-      richColors 
-      expand={false}
-      toastOptions={{
-        duration: 4000,
-      }} 
-    />
+    <Toaster position="top-right" closeButton richColors />
   </React.StrictMode>
 );

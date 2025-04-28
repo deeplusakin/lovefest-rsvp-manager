@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Guest, RsvpResponses, GuestDetailsMap } from "./useFetchHouseholdGuests";
+import { Guest, RsvpResponses, GuestDetailsMap } from "@/types/rsvp";
 
 interface UseRsvpActionsProps {
   responses: RsvpResponses;
-  setResponses: (responses: RsvpResponses | ((prev: RsvpResponses) => RsvpResponses)) => void;
+  setResponses: (responses: RsvpResponses) => void;
   guestDetails: GuestDetailsMap;
-  setGuestDetails: (guestDetails: GuestDetailsMap | ((prev: GuestDetailsMap) => GuestDetailsMap)) => void;
+  setGuestDetails: (guestDetails: GuestDetailsMap) => void;
   guests: Guest[];
 }
 
@@ -19,11 +19,13 @@ export const useRsvpActions = ({
   setGuestDetails,
   guests
 }: UseRsvpActionsProps) => {
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleRsvpChange = async (guestId: string, eventId: string, status: string) => {
     try {
-      setResponses((prev: RsvpResponses) => ({
+      setResponses(prev => ({
         ...prev,
         [guestId]: {
           ...prev[guestId],
@@ -63,7 +65,7 @@ export const useRsvpActions = ({
     field: 'email' | 'phone' | 'dietary_restrictions',
     value: string
   ) => {
-    setGuestDetails((prev: GuestDetailsMap) => ({
+    setGuestDetails(prev => ({
       ...prev,
       [guestId]: {
         ...prev[guestId],
@@ -75,6 +77,10 @@ export const useRsvpActions = ({
   };
 
   return {
+    message,
+    setMessage,
+    isSubmitting,
+    setIsSubmitting,
     hasChanges,
     setHasChanges,
     handleRsvpChange,

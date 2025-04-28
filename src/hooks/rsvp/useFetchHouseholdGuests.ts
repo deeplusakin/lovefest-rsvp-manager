@@ -2,40 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export interface Guest {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  dietary_restrictions: string | null;
-  guest_events: {
-    event_id: string;
-    status: 'invited' | 'attending' | 'declined';
-    events: {
-      name: string;
-      date: string;
-      location: string;
-    }
-  }[];
-}
-
-export interface RsvpResponses {
-  [guestId: string]: {
-    [eventId: string]: string;
-  };
-}
-
-export interface GuestDetail {
-  email: string | null;
-  phone: string | null;
-  dietary_restrictions: string | null;
-}
-
-export interface GuestDetailsMap {
-  [guestId: string]: GuestDetail;
-}
+import { Guest, RsvpResponses, GuestDetailsMap } from "@/types/rsvp";
 
 export const useFetchHouseholdGuests = (householdId: string) => {
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -49,7 +16,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
 
   const fetchHouseholdGuests = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: guests, error } = await supabase
         .from('guests')
         .select(`
           id,
@@ -72,23 +39,13 @@ export const useFetchHouseholdGuests = (householdId: string) => {
 
       if (error) throw error;
 
-      // Type-safe assignment by explicitly casting only status fields we support
-      const typeSafeGuests = data?.map(guest => ({
-        ...guest,
-        guest_events: guest.guest_events?.map(event => ({
-          ...event,
-          // Ensure status is one of our allowed types
-          status: event.status === 'not_invited' ? 'invited' : event.status as 'invited' | 'attending' | 'declined'
-        })) || []
-      })) || [];
-      
-      setGuests(typeSafeGuests);
+      setGuests(guests || []);
       
       // Initialize responses state
       const initialResponses: RsvpResponses = {};
       const initialGuestDetails: GuestDetailsMap = {};
       
-      typeSafeGuests.forEach(guest => {
+      guests?.forEach(guest => {
         initialResponses[guest.id] = {};
         guest.guest_events?.forEach(event => {
           initialResponses[guest.id][event.event_id] = event.status;

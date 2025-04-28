@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GuestData } from "../types/csv-types";
 import { generateInvitationCode } from "../utils/csv-utils";
-import { RsvpStatus } from "../types/guest-events";
 
 export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) => {
   const [uploading, setUploading] = useState(false);
@@ -31,11 +31,7 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
     fetchWeddingEventId();
   }, []);
 
-  const uploadGuests = async (
-    guests: GuestData[], 
-    replaceExisting: boolean = true,
-    preserveRsvpResponses: boolean = true
-  ) => {
+  const uploadGuests = async (guests: GuestData[], replaceExisting: boolean = true) => {
     if (guests.length === 0) {
       toast.error("No guest data to upload");
       return;
@@ -46,42 +42,6 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
     let errorCount = 0;
 
     try {
-      // Store existing RSVP responses if we want to preserve them
-      let existingRsvps: Record<string, Record<string, {status: RsvpStatus, response_date: string | null}>> = {};
-      
-      if (preserveRsvpResponses && replaceExisting) {
-        // Get all existing guest information to map between old and new guests (by name)
-        const { data: existingGuests, error: existingGuestsError } = await supabase
-          .from('guests')
-          .select(`
-            id, 
-            first_name, 
-            last_name,
-            guest_events(status, event_id, response_date)
-          `);
-        
-        if (existingGuestsError) {
-          console.error('Error fetching existing guests:', existingGuestsError);
-        } else if (existingGuests) {
-          // Create a map of guest full names to their RSVP responses
-          existingRsvps = existingGuests.reduce((acc, guest) => {
-            const fullName = `${guest.first_name.toLowerCase()} ${guest.last_name.toLowerCase()}`;
-            
-            if (guest.guest_events && guest.guest_events.length > 0) {
-              acc[fullName] = guest.guest_events.reduce((events, ge) => {
-                events[ge.event_id] = {
-                  status: ge.status as RsvpStatus,
-                  response_date: ge.response_date
-                };
-                return events;
-              }, {} as Record<string, {status: RsvpStatus, response_date: string | null}>);
-            }
-            
-            return acc;
-          }, {} as Record<string, Record<string, {status: RsvpStatus, response_date: string | null}>>);
-        }
-      }
-
       // If we're replacing existing guests for this event, first remove them
       if (replaceExisting) {
         // Get all guests currently associated with this event
@@ -223,26 +183,13 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
 
             if (guestError) throw guestError;
 
-            // Check if we have existing RSVP data for this guest
-            const guestFullName = `${guest.first_name.toLowerCase()} ${guest.last_name.toLowerCase()}`;
-            const existingGuestRsvps = existingRsvps[guestFullName];
-            
             // Add the guest to the specified event (from props)
-            let eventStatus: RsvpStatus = 'invited';
-            let responseDate: string | null = null;
-            
-            if (existingGuestRsvps?.[eventId]) {
-              eventStatus = existingGuestRsvps[eventId].status;
-              responseDate = existingGuestRsvps[eventId].response_date;
-            }
-            
             const { error: currentEventError } = await supabase
               .from('guest_events')
               .upsert({
                 guest_id: newGuest.id,
                 event_id: eventId,
-                status: eventStatus,
-                response_date: responseDate
+                status: 'invited'
               });
 
             if (currentEventError) throw currentEventError;
@@ -250,21 +197,12 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
             // If we have a wedding event ID and it's different from the current event,
             // also add the guest to the wedding event
             if (weddingEventId && weddingEventId !== eventId) {
-              let weddingEventStatus: RsvpStatus = 'invited';
-              let weddingResponseDate: string | null = null;
-              
-              if (existingGuestRsvps?.[weddingEventId]) {
-                weddingEventStatus = existingGuestRsvps[weddingEventId].status;
-                weddingResponseDate = existingGuestRsvps[weddingEventId].response_date;
-              }
-              
               const { error: weddingEventError } = await supabase
                 .from('guest_events')
                 .upsert({
                   guest_id: newGuest.id,
                   event_id: weddingEventId,
-                  status: weddingEventStatus,
-                  response_date: weddingResponseDate
+                  status: 'invited'
                 });
 
               if (weddingEventError) throw weddingEventError;
@@ -281,12 +219,8 @@ export const useGuestUpload = (eventId: string, onUploadSuccess?: () => void) =>
       const message = replaceExisting 
         ? `Replaced guest list: ${successCount} guests added successfully` 
         : `Processed ${successCount} guests successfully`;
-      
-      const rsvpMessage = preserveRsvpResponses && replaceExisting
-        ? ' (preserved existing RSVP responses)'
-        : '';
         
-      toast.success(`${message}${rsvpMessage}${errorCount > 0 ? `. ${errorCount} errors occurred.` : ''}`);
+      toast.success(`${message}${errorCount > 0 ? `. ${errorCount} errors occurred.` : ''}`);
       onUploadSuccess?.();
     } catch (error: any) {
       console.error("Error uploading guest list:", error);

@@ -1,59 +1,71 @@
 
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { GuestsTable } from "./guests/GuestsTable";
+import { Guest } from "./types/guest";
 import { GuestForm } from "./GuestForm";
 import { HouseholdConsolidation } from "./guests/HouseholdConsolidation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, UserPlus, Users } from "lucide-react";
 import { useWeddingEvent } from "./hooks/useWeddingEvent";
-import { useGuestData } from "@/hooks/useGuestData";
-import { toast } from "sonner";
 
 interface GuestManagementProps {
   onGuestsChange?: () => void;
 }
 
 export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const { weddingEventId } = useWeddingEvent();
-  
-  // Use our centralized guest data hook
-  const { guests, isLoading, isError, fetchGuests, invalidateCache } = useGuestData();
 
-  // Effect to show error toast if there's an error
-  useEffect(() => {
-    if (isError) {
-      toast.error("Failed to load guest data. Please try refreshing.", {
-        id: "guest-load-error",
-        duration: 5000
-      });
-    }
-  }, [isError]);
-
-  const handleRefresh = async () => {
+  const fetchGuests = async () => {
+    setIsLoading(true);
+    
     try {
-      // Force a fresh fetch from the server
-      await fetchGuests(true);
+      const { data, error } = await supabase
+        .from('guests')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          dietary_restrictions,
+          household_id,
+          household:households (name, invitation_code, address)
+        `)
+        .order('last_name');
+
+      if (error) throw error;
+      
+      setGuests(data as Guest[]);
       
       // Notify parent component that guests have changed
       if (onGuestsChange) {
         onGuestsChange();
       }
     } catch (error) {
-      console.error("Error refreshing guests:", error);
+      console.error('Error fetching guests:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchGuests();
+  }, []);
 
   const toggleAddForm = () => {
     setShowAddForm(!showAddForm);
   };
 
   const handleGuestSuccess = () => {
-    // Invalidate the cache to ensure fresh data on next fetch
-    invalidateCache();
-    // Perform a refresh to get updated data
-    handleRefresh();
+    fetchGuests();
+    if (onGuestsChange) {
+      onGuestsChange();
+    }
   };
 
   return (
@@ -67,7 +79,7 @@ export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={handleRefresh}
+            onClick={fetchGuests}
             disabled={isLoading}
           >
             <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
@@ -102,10 +114,7 @@ export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
           <RefreshCw className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <GuestsTable 
-          guests={guests} 
-          onDelete={handleGuestSuccess} 
-        />
+        <GuestsTable guests={guests} onDelete={handleGuestSuccess} />
       )}
     </div>
   );

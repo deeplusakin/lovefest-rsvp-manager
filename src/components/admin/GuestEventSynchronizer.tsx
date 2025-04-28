@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAdminData } from "@/hooks/useAdminData";
 import { RefreshCw } from "lucide-react";
 
 interface GuestEventSynchronizerProps {
@@ -10,9 +11,9 @@ interface GuestEventSynchronizerProps {
   onSyncComplete: () => void;
 }
 
-// The RPC function returns a UUID type for guest_id
-interface GetGuestsWithoutEventResponse {
-  guest_id: string; // UUID represented as string in TypeScript
+// Define the correct return type for our RPC function
+interface GuestWithoutEvent {
+  guest_id: string;
 }
 
 export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSynchronizerProps) => {
@@ -22,7 +23,8 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
     setIsSyncing(true);
     
     try {
-      // Get all guests that don't have a record for this event
+      // Step 1: Get all guests that don't have a record for this event
+      // Using a more explicit typing approach for RPC functions
       const { data, error: guestsError } = await supabase
         .rpc('get_guests_without_event', {
           event_id_param: eventId
@@ -31,14 +33,14 @@ export const GuestEventSynchronizer = ({ eventId, onSyncComplete }: GuestEventSy
       if (guestsError) throw guestsError;
 
       // Ensure we have a valid array to work with even if null is returned
-      const guestsWithoutEvent = (data || []) as GetGuestsWithoutEventResponse[];
+      const guestsWithoutEvent = (data || []) as GuestWithoutEvent[];
       
       if (guestsWithoutEvent.length === 0) {
         toast.info("All guests are already in the RSVP list");
         return;
       }
       
-      // Create guest_events records for these guests
+      // Step 2: Create guest_events records for these guests
       const newGuestEvents = guestsWithoutEvent.map((item) => ({
         guest_id: item.guest_id,
         event_id: eventId,
