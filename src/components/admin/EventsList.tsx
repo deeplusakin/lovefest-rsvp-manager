@@ -24,6 +24,27 @@ export const EventsList = ({ events, onEdit, onDelete }: EventsListProps) => {
     onEdit(emptyEvent);
   };
 
+  const formatEventDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      console.log('Raw date from DB:', dateString);
+      console.log('Parsed date object:', date.toISOString());
+      
+      // Using the updated format from date-fns-tz v3.x
+      const formattedDate = formatInTimeZone(
+        date,
+        'America/New_York',
+        "MMMM d, yyyy 'at' h:mm a zzz"
+      );
+      
+      console.log('Formatted date with timezone:', formattedDate);
+      return formattedDate;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -44,11 +65,7 @@ export const EventsList = ({ events, onEdit, onDelete }: EventsListProps) => {
               <div>
                 <h3 className="text-xl font-semibold">{event.name}</h3>
                 <p className="text-gray-600">
-                  {formatInTimeZone(
-                    new Date(event.date),
-                    'America/New_York',
-                    'MMMM d, yyyy \'at\' h:mm a zzz'
-                  )}
+                  {formatEventDate(event.date)}
                 </p>
                 <p className="text-gray-600">{event.location}</p>
                 {event.description && (
