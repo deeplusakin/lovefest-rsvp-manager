@@ -101,17 +101,19 @@ export const useEventManagement = (onSuccess: () => void) => {
     setEditingEvent(event);
     
     // Format the date for datetime-local input
-    // The date from the database is in UTC format
     let formattedDate = "";
+    
     if (event.date) {
       try {
         // Parse the UTC date string from the database
         const utcDate = new Date(event.date);
         console.log("Original UTC date from DB:", utcDate.toISOString());
         
-        // Convert to local timezone for the input field (which needs YYYY-MM-DDThh:mm format)
+        // The datetime-local input requires the format YYYY-MM-DDThh:mm in local time
+        // Since the form expects the time in local timezone but needs to be displayed
+        // as if it's in Eastern Time, we can use the raw ISO string
         formattedDate = utcDate.toISOString().slice(0, 16);
-        console.log("Formatted local date for input:", formattedDate);
+        console.log("Formatted date for input:", formattedDate);
       } catch (error) {
         console.error("Error formatting date:", error);
         formattedDate = "";

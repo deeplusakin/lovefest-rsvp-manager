@@ -38,7 +38,7 @@ export const EventForm = ({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="date">Date and Time (Eastern Time)</Label>
+        <Label htmlFor="date">Event Date and Time</Label>
         <Input
           id="date"
           type="datetime-local"
@@ -47,7 +47,7 @@ export const EventForm = ({
           required
         />
         <p className="text-xs text-gray-500">
-          Times are stored in UTC but displayed in Eastern Time
+          Enter the time you want displayed in Eastern Time. The system will handle timezone conversion.
         </p>
       </div>
       <div className="space-y-2">

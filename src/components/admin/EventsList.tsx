@@ -29,15 +29,16 @@ export const EventsList = ({ events, onEdit, onDelete }: EventsListProps) => {
       // The dateString comes from the DB in UTC format
       console.log('Raw date from DB:', dateString);
       
-      // Parse the date ensuring it's treated as UTC
+      // Create a Date object from the UTC string
       const date = new Date(dateString);
       console.log('Parsed date object:', date.toISOString());
       
-      // Convert from UTC to America/New_York timezone with proper formatting
+      // Format the date in Eastern Time
+      // EDT is UTC-4, EST is UTC-5
       const formattedDate = formatInTimeZone(
         date, 
-        'America/New_York',  // Using proper IANA timezone identifier
-        "MMMM d, yyyy 'at' h:mm a zzz"  // Adding timezone abbreviation at the end
+        'America/New_York',
+        "MMMM d, yyyy 'at' h:mm a zzz"
       );
       
       console.log('Formatted date with timezone:', formattedDate);
