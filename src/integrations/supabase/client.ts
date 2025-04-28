@@ -83,7 +83,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       const controller = new AbortController();
       
       // Combine the signal from options with our abort controller
-      const originalSignal = options?.signal;
+      const originalSignal = (options as RequestInit)?.signal;
       const { signal } = controller;
       
       if (originalSignal) {
@@ -98,7 +98,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       
       // Create options with the combined signal
       const fetchOptions: RequestInit = {
-        ...options,
+        ...options as RequestInit,
         signal
       };
       
