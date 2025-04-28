@@ -37,7 +37,7 @@ export const RsvpForm = ({ onHouseholdFound }: RsvpFormProps) => {
       <div className="container max-w-md text-center">
         <h2 className="text-4xl md:text-5xl font-serif mb-8">RSVP</h2>
         <p className="text-gray-300 mb-8">
-          Please enter your unique code from your invitation to RSVP for our wedding celebration.
+          Please enter your unique code (case sensitive) from your invitation to RSVP for our wedding celebration.
         </p>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
