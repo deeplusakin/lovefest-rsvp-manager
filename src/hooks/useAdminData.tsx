@@ -1,8 +1,11 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Event, Contribution, GuestEvent } from "@/types/admin";
 import { toast } from "sonner";
+
+// Request timeout in milliseconds
+const REQUEST_TIMEOUT = 8000;
 
 export const useAdminData = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -12,17 +15,49 @@ export const useAdminData = () => {
   const [isError, setIsError] = useState(false);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState(0);
+  
+  // Timeout reference for cleanup
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check session first before attempting any data fetches
   useEffect(() => {
     const checkSession = async () => {
       console.time('session-check');
-      const { data: { session } } = await supabase.auth.getSession();
-      console.timeEnd('session-check');
-      setHasSession(!!session);
+      try {
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutRef.current = setTimeout(() => {
+            reject(new Error('Session check timed out'));
+          }, REQUEST_TIMEOUT);
+        });
+        
+        const { data: { session } } = await Promise.race([
+          sessionPromise,
+          timeoutPromise as Promise<any>
+        ]);
+        
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        
+        console.timeEnd('session-check');
+        setHasSession(!!session);
+      } catch (error) {
+        console.error('Session check error:', error);
+        console.timeEnd('session-check');
+        setHasSession(false);
+      }
     };
     
     checkSession();
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, []);
 
   const fetchEvents = useCallback(async () => {
@@ -30,13 +65,31 @@ export const useAdminData = () => {
     
     try {
       console.time('events-fetch');
-      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoading(true);
+      
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Events fetch timed out'));
+        }, REQUEST_TIMEOUT);
+      });
+      
+      const { data: { session } } = await Promise.race([
+        sessionPromise,
+        timeoutPromise as Promise<any>
+      ]);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
       if (!session) {
         console.log("Skipping events fetch - no active session");
         return;
       }
 
-      const { data: eventsData, error: eventsError } = await supabase
+      const eventsPromise = supabase
         .from("events")
         .select(`
           id,
@@ -57,6 +110,22 @@ export const useAdminData = () => {
           )
         `)
         .order("date");
+      
+      const eventsTimeoutPromise = new Promise((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Events data fetch timed out'));
+        }, REQUEST_TIMEOUT);
+      });
+      
+      const { data: eventsData, error: eventsError } = await Promise.race([
+        eventsPromise,
+        eventsTimeoutPromise as Promise<any>
+      ]);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
 
       if (eventsError) {
         console.error("Events fetch error:", eventsError);
@@ -90,6 +159,13 @@ export const useAdminData = () => {
           id: "events-error", // Add a unique ID to prevent duplicate toasts
         });
       }
+    } finally {
+      setIsLoading(false);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     }
   }, [hasSession]);
 
@@ -98,13 +174,31 @@ export const useAdminData = () => {
     
     try {
       console.time('contributions-fetch');
-      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoading(true);
+      
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Contributions session check timed out'));
+        }, REQUEST_TIMEOUT);
+      });
+      
+      const { data: { session } } = await Promise.race([
+        sessionPromise,
+        timeoutPromise as Promise<any>
+      ]);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
       if (!session) {
         console.log("Skipping contributions fetch - no active session");
         return;
       }
 
-      const { data: contributionsData, error: contributionsError } = await supabase
+      const contributionsPromise = supabase
         .from("contributions")
         .select(`
           id,
@@ -118,6 +212,22 @@ export const useAdminData = () => {
           )
         `)
         .order("created_at", { ascending: false });
+      
+      const contributionsTimeoutPromise = new Promise((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Contributions data fetch timed out'));
+        }, REQUEST_TIMEOUT);
+      });
+      
+      const { data: contributionsData, error: contributionsError } = await Promise.race([
+        contributionsPromise,
+        contributionsTimeoutPromise as Promise<any>
+      ]);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
 
       console.timeEnd('contributions-fetch');
 
@@ -148,6 +258,13 @@ export const useAdminData = () => {
       setContributions([]);
       setTotalContributions(0);
       setIsError(true);
+    } finally {
+      setIsLoading(false);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     }
   }, [hasSession]);
 
@@ -170,7 +287,22 @@ export const useAdminData = () => {
     console.time('admin-data-fetch');
     
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Session check timed out during data fetch'));
+        }, REQUEST_TIMEOUT);
+      });
+      
+      const { data: { session } } = await Promise.race([
+        sessionPromise,
+        timeoutPromise as Promise<any>
+      ]);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       
       if (!session) {
         console.log("No active session");
@@ -178,7 +310,15 @@ export const useAdminData = () => {
         return;
       }
       
-      await Promise.all([fetchEvents(), fetchContributions()]);
+      // Use Promise.allSettled to ensure both fetches run to completion regardless of errors
+      const results = await Promise.allSettled([fetchEvents(), fetchContributions()]);
+      
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Request ${index} failed:`, result.reason);
+        }
+      });
+      
       console.timeEnd('admin-data-fetch');
     } catch (error: any) {
       console.error("Error fetching data:", error);
@@ -191,6 +331,11 @@ export const useAdminData = () => {
       }
     } finally {
       setIsLoading(false);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     }
   }, [fetchEvents, fetchContributions, hasSession, lastFetchTime]);
 
@@ -199,6 +344,13 @@ export const useAdminData = () => {
     if (hasSession !== null) {
       fetchData();
     }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, [hasSession, fetchData]);
 
   return {

@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+// Session check timeout (8 seconds)
+const SESSION_CHECK_TIMEOUT = 8000;
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,16 +20,49 @@ const Login = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Create a timeout promise
+        const timeoutPromise = new Promise<null>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Session check timed out'));
+          }, SESSION_CHECK_TIMEOUT);
+        });
+        
+        const sessionPromise = supabase.auth.getSession();
+        
+        // Race the session check with the timeout
+        const { data: { session } } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]);
+        
+        // Clear timeout since we got a response
+        clearTimeout(timeoutId);
+        
         if (session) {
           // Check if user is admin before redirecting
-          const { data: profileData } = await supabase
+          const adminCheckPromise = supabase
             .from('profiles')
             .select('is_admin')
             .eq('id', session.user.id)
             .single();
+            
+          const adminTimeoutPromise = new Promise<null>((_, reject) => {
+            timeoutId = setTimeout(() => {
+              reject(new Error('Admin check timed out'));
+            }, SESSION_CHECK_TIMEOUT);
+          });
+          
+          const { data: profileData } = await Promise.race([
+            adminCheckPromise,
+            adminTimeoutPromise
+          ]);
+          
+          // Clear timeout since we got a response
+          clearTimeout(timeoutId);
             
           if (profileData?.is_admin) {
             navigate('/admin');
@@ -35,12 +71,18 @@ const Login = () => {
         }
       } catch (error) {
         console.error('Session check error:', error);
+        // Just continue to login page on error
       } finally {
+        clearTimeout(timeoutId);
         setCheckingSession(false);
       }
     };
     
     checkSession();
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -66,12 +108,17 @@ const Login = () => {
 
       if (!profileData?.is_admin) {
         await supabase.auth.signOut();
-        throw new Error("Unauthorized access");
+        throw new Error("Unauthorized access: Admin privileges required");
       }
 
+      toast.success("Login successful", {
+        id: "login-success"
+      });
       navigate('/admin');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message, {
+        id: "login-error"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +126,9 @@ const Login = () => {
 
   const handlePasswordReset = async () => {
     if (!email) {
-      toast.error("Please enter your email address");
+      toast.error("Please enter your email address", {
+        id: "reset-email-required"
+      });
       return;
     }
     setIsLoading(true);
@@ -87,9 +136,13 @@ const Login = () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
-      toast.success("Password reset instructions have been sent to your email");
+      toast.success("Password reset instructions have been sent to your email", {
+        id: "reset-success"
+      });
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message, {
+        id: "reset-error"
+      });
     } finally {
       setIsLoading(false);
     }
