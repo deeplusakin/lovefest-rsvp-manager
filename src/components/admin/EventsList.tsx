@@ -13,41 +13,56 @@ interface EventsListProps {
 
 export const EventsList = ({ events, onEdit, onDelete }: EventsListProps) => (
   <div className="space-y-4">
-    {events.map(event => (
-      <Card key={event.id} className="p-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-xl font-semibold">{event.name}</h3>
-            <p className="text-gray-600">
-              {formatInTimeZone(
-                new Date(event.date),
-                'America/New_York',
-                'MMMM d, yyyy \'at\' h:mm a zzz'
-              )}
-            </p>
-            <p className="text-gray-600">{event.location}</p>
-            {event.description && (
-              <p className="text-gray-600 mt-2">{event.description}</p>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(event)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDelete(event.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-serif">Upcoming Events</h2>
+      <Button onClick={() => onEdit({ id: '', name: '', date: '', location: '', description: '', guest_events: [] })}>
+        Create New Event
+      </Button>
+    </div>
+    
+    {events.length === 0 ? (
+      <Card className="p-4 text-center text-gray-500">
+        No events found. Create your first event to get started.
       </Card>
-    ))}
+    ) : (
+      events.map(event => (
+        <Card key={event.id} className="p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-xl font-semibold">{event.name}</h3>
+              <p className="text-gray-600">
+                {formatInTimeZone(
+                  new Date(event.date),
+                  'America/New_York',
+                  'MMMM d, yyyy \'at\' h:mm a zzz'
+                )}
+              </p>
+              <p className="text-gray-600">{event.location}</p>
+              {event.description && (
+                <p className="text-gray-600 mt-2">{event.description}</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(event)}
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(event.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ))
+    )}
   </div>
 );

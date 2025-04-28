@@ -1,15 +1,18 @@
 
-import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { RefreshCw, Loader2, AlertCircle, PlusCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EventsList } from "@/components/admin/EventsList";
+import { EventForm } from "@/components/admin/EventForm";
 import { EventStatistics } from "@/components/admin/EventStatistics";
 import { RSVPList } from "@/components/admin/RSVPList";
 import { PhotoManager } from "@/components/admin/PhotoManager";
 import { ContributionsList } from "@/components/admin/ContributionsList";
 import { ProfileSettings } from "@/components/admin/ProfileSettings";
 import { GuestManagement } from "@/components/admin/GuestManagement";
-import { Event } from "@/types/admin";
+import { Event, EventFormData } from "@/types/admin";
+import { useState } from "react";
+import { useEventManagement } from "@/hooks/useEventManagement";
 
 interface AdminContentProps {
   currentTab: string;
@@ -36,6 +39,16 @@ export const AdminContent = ({
   fetchEvents,
   getEventStats
 }: AdminContentProps) => {
+  const [showEventForm, setShowEventForm] = useState(false);
+  const {
+    editingEvent,
+    eventFormData,
+    setEventFormData,
+    handleCreateEvent,
+    handleUpdateEvent,
+    handleDeleteEvent,
+    startEditEvent,
+  } = useEventManagement(fetchEvents);
 
   // Create a properly typed empty event to use as fallback
   const emptyEvent: Event = {
@@ -84,7 +97,30 @@ export const AdminContent = ({
 
   switch (currentTab) {
     case 'events':
-      return <EventsList events={events} onEdit={() => { }} onDelete={() => { }} />;
+      return showEventForm ? (
+        <div>
+          <h2 className="text-2xl font-serif mb-4">{editingEvent ? 'Edit Event' : 'Create Event'}</h2>
+          <EventForm 
+            onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+            eventFormData={eventFormData}
+            setEventFormData={setEventFormData}
+            editingEvent={editingEvent}
+            onCancel={() => {
+              setShowEventForm(false);
+              setEventFormData({ name: "", date: "", location: "", description: "" });
+            }}
+          />
+        </div>
+      ) : (
+        <EventsList 
+          events={events} 
+          onEdit={(event) => {
+            startEditEvent(event);
+            setShowEventForm(true);
+          }} 
+          onDelete={handleDeleteEvent} 
+        />
+      );
     case 'guests':
       return <GuestManagement onGuestsChange={fetchEvents} />;
     case 'rsvps':
