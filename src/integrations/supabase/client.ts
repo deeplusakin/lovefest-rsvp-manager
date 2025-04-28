@@ -9,6 +9,66 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// RequestQueue to manage and prioritize Supabase requests
+class RequestQueue {
+  private queue: Array<() => Promise<any>> = [];
+  private isProcessing = false;
+  private maxConcurrent = 3;
+  private activeRequests = 0;
+
+  async add<T>(request: () => Promise<T>, priority = false): Promise<T> {
+    const requestPromise = new Promise<T>((resolve, reject) => {
+      const executeRequest = async () => {
+        try {
+          this.activeRequests++;
+          const result = await request();
+          resolve(result);
+          return result;
+        } catch (error) {
+          reject(error);
+          throw error;
+        } finally {
+          this.activeRequests--;
+          this.processQueue();
+        }
+      };
+
+      // Add to front of queue if priority
+      if (priority) {
+        this.queue.unshift(executeRequest);
+      } else {
+        this.queue.push(executeRequest);
+      }
+    });
+
+    this.processQueue();
+    return requestPromise;
+  }
+
+  private processQueue() {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+
+    setTimeout(() => {
+      while (this.queue.length > 0 && this.activeRequests < this.maxConcurrent) {
+        const request = this.queue.shift();
+        if (request) {
+          request().catch(() => {}); // Execute and catch any errors
+        }
+      }
+      this.isProcessing = false;
+      
+      // If there are still items in the queue and we can process more, continue
+      if (this.queue.length > 0 && this.activeRequests < this.maxConcurrent) {
+        this.processQueue();
+      }
+    }, 0);
+  }
+}
+
+// Create a global request queue
+const requestQueue = new RequestQueue();
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
@@ -18,19 +78,74 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     flowType: 'pkce',  // Use the modern PKCE flow for better security
   },
   global: {
-    fetch: (...args) => {
-      // Adding a timeout to prevent hanging requests
+    fetch: (url, options = {}) => {
+      // Create a new timeout and controller for each request
       const controller = new AbortController();
+      
+      // Combine the signal from options with our abort controller
+      const originalSignal = options.signal;
+      const { signal } = controller;
+      
+      if (originalSignal) {
+        // If the original signal aborts, abort our controller too
+        originalSignal.addEventListener('abort', () => controller.abort());
+      }
+      
+      // Set a reasonable timeout (8 seconds)
       const timeout = setTimeout(() => {
         controller.abort();
-      }, 15000); // 15 second timeout
+      }, 8000);
       
-      // Fix: Explicitly handle the parameters to avoid TypeScript spread argument error
-      const [url, options = {}] = args;
-      return fetch(url, { 
-        ...options, 
-        signal: controller.signal 
-      }).finally(() => clearTimeout(timeout));
+      // Create options with the combined signal
+      const fetchOptions = {
+        ...options,
+        signal
+      };
+      
+      // Create a retry mechanism
+      let retries = 2;
+      
+      const executeRequest = async (): Promise<Response> => {
+        try {
+          const response = await fetch(url, fetchOptions);
+          
+          // If we get a rate limit response, retry with backoff
+          if (response.status === 429 && retries > 0) {
+            retries--;
+            const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+            await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+            return executeRequest();
+          }
+          
+          return response;
+        } catch (error: any) {
+          // Only retry network errors or timeouts if we have retries left
+          if ((error.name === 'AbortError' || error.name === 'TypeError') && retries > 0) {
+            retries--;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return executeRequest();
+          }
+          throw error;
+        } finally {
+          clearTimeout(timeout);
+        }
+      };
+      
+      // Add request to our queue
+      const isAuthRequest = 
+        (typeof url === 'string' && url.includes('/auth')) || 
+        (options.method === 'POST' && typeof url === 'string' && url.includes('/token'));
+        
+      return requestQueue.add(() => executeRequest(), isAuthRequest);
     }
+  }
+});
+
+// Add an error handler for auth errors
+supabase.auth.onAuthStateChange((event) => {
+  console.log('Auth state changed:', event);
+  if (event === 'SIGNED_OUT') {
+    // Clear any cached data to ensure clean state after logout
+    localStorage.removeItem('authCache');
   }
 });

@@ -17,6 +17,7 @@ interface AdminAuthContextType {
   userId: string | null;
   session: Session | null;
   isCheckingAuth: boolean;
+  logout: () => Promise<void>;
 }
 
 // Cache duration in milliseconds (5 minutes)
@@ -32,37 +33,40 @@ const AdminAuthContext = createContext<AdminAuthContextType>({
   isAdmin: false,
   userId: null,
   session: null,
-  isCheckingAuth: true
+  isCheckingAuth: true,
+  logout: async () => {}
 });
 
 export const useAdminAuthContext = () => useContext(AdminAuthContext);
 
 export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [authState, setAuthState] = useState<AdminAuthContextType>({
-    isAdmin: false,
-    userId: null,
-    session: null,
-    isCheckingAuth: true
-  });
-  
-  // Use the hook but don't expose its internals
-  const { isCheckingAuth } = useAdminAuth(() => {
+  const { isCheckingAuth, logout } = useAdminAuth(() => {
     // This is intentionally empty - state updates happen inside the hook
   });
   
   // Sync the context with the cache
+  const [authState, setAuthState] = useState<AdminAuthContextType>({
+    isAdmin: false,
+    userId: null,
+    session: null,
+    isCheckingAuth: true,
+    logout: async () => {}
+  });
+  
+  // Update context whenever auth cache changes
   useEffect(() => {
     if (!isCheckingAuth && authCache) {
       setAuthState({
         isAdmin: authCache.isAdmin,
         userId: authCache.userId,
         session: authCache.session,
-        isCheckingAuth
+        isCheckingAuth,
+        logout
       });
     } else {
-      setAuthState(prev => ({ ...prev, isCheckingAuth }));
+      setAuthState(prev => ({ ...prev, isCheckingAuth, logout }));
     }
-  }, [isCheckingAuth]);
+  }, [isCheckingAuth, logout]);
   
   return (
     <AdminAuthContext.Provider value={authState}>
@@ -77,14 +81,60 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const authAttemptRef = useRef(0);
+  const isMountedRef = useRef(true);
   
   // Function to check if the cache is still valid
   const isCacheValid = () => {
     return authCache && (Date.now() - authCache.lastChecked < CACHE_DURATION);
   };
+
+  // Improved logout function to properly clean up state
+  const logout = async () => {
+    try {
+      console.log('Logging out...');
+      
+      // Clear auth cache first to prevent race conditions
+      authCache = null;
+      
+      // Clear any pending timers
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Sign out from Supabase with more robust error handling
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error);
+        toast.error("Error during logout. Please try again.");
+        
+        // If we get an error, reset the session manually as a fallback
+        await supabase.auth.setSession({
+          access_token: '',
+          refresh_token: ''
+        });
+      }
+      
+      console.log('Redirecting to login after logout');
+      // Make sure we're still mounted before navigating
+      if (isMountedRef.current) {
+        navigate('/login');
+        toast.success("Logged out successfully");
+      }
+    } catch (error) {
+      console.error('Unexpected logout error:', error);
+      toast.error("An unexpected error occurred during logout");
+      
+      // Force navigate to login as last resort
+      if (isMountedRef.current) {
+        navigate('/login');
+      }
+    }
+  };
   
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
     console.time('auth-check');
     
     // Clear any existing timeout
@@ -138,7 +188,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           timeoutPromise as Promise<any>
         ]);
         
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         
         // Clear the timeout since we got a response
         if (timerRef.current) {
@@ -168,6 +218,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           if (location.pathname !== '/login') {
             navigate('/login');
           }
+          setIsCheckingAuth(false);
           return;
         }
 
@@ -192,7 +243,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           profileTimeoutPromise as Promise<any>
         ]);
 
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         
         // Clear the timeout since we got a response
         if (timerRef.current) {
@@ -221,8 +272,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
             lastChecked: Date.now()
           };
           
-          await supabase.auth.signOut();
-          navigate('/login');
+          await logout();
           return;
         }
 
@@ -239,8 +289,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           toast.error("Unauthorized access: Admin privileges required", {
             id: "admin-unauthorized",
           });
-          await supabase.auth.signOut();
-          navigate('/login');
+          await logout();
           return;
         }
 
@@ -251,7 +300,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
         }
         
       } catch (error: any) {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         
         console.error('Auth check error:', error);
         
@@ -266,7 +315,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           navigate('/login');
         }
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setIsCheckingAuth(false);
           console.timeEnd('auth-check');
         }
@@ -299,7 +348,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
 
     // Cleanup function
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       subscription.unsubscribe();
       
       // Clear any timeout on unmount
@@ -310,5 +359,5 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
     };
   }, [navigate, onAuthenticated, location.pathname]);
   
-  return { isCheckingAuth };
+  return { isCheckingAuth, logout };
 };

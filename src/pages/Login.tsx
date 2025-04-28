@@ -83,6 +83,10 @@ const Login = () => {
             }
           } catch (error) {
             console.error("Admin status check failed:", error);
+            // Clear any existing session since it's invalid
+            if (isMounted) {
+              await supabase.auth.signOut();
+            }
             // Continue to login page if admin check fails
           }
         }
@@ -110,7 +114,10 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Configure auth to ensure proper persistence
+      // Clear any previous session data first
+      await supabase.auth.signOut();
+      
+      // Sign in with new credentials
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

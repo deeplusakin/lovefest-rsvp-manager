@@ -1,41 +1,29 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAdminAuth, AdminAuthProvider, useAdminAuthContext } from "@/hooks/useAdminAuth";
+import { useAdminAuthContext } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventStats } from "@/hooks/useEventStats";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { AdminContent } from "@/components/admin/AdminContent";
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const [currentTab, setCurrentTab] = useState('events');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   
   console.time('admin-page-load');
   
-  // Get auth status from context
-  const { isAdmin, isCheckingAuth } = useAdminAuthContext();
+  // Get auth status from context with improved logout function
+  const { isAdmin, isCheckingAuth, logout } = useAdminAuthContext();
   
   // Initialize data fetching only when user is authenticated
   const { events, contributions, totalContributions, isLoading, isError, fetchData, fetchEvents } = useAdminData();
   const { getEventStats } = useEventStats();
 
-  // Set authenticated when admin status is confirmed
-  useEffect(() => {
-    if (isAdmin) {
-      console.log('Auth confirmed from context, setting authenticated state');
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-  }, [isAdmin]);
-  
   // Log when page is fully loaded
   useEffect(() => {
     if (!isCheckingAuth && !isLoading) {
@@ -45,8 +33,9 @@ const AdminDashboard = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate('/login');
+      toast.loading("Signing out...");
+      // Use the improved logout function from context
+      await logout();
     } catch (error) {
       console.error("Sign out error:", error);
       toast.error("Error signing out. Please try again.");
@@ -61,8 +50,8 @@ const AdminDashboard = () => {
     setCurrentTab(tabId);
   };
 
-  const handleRetryAuth = () => {
-    window.location.reload();
+  const handleRetryData = () => {
+    fetchData();
   };
 
   // If still checking auth, show a more informative loading state
@@ -94,9 +83,20 @@ const AdminDashboard = () => {
           
           <div className="p-6 md:pt-4">
             <div className="bg-card rounded-lg shadow-sm p-6 mb-12">
+              {isError && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    There was a problem loading the data. 
+                  </AlertDescription>
+                  <Button onClick={handleRetryData} variant="outline" className="ml-2">
+                    Retry
+                  </Button>
+                </Alert>
+              )}
               <AdminContent
                 currentTab={currentTab}
-                isAuthenticated={isAuthenticated}
+                isAuthenticated={isAdmin}
                 isLoading={isLoading}
                 isError={isError}
                 events={events}
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
   );
 };
 
-// Wrap the dashboard with our auth provider
+// Wrap the dashboard with our auth provider - no change here
 export const Admin = () => {
   return (
     <AdminAuthProvider>

@@ -1,71 +1,41 @@
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from "react";
 import { GuestsTable } from "./guests/GuestsTable";
-import { Guest } from "./types/guest";
 import { GuestForm } from "./GuestForm";
 import { HouseholdConsolidation } from "./guests/HouseholdConsolidation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, UserPlus, Users } from "lucide-react";
 import { useWeddingEvent } from "./hooks/useWeddingEvent";
+import { useGuestData } from "@/hooks/useGuestData";
 
 interface GuestManagementProps {
   onGuestsChange?: () => void;
 }
 
 export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const { weddingEventId } = useWeddingEvent();
+  
+  // Use our centralized guest data hook
+  const { guests, isLoading, fetchGuests } = useGuestData();
 
-  const fetchGuests = async () => {
-    setIsLoading(true);
+  const handleRefresh = async () => {
+    // Force a fresh fetch from the server
+    await fetchGuests(true);
     
-    try {
-      const { data, error } = await supabase
-        .from('guests')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          dietary_restrictions,
-          household_id,
-          household:households (name, invitation_code, address)
-        `)
-        .order('last_name');
-
-      if (error) throw error;
-      
-      setGuests(data as Guest[]);
-      
-      // Notify parent component that guests have changed
-      if (onGuestsChange) {
-        onGuestsChange();
-      }
-    } catch (error) {
-      console.error('Error fetching guests:', error);
-    } finally {
-      setIsLoading(false);
+    // Notify parent component that guests have changed
+    if (onGuestsChange) {
+      onGuestsChange();
     }
   };
-
-  useEffect(() => {
-    fetchGuests();
-  }, []);
 
   const toggleAddForm = () => {
     setShowAddForm(!showAddForm);
   };
 
   const handleGuestSuccess = () => {
-    fetchGuests();
-    if (onGuestsChange) {
-      onGuestsChange();
-    }
+    handleRefresh();
   };
 
   return (
@@ -79,7 +49,7 @@ export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={fetchGuests}
+            onClick={handleRefresh}
             disabled={isLoading}
           >
             <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
