@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { GuestsTable } from "./guests/GuestsTable";
 import { GuestForm } from "./GuestForm";
 import { HouseholdConsolidation } from "./guests/HouseholdConsolidation";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RefreshCw, UserPlus, Users } from "lucide-react";
 import { useWeddingEvent } from "./hooks/useWeddingEvent";
 import { useGuestData } from "@/hooks/useGuestData";
+import { toast } from "sonner";
 
 interface GuestManagementProps {
   onGuestsChange?: () => void;
@@ -18,15 +19,29 @@ export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
   const { weddingEventId } = useWeddingEvent();
   
   // Use our centralized guest data hook
-  const { guests, isLoading, fetchGuests } = useGuestData();
+  const { guests, isLoading, isError, fetchGuests, invalidateCache } = useGuestData();
+
+  // Effect to show error toast if there's an error
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load guest data. Please try refreshing.", {
+        id: "guest-load-error",
+        duration: 5000
+      });
+    }
+  }, [isError]);
 
   const handleRefresh = async () => {
-    // Force a fresh fetch from the server
-    await fetchGuests(true);
-    
-    // Notify parent component that guests have changed
-    if (onGuestsChange) {
-      onGuestsChange();
+    try {
+      // Force a fresh fetch from the server
+      await fetchGuests(true);
+      
+      // Notify parent component that guests have changed
+      if (onGuestsChange) {
+        onGuestsChange();
+      }
+    } catch (error) {
+      console.error("Error refreshing guests:", error);
     }
   };
 
@@ -35,6 +50,9 @@ export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
   };
 
   const handleGuestSuccess = () => {
+    // Invalidate the cache to ensure fresh data on next fetch
+    invalidateCache();
+    // Perform a refresh to get updated data
     handleRefresh();
   };
 
@@ -84,7 +102,10 @@ export const GuestManagement = ({ onGuestsChange }: GuestManagementProps) => {
           <RefreshCw className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <GuestsTable guests={guests} onDelete={handleGuestSuccess} />
+        <GuestsTable 
+          guests={guests} 
+          onDelete={handleGuestSuccess} 
+        />
       )}
     </div>
   );

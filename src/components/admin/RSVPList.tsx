@@ -6,8 +6,9 @@ import { Event, EventStats } from "@/types/admin";
 import { EventStatistics } from "./EventStatistics";
 import { GuestListUpload } from "./GuestListUpload";
 import { GuestEventsTable } from "./GuestEventsTable";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useAdminData } from "@/hooks/useAdminData";
+import { useGuestData } from "@/hooks/useGuestData";
 import { downloadCSV } from "@/utils/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,19 +22,28 @@ interface RSVPListProps {
 
 export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
   const { fetchEvents } = useAdminData();
+  const { invalidateCache: invalidateGuestCache } = useGuestData();
   const [isSyncing, setIsSyncing] = useState<Record<string, boolean>>({});
 
+  // Make sure guest cache is invalidated when we navigate to this component
+  useEffect(() => {
+    invalidateGuestCache();
+  }, [invalidateGuestCache]);
+
   const handleUploadSuccess = useCallback(() => {
+    invalidateGuestCache();
     fetchEvents();
-  }, [fetchEvents]);
+  }, [fetchEvents, invalidateGuestCache]);
 
   const handleSyncComplete = useCallback(() => {
+    invalidateGuestCache();
     fetchEvents();
-  }, [fetchEvents]);
+  }, [fetchEvents, invalidateGuestCache]);
 
   const handleDeleteComplete = useCallback(() => {
+    invalidateGuestCache();
     fetchEvents();
-  }, [fetchEvents]);
+  }, [fetchEvents, invalidateGuestCache]);
 
   // Function to sync and clean up outdated RSVPs
   const handleSyncAndCleanup = async (eventId: string) => {
@@ -65,6 +75,7 @@ export const RSVPList = ({ events, getEventStats }: RSVPListProps) => {
         toast.info("No outdated RSVP records found");
       }
       
+      invalidateGuestCache();
       fetchEvents();
     } catch (error) {
       console.error('Error cleaning up RSVPs:', error);

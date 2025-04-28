@@ -4,9 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Guest } from "@/components/admin/types/guest";
 import { toast } from "sonner";
 import { useAdminAuthContext } from "../useAdminAuth";
-import { guestCache, isCacheValid, updateCache, resetCache } from "./guestCache";
+import { guestCache, isCacheValid, updateCache, resetCache, invalidateCache } from "./guestCache";
 import { UseGuestDataReturn } from "./types";
-import { invalidateCache } from "./guestCache";
 
 export const useGuestDataService = (): UseGuestDataReturn => {
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -25,13 +24,22 @@ export const useGuestDataService = (): UseGuestDataReturn => {
     // Return cached data if it's fresh and not forcing a refresh
     if (!forceRefresh && isCacheValid()) {
       console.log('Using cached guest data');
+      setGuests(guestCache.data);
+      setIsLoading(false);
       return guestCache.data;
     }
 
     // If there's already a request in progress, return its promise
     if (!forceRefresh && guestCache.isLoading && guestCache.loadPromise) {
       console.log('Using existing guest data request');
-      return guestCache.loadPromise;
+      try {
+        const data = await guestCache.loadPromise;
+        setGuests(data);
+        return data;
+      } catch (error) {
+        console.error('Error waiting for existing guest request:', error);
+        throw error;
+      }
     }
 
     // Cancel any previous requests
@@ -70,10 +78,13 @@ export const useGuestDataService = (): UseGuestDataReturn => {
         
         if (error) throw error;
         
+        const typedData = data as Guest[];
+        
         // Update the cache and state
-        updateCache(data as Guest[]);
-        setGuests(data as Guest[]);
-        resolve(data as Guest[]);
+        updateCache(typedData);
+        setGuests(typedData);
+        setIsLoading(false);
+        resolve(typedData);
       } catch (error: any) {
         console.error('Error fetching guests:', error);
         
@@ -84,9 +95,9 @@ export const useGuestDataService = (): UseGuestDataReturn => {
             id: "guest-fetch-error"
           });
         }
+        setIsLoading(false);
         reject(error);
       } finally {
-        setIsLoading(false);
         guestCache.isLoading = false;
         guestCache.loadPromise = null;
         abortControllerRef.current = null;
@@ -103,8 +114,9 @@ export const useGuestDataService = (): UseGuestDataReturn => {
   useEffect(() => {
     if (isAdmin) {
       fetchGuests()
-        .then(data => setGuests(data))
         .catch(() => {}); // Error already handled in fetchGuests
+    } else {
+      setIsLoading(false);
     }
     
     // Cleanup function to cancel any pending requests
