@@ -87,6 +87,19 @@ export const RsvpDetails = () => {
     return null;
   }
 
+  // Format date for display
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary to-primary/80 text-white">
       <section className="py-24">
@@ -104,14 +117,7 @@ export const RsvpDetails = () => {
                 <div className="space-y-2">
                   <h3 className="text-2xl font-serif">{event.events.name}</h3>
                   <p className="text-gray-300">
-                    {new Date(event.events.date).toLocaleDateString(undefined, {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {formatEventDate(event.events.date)}
                   </p>
                   <p className="text-gray-300">{event.events.location}</p>
                 </div>

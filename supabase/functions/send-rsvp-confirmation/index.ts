@@ -55,6 +55,20 @@ serve(async (req) => {
       throw new Error("Failed to fetch event data");
     }
 
+    // Format date for email
+    const formatEventDate = (dateString: string) => {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric', 
+        minute: 'numeric',
+        hour12: true
+      }).format(date);
+    };
+
     // Send confirmation email
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Wedding RSVP <rsvp@resend.dev>",
@@ -67,7 +81,7 @@ serve(async (req) => {
         <p>You have indicated that you ${isAttending ? "will" : "will not"} be attending.</p>
         ${isAttending ? `
           <h2>Event Details:</h2>
-          <p>Date: ${new Date(event.date).toLocaleDateString()}</p>
+          <p>Date: ${formatEventDate(event.date)}</p>
           <p>Location: ${event.location}</p>
         ` : ""}
         <p>If you need to make any changes to your RSVP, please use your invitation code to access the website.</p>

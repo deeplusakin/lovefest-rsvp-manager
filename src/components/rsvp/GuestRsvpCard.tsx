@@ -45,6 +45,20 @@ export const GuestRsvpCard = ({
   onDetailChange 
 }: GuestRsvpCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
+  
+  // Format date for display
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).format(date);
+  };
 
   return (
     <Card className="p-6">
@@ -99,7 +113,7 @@ export const GuestRsvpCard = ({
           <div key={event.event_id} className="space-y-3">
             <h4 className="font-medium">{event.events.name}</h4>
             <p className="text-sm text-gray-600">
-              {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
+              {formatEventDate(event.events.date)} at {event.events.location}
             </p>
             <RadioGroup
               value={responses[event.event_id] || event.status}
