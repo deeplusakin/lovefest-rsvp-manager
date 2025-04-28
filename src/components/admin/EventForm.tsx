@@ -38,7 +38,7 @@ export const EventForm = ({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="date">Date and Time</Label>
+        <Label htmlFor="date">Date and Time (Eastern Time)</Label>
         <Input
           id="date"
           type="datetime-local"
@@ -46,6 +46,9 @@ export const EventForm = ({
           onChange={(e) => setEventFormData({ ...eventFormData, date: e.target.value })}
           required
         />
+        <p className="text-xs text-gray-500">
+          Times are stored in UTC but displayed in Eastern Time
+        </p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="location">Location</Label>

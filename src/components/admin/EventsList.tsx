@@ -26,15 +26,18 @@ export const EventsList = ({ events, onEdit, onDelete }: EventsListProps) => {
 
   const formatEventDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      // The dateString comes from the DB in UTC format
       console.log('Raw date from DB:', dateString);
+      
+      // Parse the date ensuring it's treated as UTC
+      const date = new Date(dateString);
       console.log('Parsed date object:', date.toISOString());
       
-      // Using the updated format from date-fns-tz v3.x
+      // Convert from UTC to America/New_York timezone with proper formatting
       const formattedDate = formatInTimeZone(
-        date,
-        'America/New_York',
-        "MMMM d, yyyy 'at' h:mm a zzz"
+        date, 
+        'America/New_York',  // Using proper IANA timezone identifier
+        "MMMM d, yyyy 'at' h:mm a zzz"  // Adding timezone abbreviation at the end
       );
       
       console.log('Formatted date with timezone:', formattedDate);

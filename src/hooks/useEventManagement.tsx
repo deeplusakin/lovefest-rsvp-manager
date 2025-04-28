@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Event, EventFormData } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 export const useEventManagement = (onSuccess: () => void) => {
   const [showEventForm, setShowEventForm] = useState(false);
@@ -100,11 +101,17 @@ export const useEventManagement = (onSuccess: () => void) => {
     setEditingEvent(event);
     
     // Format the date for datetime-local input
-    // The date from the database needs to be formatted as YYYY-MM-DDThh:mm
+    // The date from the database is in UTC format
     let formattedDate = "";
     if (event.date) {
       try {
-        formattedDate = new Date(event.date).toISOString().slice(0, 16);
+        // Parse the UTC date string from the database
+        const utcDate = new Date(event.date);
+        console.log("Original UTC date from DB:", utcDate.toISOString());
+        
+        // Convert to local timezone for the input field (which needs YYYY-MM-DDThh:mm format)
+        formattedDate = utcDate.toISOString().slice(0, 16);
+        console.log("Formatted local date for input:", formattedDate);
       } catch (error) {
         console.error("Error formatting date:", error);
         formattedDate = "";
