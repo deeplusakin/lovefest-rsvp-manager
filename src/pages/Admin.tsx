@@ -7,27 +7,39 @@ import { useAdminData } from "@/hooks/useAdminData";
 import { useEventStats } from "@/hooks/useEventStats";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { AdminContent } from "@/components/admin/AdminContent";
+import { Loader2 } from "lucide-react";
 
 export const Admin = () => {
   const [currentTab, setCurrentTab] = useState('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   
+  console.time('admin-page-load');
+  
+  // Initialize auth check with callback
+  const { isCheckingAuth } = useAdminAuth(() => {
+    console.log('Auth confirmed, setting authenticated state');
+    setIsAuthenticated(true);
+  });
+  
   // Initialize data fetching only when user is authenticated
   const { events, contributions, totalContributions, isLoading, isError, fetchData, fetchEvents } = useAdminData();
   const { getEventStats } = useEventStats();
 
-  // Check authentication status when component mounts
-  useAdminAuth(() => {
-    setIsAuthenticated(true);
-  });
-
   // Only fetch data once authentication is confirmed
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('User authenticated, fetching data');
       fetchData();
     }
   }, [isAuthenticated, fetchData]);
+  
+  // Log when page is fully loaded
+  useEffect(() => {
+    if (!isCheckingAuth && !isLoading) {
+      console.timeEnd('admin-page-load');
+    }
+  }, [isCheckingAuth, isLoading]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -41,6 +53,19 @@ export const Admin = () => {
     }
     setCurrentTab(tabId);
   };
+
+  // If still checking auth, show a more informative loading state
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-lg">Verifying authentication...</p>
+          <p className="text-sm text-muted-foreground">This may take a moment</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col pt-10">

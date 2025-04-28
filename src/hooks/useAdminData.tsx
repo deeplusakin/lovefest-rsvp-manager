@@ -11,11 +11,14 @@ export const useAdminData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
 
   // Check session first before attempting any data fetches
   useEffect(() => {
     const checkSession = async () => {
+      console.time('session-check');
       const { data: { session } } = await supabase.auth.getSession();
+      console.timeEnd('session-check');
       setHasSession(!!session);
     };
     
@@ -26,6 +29,7 @@ export const useAdminData = () => {
     if (hasSession === false) return; // Skip if we know there's no session
     
     try {
+      console.time('events-fetch');
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         console.log("Skipping events fetch - no active session");
@@ -58,6 +62,8 @@ export const useAdminData = () => {
         console.error("Events fetch error:", eventsError);
         throw eventsError;
       }
+      
+      console.timeEnd('events-fetch');
 
       // Log the raw date values to debug
       console.log("Raw event dates:", eventsData?.map(e => ({ name: e.name, date: e.date })));
@@ -91,6 +97,7 @@ export const useAdminData = () => {
     if (hasSession === false) return; // Skip if we know there's no session
     
     try {
+      console.time('contributions-fetch');
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         console.log("Skipping contributions fetch - no active session");
@@ -111,6 +118,8 @@ export const useAdminData = () => {
           )
         `)
         .order("created_at", { ascending: false });
+
+      console.timeEnd('contributions-fetch');
 
       if (contributionsError) {
         console.error("Contributions fetch error:", contributionsError);
@@ -149,7 +158,16 @@ export const useAdminData = () => {
       return; // Skip if we know there's no session
     }
     
+    // Add debounce to prevent multiple rapid fetches
+    const now = Date.now();
+    if (now - lastFetchTime < 1000) { // 1 second debounce
+      console.log("Skipping fetch, too soon since last fetch");
+      return;
+    }
+    setLastFetchTime(now);
+    
     setIsLoading(true);
+    console.time('admin-data-fetch');
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -161,6 +179,7 @@ export const useAdminData = () => {
       }
       
       await Promise.all([fetchEvents(), fetchContributions()]);
+      console.timeEnd('admin-data-fetch');
     } catch (error: any) {
       console.error("Error fetching data:", error);
       
@@ -173,7 +192,7 @@ export const useAdminData = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchEvents, fetchContributions, hasSession]);
+  }, [fetchEvents, fetchContributions, hasSession, lastFetchTime]);
 
   // Trigger fetchData when hasSession changes
   useEffect(() => {
