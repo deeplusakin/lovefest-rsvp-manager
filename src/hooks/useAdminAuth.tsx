@@ -1,13 +1,22 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, createContext, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Session } from "@supabase/supabase-js";
 
 interface AdminAuthCache {
   isAdmin: boolean;
   userId: string | null;
+  session: Session | null;
   lastChecked: number;
+}
+
+interface AdminAuthContextType {
+  isAdmin: boolean;
+  userId: string | null;
+  session: Session | null;
+  isCheckingAuth: boolean;
 }
 
 // Cache duration in milliseconds (5 minutes)
@@ -18,11 +27,56 @@ const REQUEST_TIMEOUT = 8000;
 // In-memory cache shared between hook instances
 let authCache: AdminAuthCache | null = null;
 
+// Create a context to share auth state across components
+const AdminAuthContext = createContext<AdminAuthContextType>({
+  isAdmin: false,
+  userId: null,
+  session: null,
+  isCheckingAuth: true
+});
+
+export const useAdminAuthContext = () => useContext(AdminAuthContext);
+
+export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [authState, setAuthState] = useState<AdminAuthContextType>({
+    isAdmin: false,
+    userId: null,
+    session: null,
+    isCheckingAuth: true
+  });
+  
+  // Use the hook but don't expose its internals
+  const { isCheckingAuth } = useAdminAuth(() => {
+    // This is intentionally empty - state updates happen inside the hook
+  });
+  
+  // Sync the context with the cache
+  useEffect(() => {
+    if (!isCheckingAuth && authCache) {
+      setAuthState({
+        isAdmin: authCache.isAdmin,
+        userId: authCache.userId,
+        session: authCache.session,
+        isCheckingAuth
+      });
+    } else {
+      setAuthState(prev => ({ ...prev, isCheckingAuth }));
+    }
+  }, [isCheckingAuth]);
+  
+  return (
+    <AdminAuthContext.Provider value={authState}>
+      {children}
+    </AdminAuthContext.Provider>
+  );
+};
+
 export const useAdminAuth = (onAuthenticated: () => void) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const authAttemptRef = useRef(0);
   
   // Function to check if the cache is still valid
   const isCacheValid = () => {
@@ -60,6 +114,16 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           }
         }
         
+        // Increment attempt counter for potential backoff
+        authAttemptRef.current += 1;
+        
+        // Apply exponential backoff if we've had multiple attempts
+        const backoffTime = Math.min(Math.pow(2, authAttemptRef.current - 1) * 1000, 8000);
+        if (authAttemptRef.current > 1) {
+          console.log(`Applying backoff of ${backoffTime}ms before auth check`);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
+        }
+        
         // Set timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) => {
           timerRef.current = setTimeout(() => {
@@ -82,6 +146,9 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           timerRef.current = null;
         }
         
+        // Reset attempt counter on successful response
+        authAttemptRef.current = 0;
+        
         if (sessionError) {
           console.error('Session error:', sessionError);
           throw sessionError;
@@ -93,6 +160,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           authCache = {
             isAdmin: false,
             userId: null,
+            session: null,
             lastChecked: Date.now()
           };
           
@@ -149,6 +217,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
           authCache = {
             isAdmin: false,
             userId: null,
+            session: null,
             lastChecked: Date.now()
           };
           
@@ -161,6 +230,7 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
         authCache = {
           isAdmin: !!profile?.is_admin,
           userId: session.user.id,
+          session: session,
           lastChecked: Date.now()
         };
 

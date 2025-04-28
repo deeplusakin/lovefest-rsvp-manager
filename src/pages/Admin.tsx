@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminAuth, AdminAuthProvider, useAdminAuthContext } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useEventStats } from "@/hooks/useEventStats";
 import { Sidebar } from "@/components/admin/Sidebar";
@@ -12,48 +12,29 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
-export const Admin = () => {
+const AdminDashboard = () => {
   const [currentTab, setCurrentTab] = useState('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authTimedOut, setAuthTimedOut] = useState(false);
   const navigate = useNavigate();
   
   console.time('admin-page-load');
   
-  // Initialize auth check with callback
-  const { isCheckingAuth } = useAdminAuth(() => {
-    console.log('Auth confirmed, setting authenticated state');
-    setIsAuthenticated(true);
-    setAuthTimedOut(false); // Reset timeout state on successful auth
-  });
+  // Get auth status from context
+  const { isAdmin, isCheckingAuth } = useAdminAuthContext();
   
   // Initialize data fetching only when user is authenticated
   const { events, contributions, totalContributions, isLoading, isError, fetchData, fetchEvents } = useAdminData();
   const { getEventStats } = useEventStats();
 
-  // Only fetch data once authentication is confirmed
+  // Set authenticated when admin status is confirmed
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log('User authenticated, fetching data');
-      fetchData();
+    if (isAdmin) {
+      console.log('Auth confirmed from context, setting authenticated state');
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
     }
-  }, [isAuthenticated, fetchData]);
-  
-  // Handle authentication timeout
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    if (isCheckingAuth) {
-      // Set a timeout for authentication check
-      timeoutId = setTimeout(() => {
-        setAuthTimedOut(true);
-      }, 10000); // 10 seconds timeout
-    }
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [isCheckingAuth]);
+  }, [isAdmin]);
   
   // Log when page is fully loaded
   useEffect(() => {
@@ -81,34 +62,9 @@ export const Admin = () => {
   };
 
   const handleRetryAuth = () => {
-    setAuthTimedOut(false);
     window.location.reload();
   };
 
-  // If auth check times out, show retry option
-  if (authTimedOut) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-card p-8 rounded-lg shadow-md">
-          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-center mb-4">Authentication Taking Too Long</h2>
-          <p className="text-muted-foreground mb-6 text-center">
-            We're having trouble verifying your admin status. This could be due to a slow connection or a temporary issue.
-          </p>
-          <div className="space-y-4">
-            <Button onClick={handleRetryAuth} className="w-full">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry Authentication
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/login')} className="w-full">
-              Return to Login
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
   // If still checking auth, show a more informative loading state
   if (isCheckingAuth) {
     return (
@@ -155,6 +111,15 @@ export const Admin = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Wrap the dashboard with our auth provider
+export const Admin = () => {
+  return (
+    <AdminAuthProvider>
+      <AdminDashboard />
+    </AdminAuthProvider>
   );
 };
 

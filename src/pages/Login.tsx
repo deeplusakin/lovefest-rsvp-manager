@@ -9,25 +9,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-// Session check timeout (8 seconds)
-const SESSION_CHECK_TIMEOUT = 8000;
+// Session check timeout (10 seconds)
+const SESSION_CHECK_TIMEOUT = 10000;
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    let isMounted = true;
     
     const checkSession = async () => {
       try {
+        setSessionCheckFailed(false);
+        
         // Create a timeout promise
         const timeoutPromise = new Promise<null>((_, reject) => {
           timeoutId = setTimeout(() => {
-            reject(new Error('Session check timed out'));
+            if (isMounted) {
+              setSessionCheckFailed(true);
+              reject(new Error('Session check timed out'));
+            }
           }, SESSION_CHECK_TIMEOUT);
         });
         
@@ -42,7 +49,9 @@ const Login = () => {
         // Clear timeout since we got a response
         clearTimeout(timeoutId);
         
-        if (session) {
+        if (session && isMounted) {
+          console.log("Session found, checking admin status");
+          
           // Check if user is admin before redirecting
           const adminCheckPromise = supabase
             .from('profiles')
@@ -52,21 +61,29 @@ const Login = () => {
             
           const adminTimeoutPromise = new Promise<null>((_, reject) => {
             timeoutId = setTimeout(() => {
-              reject(new Error('Admin check timed out'));
+              if (isMounted) {
+                setSessionCheckFailed(true);
+                reject(new Error('Admin check timed out'));
+              }
             }, SESSION_CHECK_TIMEOUT);
           });
           
-          const { data: profileData } = await Promise.race([
-            adminCheckPromise,
-            adminTimeoutPromise
-          ]);
-          
-          // Clear timeout since we got a response
-          clearTimeout(timeoutId);
+          try {
+            const { data: profileData } = await Promise.race([
+              adminCheckPromise,
+              adminTimeoutPromise
+            ]);
             
-          if (profileData?.is_admin) {
-            navigate('/admin');
-            return;
+            // Clear timeout since we got a response
+            clearTimeout(timeoutId);
+              
+            if (profileData?.is_admin && isMounted) {
+              navigate('/admin');
+              return;
+            }
+          } catch (error) {
+            console.error("Admin status check failed:", error);
+            // Continue to login page if admin check fails
           }
         }
       } catch (error) {
@@ -74,13 +91,16 @@ const Login = () => {
         // Just continue to login page on error
       } finally {
         clearTimeout(timeoutId);
-        setCheckingSession(false);
+        if (isMounted) {
+          setCheckingSession(false);
+        }
       }
     };
     
     checkSession();
     
     return () => {
+      isMounted = false;
       clearTimeout(timeoutId);
     };
   }, [navigate]);
@@ -90,6 +110,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Configure auth to ensure proper persistence
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -148,12 +169,26 @@ const Login = () => {
     }
   };
 
+  const handleRetrySessionCheck = () => {
+    setCheckingSession(true);
+    setSessionCheckFailed(false);
+    window.location.reload();
+  };
+
   if (checkingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p>Loading...</p>
+          <p>Checking authentication...</p>
+          {sessionCheckFailed && (
+            <div className="mt-4">
+              <p className="text-amber-500 mb-2">Session check is taking longer than expected</p>
+              <Button variant="outline" onClick={handleRetrySessionCheck}>
+                Retry
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );

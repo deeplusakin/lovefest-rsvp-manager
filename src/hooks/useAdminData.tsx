@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Event, Contribution, GuestEvent } from "@/types/admin";
 import { toast } from "sonner";
+import { useAdminAuthContext } from "./useAdminAuth";
 
 // Request timeout in milliseconds
 const REQUEST_TIMEOUT = 8000;
@@ -13,82 +14,21 @@ export const useAdminData = () => {
   const [totalContributions, setTotalContributions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState(0);
+  
+  // Use the centralized auth context instead of running separate session checks
+  const { isAdmin, session } = useAdminAuthContext();
   
   // Timeout reference for cleanup
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check session first before attempting any data fetches
-  useEffect(() => {
-    const checkSession = async () => {
-      console.time('session-check');
-      try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutRef.current = setTimeout(() => {
-            reject(new Error('Session check timed out'));
-          }, REQUEST_TIMEOUT);
-        });
-        
-        const { data: { session } } = await Promise.race([
-          sessionPromise,
-          timeoutPromise as Promise<any>
-        ]);
-        
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-        
-        console.timeEnd('session-check');
-        setHasSession(!!session);
-      } catch (error) {
-        console.error('Session check error:', error);
-        console.timeEnd('session-check');
-        setHasSession(false);
-      }
-    };
-    
-    checkSession();
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, []);
-
   const fetchEvents = useCallback(async () => {
-    if (hasSession === false) return; // Skip if we know there's no session
+    if (!isAdmin || !session) return; // Skip if not authenticated
     
     try {
       console.time('events-fetch');
       setIsLoading(true);
       
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutRef.current = setTimeout(() => {
-          reject(new Error('Events fetch timed out'));
-        }, REQUEST_TIMEOUT);
-      });
-      
-      const { data: { session } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise as Promise<any>
-      ]);
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      
-      if (!session) {
-        console.log("Skipping events fetch - no active session");
-        return;
-      }
-
       const eventsPromise = supabase
         .from("events")
         .select(`
@@ -167,37 +107,15 @@ export const useAdminData = () => {
         timeoutRef.current = null;
       }
     }
-  }, [hasSession]);
+  }, [isAdmin, session]);
 
   const fetchContributions = useCallback(async () => {
-    if (hasSession === false) return; // Skip if we know there's no session
+    if (!isAdmin || !session) return; // Skip if not authenticated
     
     try {
       console.time('contributions-fetch');
       setIsLoading(true);
       
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutRef.current = setTimeout(() => {
-          reject(new Error('Contributions session check timed out'));
-        }, REQUEST_TIMEOUT);
-      });
-      
-      const { data: { session } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise as Promise<any>
-      ]);
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      
-      if (!session) {
-        console.log("Skipping contributions fetch - no active session");
-        return;
-      }
-
       const contributionsPromise = supabase
         .from("contributions")
         .select(`
@@ -266,13 +184,12 @@ export const useAdminData = () => {
         timeoutRef.current = null;
       }
     }
-  }, [hasSession]);
+  }, [isAdmin, session]);
 
   const fetchData = useCallback(async () => {
-    if (hasSession === null) return; // Wait until we know session state
-    if (hasSession === false) {
+    if (!isAdmin) {
       setIsLoading(false);
-      return; // Skip if we know there's no session
+      return; // Skip if not authenticated
     }
     
     // Add debounce to prevent multiple rapid fetches
@@ -287,29 +204,6 @@ export const useAdminData = () => {
     console.time('admin-data-fetch');
     
     try {
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutRef.current = setTimeout(() => {
-          reject(new Error('Session check timed out during data fetch'));
-        }, REQUEST_TIMEOUT);
-      });
-      
-      const { data: { session } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise as Promise<any>
-      ]);
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      
-      if (!session) {
-        console.log("No active session");
-        setIsLoading(false);
-        return;
-      }
-      
       // Use Promise.allSettled to ensure both fetches run to completion regardless of errors
       const results = await Promise.allSettled([fetchEvents(), fetchContributions()]);
       
@@ -337,11 +231,11 @@ export const useAdminData = () => {
         timeoutRef.current = null;
       }
     }
-  }, [fetchEvents, fetchContributions, hasSession, lastFetchTime]);
+  }, [fetchEvents, fetchContributions, isAdmin, lastFetchTime]);
 
-  // Trigger fetchData when hasSession changes
+  // Fetch data when auth state changes
   useEffect(() => {
-    if (hasSession !== null) {
+    if (isAdmin) {
       fetchData();
     }
     
@@ -351,7 +245,7 @@ export const useAdminData = () => {
         timeoutRef.current = null;
       }
     };
-  }, [hasSession, fetchData]);
+  }, [isAdmin, fetchData]);
 
   return {
     events,
