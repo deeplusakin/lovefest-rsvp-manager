@@ -16,7 +16,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
 
   const fetchHouseholdGuests = async () => {
     try {
-      const { data: guests, error } = await supabase
+      const { data: guestsData, error } = await supabase
         .from('guests')
         .select(`
           id,
@@ -39,13 +39,15 @@ export const useFetchHouseholdGuests = (householdId: string) => {
 
       if (error) throw error;
 
-      setGuests(guests || []);
+      // Explicitly cast the data to match our Guest[] type
+      const typedGuests = guestsData as unknown as Guest[];
+      setGuests(typedGuests || []);
       
       // Initialize responses state
       const initialResponses: RsvpResponses = {};
       const initialGuestDetails: GuestDetailsMap = {};
       
-      guests?.forEach(guest => {
+      typedGuests?.forEach(guest => {
         initialResponses[guest.id] = {};
         guest.guest_events?.forEach(event => {
           initialResponses[guest.id][event.event_id] = event.status;

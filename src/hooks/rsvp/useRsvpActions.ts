@@ -6,9 +6,9 @@ import { Guest, RsvpResponses, GuestDetailsMap } from "@/types/rsvp";
 
 interface UseRsvpActionsProps {
   responses: RsvpResponses;
-  setResponses: (responses: RsvpResponses) => void;
+  setResponses: React.Dispatch<React.SetStateAction<RsvpResponses>>;
   guestDetails: GuestDetailsMap;
-  setGuestDetails: (guestDetails: GuestDetailsMap) => void;
+  setGuestDetails: React.Dispatch<React.SetStateAction<GuestDetailsMap>>;
   guests: Guest[];
 }
 
@@ -25,10 +25,10 @@ export const useRsvpActions = ({
 
   const handleRsvpChange = async (guestId: string, eventId: string, status: string) => {
     try {
-      setResponses(prev => ({
+      setResponses((prev: RsvpResponses) => ({
         ...prev,
         [guestId]: {
-          ...prev[guestId],
+          ...(prev[guestId] || {}),
           [eventId]: status
         }
       }));
@@ -65,10 +65,10 @@ export const useRsvpActions = ({
     field: 'email' | 'phone' | 'dietary_restrictions',
     value: string
   ) => {
-    setGuestDetails(prev => ({
+    setGuestDetails((prev: GuestDetailsMap) => ({
       ...prev,
       [guestId]: {
-        ...prev[guestId],
+        ...(prev[guestId] || {}),
         [field]: value
       }
     }));

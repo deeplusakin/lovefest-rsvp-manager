@@ -47,7 +47,8 @@ export const useAdminData = () => {
       // Log the raw date values to debug
       console.log("Raw event dates:", eventsData?.map(e => ({ name: e.name, date: e.date })));
       
-      setEvents(eventsData || []);
+      // Use type assertion to map the events data to the Event type
+      setEvents((eventsData || []) as unknown as Event[]);
     } catch (error: any) {
       console.error("Error fetching events:", error.message);
       toast.error("Error loading events");

@@ -1,7 +1,7 @@
 
 export interface GuestEvent {
   event_id: string;
-  status: 'not_invited' | 'invited' | 'attending' | 'declined';
+  status: 'not_invited' | 'invited' | 'attending' | 'declined' | string;
   events: {
     name: string;
     date: string;
