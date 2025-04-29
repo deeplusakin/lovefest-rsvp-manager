@@ -4,35 +4,12 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-
-interface GuestEvent {
-  event_id: string;
-  status: 'not_invited' | 'invited' | 'attending' | 'declined';
-  events: {
-    name: string;
-    date: string;
-    location: string;
-  };
-}
-
-interface Guest {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string | null;
-  phone?: string | null;
-  dietary_restrictions?: string | null;
-  guest_events: GuestEvent[];
-}
+import { Guest, GuestDetails } from "@/types/rsvp";
 
 interface GuestRsvpCardProps {
   guest: Guest;
   responses: Record<string, string>;
-  guestDetails?: {
-    email?: string | null;
-    phone?: string | null;
-    dietary_restrictions?: string | null;
-  };
+  guestDetails?: GuestDetails;
   onRsvpChange: (guestId: string, eventId: string, status: string) => void;
   onDetailChange?: (guestId: string, field: 'email' | 'phone' | 'dietary_restrictions', value: string) => void;
 }

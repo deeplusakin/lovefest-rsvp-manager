@@ -6,11 +6,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RsvpStatus } from "./types/guest-events";
 
 interface GuestStatusSelectProps {
-  status: RsvpStatus;
-  onStatusChange: (status: RsvpStatus) => void;
+  status: string;
+  onStatusChange: (status: string) => void;
   disabled?: boolean;
 }
 
@@ -18,7 +17,7 @@ export const GuestStatusSelect = ({ status, onStatusChange, disabled }: GuestSta
   return (
     <Select
       value={status}
-      onValueChange={(value: RsvpStatus) => onStatusChange(value)}
+      onValueChange={(value) => onStatusChange(value)}
       disabled={disabled}
     >
       <SelectTrigger className="w-[140px]">

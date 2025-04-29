@@ -1,5 +1,5 @@
 
-export type RsvpStatus = "not_invited" | "invited" | "attending" | "declined";
+export type RsvpStatus = "not_invited" | "invited" | "attending" | "declined" | string;
 
 export interface AvailableEvent {
   id: string;

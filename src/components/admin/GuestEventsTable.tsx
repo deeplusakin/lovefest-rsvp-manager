@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GuestEventAddForm } from "./GuestEventAddForm";
 import { GuestStatusSelect } from "./GuestStatusSelect";
-import { RsvpStatus } from "./types/guest-events";
 
 interface GuestEventsTableProps {
   guests: GuestEvent[];
@@ -17,7 +16,7 @@ export const GuestEventsTable = ({ guests, eventId }: GuestEventsTableProps) => 
   const [addingEventToGuest, setAddingEventToGuest] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
-  const handleStatusUpdate = async (guestId: string, newStatus: RsvpStatus) => {
+  const handleStatusUpdate = async (guestId: string, newStatus: string) => {
     setUpdatingStatus(guestId);
     try {
       const { error } = await supabase
