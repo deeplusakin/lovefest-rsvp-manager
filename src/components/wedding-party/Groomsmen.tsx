@@ -26,13 +26,6 @@ const groomsmen = [
     description: "Groom's brother-in-law"
   },
   {
-    id: 7,
-    name: "Taurean",
-    role: "Groomsman",
-    image: "/lovable-uploads/3f0413f8-b63c-4f28-9edf-fb2935ab2cdc.png",
-    description: "Brother of the groom"
-  },
-  {
     id: 4,
     name: "Joharri",
     role: "Groomsman",
