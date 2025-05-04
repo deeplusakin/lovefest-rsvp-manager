@@ -43,7 +43,7 @@ const groomsmen = [
     id: 9,
     name: "Djibril",
     role: "Groomsman",
-    image: "/lovable-uploads/52abb3f9-3407-4a4b-8ca6-03179d66a1b1.png",
+    image: "/lovable-uploads/583f0616-7458-45cc-95a9-65cbeb479773.png",
     description: "Brother-in-law of the groom"
   },
   {
