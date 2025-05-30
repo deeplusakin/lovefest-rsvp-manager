@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 
 // Bridesmaid data with the uploaded images
@@ -20,7 +19,7 @@ const bridesmaids = [
   {
     id: 2,
     name: "Dekontee",
-    role: "Bridesmaid",
+    role: "Maid of Honor",
     image: "/lovable-uploads/166860cc-b572-4417-9637-a8fbf73eee46.png",
     description: "Bride's sister"
   },
