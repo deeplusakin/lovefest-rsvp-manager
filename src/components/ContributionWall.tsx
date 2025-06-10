@@ -14,7 +14,7 @@ interface Contribution {
   guests: {
     first_name: string;
     last_name: string;
-  };
+  } | null;
 }
 
 export const ContributionWall = () => {
@@ -146,7 +146,10 @@ export const ContributionWall = () => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="font-medium text-lg">
-                    {contribution.guests.first_name} {contribution.guests.last_name}
+                    {contribution.guests 
+                      ? `${contribution.guests.first_name} ${contribution.guests.last_name}`
+                      : "Anonymous Guest"
+                    }
                   </p>
                   <p className="text-sm text-gray-500">
                     {new Date(contribution.created_at).toLocaleDateString()}
