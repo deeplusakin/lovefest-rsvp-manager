@@ -70,11 +70,21 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
     // Initial auth check
     checkAuth();
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    // Set up auth state change listener with improved logic
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session ? 'session exists' : 'no session');
+      
+      // Only redirect to login on explicit sign out or when there's definitely no session after initial load
+      if (event === 'SIGNED_OUT') {
         navigate('/login');
+      } else if (event === 'SIGNED_IN' && session) {
+        // Re-check admin status on sign in
+        checkAuth();
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        // Token was refreshed successfully, no action needed
+        console.log('Token refreshed successfully');
       }
+      // Don't redirect on TOKEN_REFRESHED or during normal token refresh cycles
     });
 
     // Cleanup subscription on unmount
