@@ -4,8 +4,17 @@ import { SecureRsvpForm } from "@/components/SecureRsvpForm";
 import { HouseholdRsvp } from "@/components/HouseholdRsvp";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const RsvpForm = () => {
+interface RsvpFormProps {
+  onHouseholdFound?: (householdId: string) => void;
+}
+
+export const RsvpForm = ({ onHouseholdFound }: RsvpFormProps) => {
   const [householdId, setHouseholdId] = useState<string | null>(null);
+
+  const handleValidCode = (id: string) => {
+    setHouseholdId(id);
+    onHouseholdFound?.(id);
+  };
 
   if (householdId) {
     return <HouseholdRsvp householdId={householdId} />;
@@ -20,7 +29,7 @@ export const RsvpForm = () => {
         </p>
       </div>
       
-      <SecureRsvpForm onValidCode={setHouseholdId} />
+      <SecureRsvpForm onValidCode={handleValidCode} />
       
       <Card className="mt-8">
         <CardHeader>
