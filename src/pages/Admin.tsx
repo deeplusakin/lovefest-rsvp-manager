@@ -63,9 +63,17 @@ export const Admin = () => {
       case 'profile':
         return <ProfileSettings />;
       case 'statistics':
-        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+        return events.length > 0 ? (
+          <EventStatistics stats={getEventStats(events[0])} />
+        ) : (
+          <div className="text-center text-muted-foreground">No events available</div>
+        );
       default:
-        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+        return events.length > 0 ? (
+          <EventStatistics stats={getEventStats(events[0])} />
+        ) : (
+          <div className="text-center text-muted-foreground">No events available</div>
+        );
     }
   };
 
