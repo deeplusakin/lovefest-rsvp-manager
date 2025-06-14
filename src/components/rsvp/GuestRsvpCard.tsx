@@ -23,6 +23,8 @@ export const GuestRsvpCard = ({
 }: GuestRsvpCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
+  console.log("GuestRsvpCard rendering for guest:", guest.first_name, "with events:", guest.guest_events?.length);
+
   return (
     <Card className="p-6">
       <div className="flex justify-between items-center mb-4">
@@ -73,6 +75,8 @@ export const GuestRsvpCard = ({
 
       <div className="space-y-6">
         {guest.guest_events?.map(event => {
+          console.log("Rendering event:", event.event_id, "with events data:", event.events);
+          
           // Add null check for event.events
           if (!event.events) {
             console.log("Event data is null for event_id:", event.event_id);
@@ -86,6 +90,9 @@ export const GuestRsvpCard = ({
             );
           }
 
+          const currentResponse = responses[event.event_id] || event.status;
+          console.log("Current response for event", event.event_id, ":", currentResponse);
+
           return (
             <div key={event.event_id} className="space-y-3">
               <h4 className="font-medium">{event.events.name}</h4>
@@ -93,8 +100,11 @@ export const GuestRsvpCard = ({
                 {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
               </p>
               <RadioGroup
-                value={responses[event.event_id] || event.status}
-                onValueChange={(value) => onRsvpChange(guest.id, event.event_id, value)}
+                value={currentResponse}
+                onValueChange={(value) => {
+                  console.log("RSVP change:", guest.id, event.event_id, value);
+                  onRsvpChange(guest.id, event.event_id, value);
+                }}
                 className="flex items-center gap-4"
               >
                 <div className="flex items-center space-x-2">

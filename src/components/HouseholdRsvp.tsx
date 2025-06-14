@@ -27,7 +27,13 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
     handleSubmitRsvp
   } = useHouseholdRsvp(householdId);
 
-  console.log("HouseholdRsvp state:", { guests: guests?.length, loading, responses });
+  console.log("HouseholdRsvp state:", { 
+    guests: guests?.length, 
+    loading, 
+    responses, 
+    hasChanges,
+    isSubmitting 
+  });
 
   if (loading) {
     return (
@@ -81,6 +87,9 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
           {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
           {!isSubmitting && <Check className="h-4 w-4" />}
         </Button>
+        <p className="text-sm text-gray-500 ml-4 self-center">
+          {hasChanges ? "You have unsaved changes" : "No changes to save"}
+        </p>
       </div>
     </div>
   );
