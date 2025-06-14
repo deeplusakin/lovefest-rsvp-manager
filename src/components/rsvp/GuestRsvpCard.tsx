@@ -24,7 +24,7 @@ export const GuestRsvpCard = ({
   const [showDetails, setShowDetails] = useState(false);
 
   console.log("GuestRsvpCard rendering for guest:", guest.first_name, "with events:", guest.guest_events?.length);
-  console.log("Full guest object:", JSON.stringify(guest, null, 2));
+  console.log("Guest events data:", JSON.stringify(guest.guest_events, null, 2));
 
   return (
     <Card className="p-6">

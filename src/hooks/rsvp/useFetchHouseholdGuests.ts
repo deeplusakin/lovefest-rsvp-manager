@@ -22,40 +22,66 @@ export const useFetchHouseholdGuests = (householdId: string) => {
       setLoading(true);
       console.log("Starting to fetch household guests for ID:", householdId);
 
-      // Fetch guests with their guest_events and events in a single query
-      const { data: guestsWithEvents, error: guestsError } = await supabase
+      // First fetch guests
+      const { data: guestsData, error: guestsError } = await supabase
         .from('guests')
-        .select(`
-          *,
-          guest_events (
-            event_id,
-            status,
-            events (
-              id,
-              name,
-              date,
-              location,
-              description
-            )
-          )
-        `)
+        .select('*')
         .eq('household_id', householdId);
 
-      console.log("Guests query result:", { guestsWithEvents, error: guestsError });
+      console.log("Guests query result:", { guestsData, error: guestsError });
 
       if (guestsError) {
-        console.error("Error fetching guests with events:", guestsError);
+        console.error("Error fetching guests:", guestsError);
         throw guestsError;
       }
 
-      if (!guestsWithEvents || guestsWithEvents.length === 0) {
+      if (!guestsData || guestsData.length === 0) {
         console.log("No guests found for household:", householdId);
         setGuests([]);
         setLoading(false);
         return;
       }
 
-      console.log("Raw guests data structure:", JSON.stringify(guestsWithEvents, null, 2));
+      // Then fetch guest_events with events for these guests
+      const guestIds = guestsData.map(guest => guest.id);
+      
+      const { data: guestEventsData, error: guestEventsError } = await supabase
+        .from('guest_events')
+        .select(`
+          guest_id,
+          event_id,
+          status,
+          events!inner (
+            id,
+            name,
+            date,
+            location,
+            description
+          )
+        `)
+        .in('guest_id', guestIds);
+
+      console.log("Guest events query result:", { guestEventsData, error: guestEventsError });
+
+      if (guestEventsError) {
+        console.error("Error fetching guest events:", guestEventsError);
+        throw guestEventsError;
+      }
+
+      // Combine the data
+      const guestsWithEvents = guestsData.map(guest => {
+        const guestEvents = guestEventsData?.filter(ge => ge.guest_id === guest.id) || [];
+        return {
+          ...guest,
+          guest_events: guestEvents.map(ge => ({
+            event_id: ge.event_id,
+            status: ge.status,
+            events: ge.events
+          }))
+        };
+      });
+
+      console.log("Combined guests with events:", JSON.stringify(guestsWithEvents, null, 2));
       
       setGuests(guestsWithEvents);
       
