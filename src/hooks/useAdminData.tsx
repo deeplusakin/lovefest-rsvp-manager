@@ -14,7 +14,9 @@ export const useAdminData = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error("No active session");
+        // Don't show error when there's no session - user might be logging out
+        setEvents([]);
+        return;
       }
 
       const { data: eventsData, error: eventsError } = await supabase
@@ -51,7 +53,11 @@ export const useAdminData = () => {
       setEvents((eventsData || []) as unknown as Event[]);
     } catch (error: any) {
       console.error("Error fetching events:", error.message);
-      toast.error("Error loading events");
+      // Only show toast error if there's an actual session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        toast.error("Error loading events");
+      }
       setEvents([]);
     }
   }, []);
@@ -60,7 +66,10 @@ export const useAdminData = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error("No active session");
+        // Don't show error when there's no session - user might be logging out
+        setContributions([]);
+        setTotalContributions(0);
+        return;
       }
 
       const { data: contributionsData, error: contributionsError } = await supabase
@@ -90,7 +99,11 @@ export const useAdminData = () => {
       setTotalContributions(total);
     } catch (error: any) {
       console.error("Error fetching contributions:", error.message);
-      toast.error("Error loading contributions");
+      // Only show toast error if there's an actual session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        toast.error("Error loading contributions");
+      }
       setContributions([]);
       setTotalContributions(0);
     }
@@ -101,13 +114,22 @@ export const useAdminData = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error("No active session");
+        // Clean up data when no session
+        setEvents([]);
+        setContributions([]);
+        setTotalContributions(0);
+        setIsLoading(false);
+        return;
       }
       
       await Promise.all([fetchEvents(), fetchContributions()]);
     } catch (error: any) {
       console.error("Error fetching data:", error);
-      toast.error("Please log in to access admin data");
+      // Only show the login message if there's actually a session issue
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        toast.error("Please log in to access admin data");
+      }
     } finally {
       setIsLoading(false);
     }

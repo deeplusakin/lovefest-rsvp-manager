@@ -146,9 +146,9 @@ export const ContributionWall = () => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="font-medium text-lg">
-                    {contribution.guests ? 
-                      `${contribution.guests.first_name} ${contribution.guests.last_name}` :
-                      'Anonymous Guest'
+                    {contribution.guests 
+                      ? `${contribution.guests.first_name} ${contribution.guests.last_name}`
+                      : "Anonymous Guest"
                     }
                   </p>
                   <p className="text-sm text-gray-500">
