@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,21 +36,9 @@ export const Admin = () => {
   });
 
   const handleSignOut = async () => {
-    // Clear authentication state first
-    setIsAuthenticated(false);
-    // Sign out from Supabase
     await supabase.auth.signOut();
-    // Navigate to login
     navigate('/login');
   };
-
-  // Clean up data when component unmounts or user is not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // Reset tab to default when not authenticated
-      setCurrentTab('events');
-    }
-  }, [isAuthenticated]);
 
   const handleGuestTabChange = (tabId: string) => {
     // If switching from guests to RSVPs, refresh the event data
@@ -75,17 +63,9 @@ export const Admin = () => {
       case 'profile':
         return <ProfileSettings />;
       case 'statistics':
-        return events.length > 0 ? (
-          <EventStatistics stats={getEventStats(events[0])} />
-        ) : (
-          <div className="text-center text-muted-foreground">No events available</div>
-        );
+        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
       default:
-        return events.length > 0 ? (
-          <EventStatistics stats={getEventStats(events[0])} />
-        ) : (
-          <div className="text-center text-muted-foreground">No events available</div>
-        );
+        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
     }
   };
 
