@@ -72,28 +72,43 @@ export const GuestRsvpCard = ({
       )}
 
       <div className="space-y-6">
-        {guest.guest_events?.map(event => (
-          <div key={event.event_id} className="space-y-3">
-            <h4 className="font-medium">{event.events.name}</h4>
-            <p className="text-sm text-gray-600">
-              {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
-            </p>
-            <RadioGroup
-              value={responses[event.event_id] || event.status}
-              onValueChange={(value) => onRsvpChange(guest.id, event.event_id, value)}
-              className="flex items-center gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="attending" id={`attending-${guest.id}-${event.event_id}`} />
-                <Label htmlFor={`attending-${guest.id}-${event.event_id}`}>Attending</Label>
+        {guest.guest_events?.map(event => {
+          // Add null check for event.events
+          if (!event.events) {
+            console.log("Event data is null for event_id:", event.event_id);
+            return (
+              <div key={event.event_id} className="space-y-3 p-4 border border-yellow-200 bg-yellow-50 rounded">
+                <h4 className="font-medium text-yellow-800">Event Information Unavailable</h4>
+                <p className="text-sm text-yellow-600">
+                  Event ID: {event.event_id} - Please contact support if this persists.
+                </p>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="declined" id={`declined-${guest.id}-${event.event_id}`} />
-                <Label htmlFor={`declined-${guest.id}-${event.event_id}`}>Cannot Attend</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        ))}
+            );
+          }
+
+          return (
+            <div key={event.event_id} className="space-y-3">
+              <h4 className="font-medium">{event.events.name}</h4>
+              <p className="text-sm text-gray-600">
+                {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
+              </p>
+              <RadioGroup
+                value={responses[event.event_id] || event.status}
+                onValueChange={(value) => onRsvpChange(guest.id, event.event_id, value)}
+                className="flex items-center gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="attending" id={`attending-${guest.id}-${event.event_id}`} />
+                  <Label htmlFor={`attending-${guest.id}-${event.event_id}`}>Attending</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="declined" id={`declined-${guest.id}-${event.event_id}`} />
+                  <Label htmlFor={`declined-${guest.id}-${event.event_id}`}>Cannot Attend</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          );
+        })}
       </div>
     </Card>
   );
