@@ -22,7 +22,28 @@ export const useFetchHouseholdGuests = (householdId: string) => {
       setLoading(true);
       console.log("Starting to fetch household guests for ID:", householdId);
 
-      const { data: guestsData, error } = await supabase
+      // First, let's check if guests exist for this household
+      const { data: guestsData, error: guestsError } = await supabase
+        .from('guests')
+        .select('*')
+        .eq('household_id', householdId);
+
+      console.log("Basic guests query result:", { guestsData, error: guestsError });
+
+      if (guestsError) {
+        console.error("Error fetching basic guests:", guestsError);
+        throw guestsError;
+      }
+
+      if (!guestsData || guestsData.length === 0) {
+        console.log("No guests found for household:", householdId);
+        setGuests([]);
+        setLoading(false);
+        return;
+      }
+
+      // Now fetch guests with their events
+      const { data: guestsWithEvents, error: eventsError } = await supabase
         .from('guests')
         .select(`
           id,
@@ -31,10 +52,10 @@ export const useFetchHouseholdGuests = (householdId: string) => {
           email,
           phone,
           dietary_restrictions,
-          guest_events!inner (
+          guest_events (
             event_id,
             status,
-            events!inner (
+            events (
               name,
               date,
               location
@@ -43,15 +64,15 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         `)
         .eq('household_id', householdId);
 
-      console.log("Guests query result:", { guestsData, error });
+      console.log("Guests with events query result:", { guestsWithEvents, error: eventsError });
 
-      if (error) {
-        console.error("Error fetching guests:", error);
-        throw error;
+      if (eventsError) {
+        console.error("Error fetching guests with events:", eventsError);
+        throw eventsError;
       }
 
       // Explicitly cast the data to match our Guest[] type
-      const typedGuests = guestsData as unknown as Guest[];
+      const typedGuests = guestsWithEvents as unknown as Guest[];
       console.log("Typed guests:", typedGuests);
       setGuests(typedGuests || []);
       
