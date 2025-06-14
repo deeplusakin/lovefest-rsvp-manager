@@ -31,10 +31,10 @@ export const useFetchHouseholdGuests = (householdId: string) => {
           email,
           phone,
           dietary_restrictions,
-          guest_events (
+          guest_events!inner (
             event_id,
             status,
-            events (
+            events!inner (
               name,
               date,
               location
