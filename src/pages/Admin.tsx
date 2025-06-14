@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -63,9 +64,11 @@ export const Admin = () => {
       case 'profile':
         return <ProfileSettings />;
       case 'statistics':
-        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+        const firstEvent = events && events.length > 0 ? events[0] : { guest_events: [] };
+        return <EventStatistics stats={getEventStats(firstEvent)} />;
       default:
-        return <EventStatistics stats={getEventStats(events[0] || { guest_events: [] })} />;
+        const defaultEvent = events && events.length > 0 ? events[0] : { guest_events: [] };
+        return <EventStatistics stats={getEventStats(defaultEvent)} />;
     }
   };
 

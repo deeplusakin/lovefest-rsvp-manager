@@ -274,6 +274,10 @@ export type Database = {
           guest_id: string
         }[]
       }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       validate_invitation_code: {
         Args: { code: string }
         Returns: string
