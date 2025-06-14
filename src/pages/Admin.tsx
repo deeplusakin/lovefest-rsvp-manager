@@ -1,227 +1,185 @@
-
-import { motion } from "framer-motion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GuestManagement } from "@/components/admin/GuestManagement";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LayoutDashboard as DashboardIcon, Image as ImageIcon, Users as UsersIcon, Calendar as CalendarIcon, PiggyBank as PiggyBankIcon, Settings as SettingsIcon, BarChart as BarChartIcon } from 'lucide-react';
+import { cn } from "@/lib/utils";
 import { EventsList } from "@/components/admin/EventsList";
-import { RSVPList } from "@/components/admin/RSVPList";
 import { EventStatistics } from "@/components/admin/EventStatistics";
+import { RSVPList } from "@/components/admin/RSVPList";
 import { PhotoManager } from "@/components/admin/PhotoManager";
-import { ProfileSettings } from "@/components/admin/ProfileSettings";
 import { ContributionsList } from "@/components/admin/ContributionsList";
+import { ProfileSettings } from "@/components/admin/ProfileSettings";
+import { GuestManagement } from "@/components/admin/GuestManagement";
+import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminData } from "@/hooks/useAdminData";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import { exportGuestsToCSV } from "@/utils/csvExport";
-import { useCallback } from "react";
+import { getEventStats } from "@/utils/eventStats";
 
-const Admin = () => {
-  const { fetchData } = useAdminData();
-  const { loading: authLoading, error: authError } = useAdminAuth(fetchData);
-  const { events, guests, contributions, totalContributions, loading: dataLoading } = useAdminData();
+export const Admin = () => {
+  const [currentTab, setCurrentTab] = useState('events');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+  const { events, contributions, totalContributions, isLoading, fetchData, fetchEvents } = useAdminData();
 
-  if (authLoading || dataLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  // Check authentication status when component mounts
+  useAdminAuth(() => {
+    setIsAuthenticated(true);
+    fetchData();
+  });
+
+  const handleSignOut = async () => {
+    // Clear authentication state first
+    setIsAuthenticated(false);
+    // Sign out from Supabase
+    await supabase.auth.signOut();
+    // Navigate to login
+    navigate('/login');
+  };
+
+  // Clean up data when component unmounts or user is not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Reset tab to default when not authenticated
+      setCurrentTab('events');
+    }
+  }, [isAuthenticated]);
+
+  const handleGuestTabChange = (tabId: string) => {
+    // If switching from guests to RSVPs, refresh the event data
+    if (currentTab === 'guests' && tabId === 'rsvps') {
+      fetchEvents();
+    }
+    setCurrentTab(tabId);
+  };
+
+  const renderContent = () => {
+    switch (currentTab) {
+      case 'events':
+        return <EventsList events={events} onEdit={() => {}} onDelete={() => {}} />;
+      case 'guests':
+        return <GuestManagement onGuestsChange={fetchEvents} />;
+      case 'rsvps':
+        return <RSVPList events={events} getEventStats={getEventStats} />;
+      case 'photos':
+        return <PhotoManager />;
+      case 'contributions':
+        return <ContributionsList contributions={contributions} totalContributions={totalContributions} />;
+      case 'profile':
+        return <ProfileSettings />;
+      case 'statistics':
+        return events.length > 0 ? (
+          <EventStatistics stats={getEventStats(events[0])} />
+        ) : (
+          <div className="text-center text-muted-foreground">No events available</div>
+        );
+      default:
+        return events.length > 0 ? (
+          <EventStatistics stats={getEventStats(events[0])} />
+        ) : (
+          <div className="text-center text-muted-foreground">No events available</div>
+        );
+    }
+  };
+
+  const sidebarItems = [
+    { id: 'events', label: 'Events', icon: CalendarIcon },
+    { id: 'guests', label: 'Guests', icon: UsersIcon },
+    { id: 'rsvps', label: 'RSVPs', icon: DashboardIcon },
+    { id: 'photos', label: 'Photos', icon: ImageIcon },
+    { id: 'contributions', label: 'Contributions', icon: PiggyBankIcon },
+    { id: 'statistics', label: 'Statistics', icon: BarChartIcon },
+    { id: 'profile', label: 'Profile', icon: SettingsIcon },
+  ];
+
+  if (!isAuthenticated) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
-
-  if (authError) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-red-600">{authError}</p>
-      </div>
-    );
-  }
-
-  const handleExportGuests = () => {
-    exportGuestsToCSV(guests);
-  };
-
-  // Calculate statistics with proper type checking
-  const getEventStats = useCallback((event: any) => {
-    if (!guests || guests.length === 0) return { 
-      totalInvited: 0, 
-      responded: 0, 
-      attending: 0, 
-      notAttending: 0 
-    };
-    
-    let attending = 0;
-    let notAttending = 0;
-    let responded = 0;
-    
-    guests.forEach(guest => {
-      if (guest.guest_events) {
-        const guestEvent = guest.guest_events.find((ge: any) => ge.event_id === event.id);
-        if (guestEvent) {
-          if (guestEvent.status === 'attending') {
-            attending++;
-            responded++;
-          } else if (guestEvent.status === 'declined') {
-            notAttending++;
-            responded++;
-          }
-        }
-      }
-    });
-    
-    return { 
-      totalInvited: event.guest_events?.length || 0,
-      responded,
-      attending, 
-      notAttending 
-    };
-  }, [guests]);
-
-  const handleEditEvent = (event: any) => {
-    // TODO: Implement edit functionality
-    console.log('Edit event:', event);
-  };
-
-  const handleDeleteEvent = (eventId: string) => {
-    // TODO: Implement delete functionality
-    console.log('Delete event:', eventId);
-  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="container mx-auto p-6 space-y-6"
-    >
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Wedding Admin Dashboard</h1>
-        <Button onClick={handleExportGuests} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Export Guests
-        </Button>
-      </div>
-
-      <Tabs defaultValue="guests" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="guests">Guests</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="rsvp">RSVP</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
-          <TabsTrigger value="photos">Photos</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="guests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Guest Management</CardTitle>
-              <CardDescription>
-                Manage wedding guests and their information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <GuestManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="events">
-          <Card>
-            <CardHeader>
-              <CardTitle>Wedding Events</CardTitle>
-              <CardDescription>
-                Create and manage wedding events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EventsList 
-                events={events} 
-                onEdit={handleEditEvent}
-                onDelete={handleDeleteEvent}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="rsvp">
-          <Card>
-            <CardHeader>
-              <CardTitle>RSVP Responses</CardTitle>
-              <CardDescription>
-                View and manage guest RSVP responses
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RSVPList 
-                events={events}
-                getEventStats={getEventStats}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="stats">
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Statistics</CardTitle>
-              <CardDescription>
-                View attendance statistics for all events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {events.map(event => (
-                <div key={event.id} className="mb-6">
-                  <h3 className="text-xl font-semibold mb-4">{event.name}</h3>
-                  <EventStatistics stats={getEventStats(event)} />
-                </div>
+    <div className="min-h-screen bg-background flex flex-col pt-10">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Mobile menu */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-background p-4 border-b">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Menu <span className="ml-2">▼</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-background">
+              <DropdownMenuLabel>Admin Dashboard</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {sidebarItems.map((item) => (
+                <DropdownMenuItem key={item.id} onClick={() => handleGuestTabChange(item.id)}>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </DropdownMenuItem>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-        <TabsContent value="photos">
-          <Card>
-            <CardHeader>
-              <CardTitle>Photo Management</CardTitle>
-              <CardDescription>
-                Upload and manage wedding photos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PhotoManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Sidebar */}
+        <div className="hidden md:flex flex-col w-64 border-r bg-card min-h-screen">
+          <div className="p-6 flex flex-col h-full">
+            <div>
+              <h3 className="font-semibold text-lg">Admin Dashboard</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Wedding Management
+              </p>
+              <div className="space-y-1">
+                {sidebarItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant="ghost"
+                    className={cn(
+                      "justify-start w-full",
+                      currentTab === item.id ? "bg-secondary" : "hover:bg-secondary",
+                    )}
+                    onClick={() => handleGuestTabChange(item.id)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-auto pt-6">
+              <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={handleSignOut}
+              >
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
 
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Settings</CardTitle>
-              <CardDescription>
-                Manage your admin profile and settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProfileSettings />
-            </CardContent>
-          </Card>
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Contributions</CardTitle>
-              <CardDescription>
-                View honeymoon fund contributions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ContributionsList 
-                contributions={contributions}
-                totalContributions={totalContributions}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </motion.div>
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-auto pb-20">
+          {/* Mobile padding to avoid content being hidden behind the mobile menu */}
+          <div className="md:hidden h-16"></div>
+          
+          <div className="p-6 md:pt-4">
+            <div className="bg-card rounded-lg shadow-sm p-6 mb-12">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

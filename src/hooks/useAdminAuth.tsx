@@ -1,20 +1,15 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const useAdminAuth = (onAuthenticated?: () => void) => {
+export const useAdminAuth = (onAuthenticated: () => void) => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -38,13 +33,9 @@ export const useAdminAuth = (onAuthenticated?: () => void) => {
           
           // If the error is about network connectivity, show a specific message
           if (profileError.message === 'Failed to fetch') {
-            const errorMsg = "Network error: Unable to verify admin status. Please check your connection.";
-            setError(errorMsg);
-            toast.error(errorMsg);
+            toast.error("Network error: Unable to verify admin status. Please check your connection.");
           } else {
-            const errorMsg = "Error verifying admin access";
-            setError(errorMsg);
-            toast.error(errorMsg);
+            toast.error("Error verifying admin access");
           }
           
           await supabase.auth.signOut();
@@ -53,36 +44,26 @@ export const useAdminAuth = (onAuthenticated?: () => void) => {
         }
 
         if (!profile?.is_admin) {
-          const errorMsg = "Unauthorized access: Admin privileges required";
-          setError(errorMsg);
-          toast.error(errorMsg);
+          toast.error("Unauthorized access: Admin privileges required");
           await supabase.auth.signOut();
           navigate('/login');
           return;
         }
 
         // If we get here, the user is authenticated and is an admin
-        if (onAuthenticated) {
-          onAuthenticated();
-        }
+        onAuthenticated();
         
       } catch (error: any) {
         console.error('Auth check error:', error);
         
         // Handle network errors specifically
         if (error.message === 'Failed to fetch') {
-          const errorMsg = "Network error: Please check your connection";
-          setError(errorMsg);
-          toast.error(errorMsg);
+          toast.error("Network error: Please check your connection");
         } else {
-          const errorMsg = "Please log in to continue";
-          setError(errorMsg);
-          toast.error(errorMsg);
+          toast.error("Please log in to continue");
         }
         
         navigate('/login');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -127,6 +108,4 @@ export const useAdminAuth = (onAuthenticated?: () => void) => {
       subscription.unsubscribe();
     };
   }, [navigate, onAuthenticated]);
-
-  return { loading, error };
 };
