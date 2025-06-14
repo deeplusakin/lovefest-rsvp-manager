@@ -14,10 +14,12 @@ import { useAdminData } from "@/hooks/useAdminData";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportGuestsToCSV } from "@/utils/csvExport";
+import { useCallback } from "react";
 
 const Admin = () => {
-  const { loading: authLoading, error: authError } = useAdminAuth();
-  const { events, guests, loading: dataLoading } = useAdminData();
+  const { fetchData } = useAdminData();
+  const { loading: authLoading, error: authError } = useAdminAuth(fetchData);
+  const { events, guests, contributions, totalContributions, loading: dataLoading } = useAdminData();
 
   if (authLoading || dataLoading) {
     return (
@@ -40,40 +42,50 @@ const Admin = () => {
   };
 
   // Calculate statistics with proper type checking
-  const calculateEventStats = (eventId: string) => {
-    if (!guests || guests.length === 0) return { attending: 0, notAttending: 0 };
+  const getEventStats = useCallback((event: any) => {
+    if (!guests || guests.length === 0) return { 
+      totalInvited: 0, 
+      responded: 0, 
+      attending: 0, 
+      notAttending: 0 
+    };
     
     let attending = 0;
     let notAttending = 0;
+    let responded = 0;
     
     guests.forEach(guest => {
       if (guest.guest_events) {
-        const guestEvent = guest.guest_events.find(ge => ge.event_id === eventId);
+        const guestEvent = guest.guest_events.find((ge: any) => ge.event_id === event.id);
         if (guestEvent) {
           if (guestEvent.status === 'attending') {
             attending++;
+            responded++;
           } else if (guestEvent.status === 'declined') {
             notAttending++;
+            responded++;
           }
         }
       }
     });
     
-    return { attending, notAttending };
+    return { 
+      totalInvited: event.guest_events?.length || 0,
+      responded,
+      attending, 
+      notAttending 
+    };
+  }, [guests]);
+
+  const handleEditEvent = (event: any) => {
+    // TODO: Implement edit functionality
+    console.log('Edit event:', event);
   };
 
-  const eventsWithStats = events?.map(event => {
-    // Only process actual events with all required properties
-    if (event && typeof event === 'object' && 'id' in event && 'name' in event) {
-      const stats = calculateEventStats(event.id);
-      return {
-        ...event,
-        guest_events: undefined, // Remove the guest_events array that's causing type issues
-        ...stats
-      };
-    }
-    return null;
-  }).filter(Boolean) || [];
+  const handleDeleteEvent = (eventId: string) => {
+    // TODO: Implement delete functionality
+    console.log('Delete event:', eventId);
+  };
 
   return (
     <motion.div
@@ -122,7 +134,11 @@ const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EventsList />
+              <EventsList 
+                events={events} 
+                onEdit={handleEditEvent}
+                onDelete={handleDeleteEvent}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -136,7 +152,10 @@ const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RSVPList />
+              <RSVPList 
+                events={events}
+                getEventStats={getEventStats}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -150,7 +169,12 @@ const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EventStatistics events={eventsWithStats} />
+              {events.map(event => (
+                <div key={event.id} className="mb-6">
+                  <h3 className="text-xl font-semibold mb-4">{event.name}</h3>
+                  <EventStatistics stats={getEventStats(event)} />
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
@@ -189,7 +213,10 @@ const Admin = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ContributionsList />
+              <ContributionsList 
+                contributions={contributions}
+                totalContributions={totalContributions}
+              />
             </CardContent>
           </Card>
         </TabsContent>

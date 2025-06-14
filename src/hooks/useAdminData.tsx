@@ -6,9 +6,52 @@ import { toast } from "sonner";
 
 export const useAdminData = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [guests, setGuests] = useState<any[]>([]);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [totalContributions, setTotalContributions] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  const fetchGuests = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const { data: guestsData, error: guestsError } = await supabase
+        .from("guests")
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          dietary_restrictions,
+          household:households (
+            name,
+            invitation_code,
+            address
+          ),
+          guest_events (
+            event_id,
+            status,
+            response_date
+          )
+        `)
+        .order("last_name");
+
+      if (guestsError) {
+        console.error("Guests fetch error:", guestsError);
+        throw guestsError;
+      }
+
+      setGuests(guestsData || []);
+    } catch (error: any) {
+      console.error("Error fetching guests:", error.message);
+      toast.error("Error loading guests");
+      setGuests([]);
+    }
+  }, []);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -97,29 +140,31 @@ export const useAdminData = () => {
   }, []);
 
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error("No active session");
       }
       
-      await Promise.all([fetchEvents(), fetchContributions()]);
+      await Promise.all([fetchEvents(), fetchContributions(), fetchGuests()]);
     } catch (error: any) {
       console.error("Error fetching data:", error);
       toast.error("Please log in to access admin data");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [fetchEvents, fetchContributions]);
+  }, [fetchEvents, fetchContributions, fetchGuests]);
 
   return {
     events,
+    guests,
     contributions,
     totalContributions,
-    isLoading,
+    loading,
     fetchData,
     fetchEvents,
     fetchContributions,
+    fetchGuests,
   };
 };
