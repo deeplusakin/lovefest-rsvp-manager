@@ -11,11 +11,17 @@ export const useFetchHouseholdGuests = (householdId: string) => {
   const [guestDetails, setGuestDetails] = useState<GuestDetailsMap>({});
 
   useEffect(() => {
-    fetchHouseholdGuests();
+    if (householdId) {
+      console.log("Fetching guests for household:", householdId);
+      fetchHouseholdGuests();
+    }
   }, [householdId]);
 
   const fetchHouseholdGuests = async () => {
     try {
+      setLoading(true);
+      console.log("Starting to fetch household guests for ID:", householdId);
+
       const { data: guestsData, error } = await supabase
         .from('guests')
         .select(`
@@ -37,10 +43,16 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         `)
         .eq('household_id', householdId);
 
-      if (error) throw error;
+      console.log("Guests query result:", { guestsData, error });
+
+      if (error) {
+        console.error("Error fetching guests:", error);
+        throw error;
+      }
 
       // Explicitly cast the data to match our Guest[] type
       const typedGuests = guestsData as unknown as Guest[];
+      console.log("Typed guests:", typedGuests);
       setGuests(typedGuests || []);
       
       // Initialize responses state
@@ -63,9 +75,11 @@ export const useFetchHouseholdGuests = (householdId: string) => {
       setResponses(initialResponses);
       setGuestDetails(initialGuestDetails);
       
+      console.log("Guests loaded successfully:", typedGuests?.length || 0, "guests");
+      
     } catch (error: any) {
+      console.error("Error in fetchHouseholdGuests:", error);
       toast.error("Error fetching household members");
-      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
