@@ -24,6 +24,7 @@ export const GuestRsvpCard = ({
   const [showDetails, setShowDetails] = useState(false);
 
   console.log("GuestRsvpCard rendering for guest:", guest.first_name, "with events:", guest.guest_events?.length);
+  console.log("Full guest object:", JSON.stringify(guest, null, 2));
 
   return (
     <Card className="p-6">
@@ -74,46 +75,46 @@ export const GuestRsvpCard = ({
       )}
 
       <div className="space-y-6">
-        {guest.guest_events?.map(event => {
-          console.log("Rendering event:", event.event_id, "with events data:", event.events);
+        {guest.guest_events?.map(guestEvent => {
+          console.log("Processing guest_event:", JSON.stringify(guestEvent, null, 2));
           
-          // Add null check for event.events
-          if (!event.events) {
-            console.log("Event data is null for event_id:", event.event_id);
+          // Check if events data exists properly
+          if (!guestEvent.events) {
+            console.log("Event data is null for event_id:", guestEvent.event_id);
             return (
-              <div key={event.event_id} className="space-y-3 p-4 border border-yellow-200 bg-yellow-50 rounded">
+              <div key={guestEvent.event_id} className="space-y-3 p-4 border border-yellow-200 bg-yellow-50 rounded">
                 <h4 className="font-medium text-yellow-800">Event Information Unavailable</h4>
                 <p className="text-sm text-yellow-600">
-                  Event ID: {event.event_id} - Please contact support if this persists.
+                  Event ID: {guestEvent.event_id} - Please contact support if this persists.
                 </p>
               </div>
             );
           }
 
-          const currentResponse = responses[event.event_id] || event.status;
-          console.log("Current response for event", event.event_id, ":", currentResponse);
+          const currentResponse = responses[guestEvent.event_id] || guestEvent.status;
+          console.log("Current response for event", guestEvent.event_id, ":", currentResponse);
 
           return (
-            <div key={event.event_id} className="space-y-3">
-              <h4 className="font-medium">{event.events.name}</h4>
+            <div key={guestEvent.event_id} className="space-y-3">
+              <h4 className="font-medium">{guestEvent.events.name}</h4>
               <p className="text-sm text-gray-600">
-                {new Date(event.events.date).toLocaleDateString()} at {event.events.location}
+                {new Date(guestEvent.events.date).toLocaleDateString()} at {guestEvent.events.location}
               </p>
               <RadioGroup
                 value={currentResponse}
                 onValueChange={(value) => {
-                  console.log("RSVP change:", guest.id, event.event_id, value);
-                  onRsvpChange(guest.id, event.event_id, value);
+                  console.log("RSVP change:", guest.id, guestEvent.event_id, value);
+                  onRsvpChange(guest.id, guestEvent.event_id, value);
                 }}
                 className="flex items-center gap-4"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="attending" id={`attending-${guest.id}-${event.event_id}`} />
-                  <Label htmlFor={`attending-${guest.id}-${event.event_id}`}>Attending</Label>
+                  <RadioGroupItem value="attending" id={`attending-${guest.id}-${guestEvent.event_id}`} />
+                  <Label htmlFor={`attending-${guest.id}-${guestEvent.event_id}`}>Attending</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="declined" id={`declined-${guest.id}-${event.event_id}`} />
-                  <Label htmlFor={`declined-${guest.id}-${event.event_id}`}>Cannot Attend</Label>
+                  <RadioGroupItem value="declined" id={`declined-${guest.id}-${guestEvent.event_id}`} />
+                  <Label htmlFor={`declined-${guest.id}-${guestEvent.event_id}`}>Cannot Attend</Label>
                 </div>
               </RadioGroup>
             </div>
