@@ -64,10 +64,10 @@ export const Admin = () => {
       case 'profile':
         return <ProfileSettings />;
       case 'statistics':
-        const firstEvent = events && events.length > 0 ? events[0] : { guest_events: [] };
+        const firstEvent = events && events.length > 0 ? events[0] : null;
         return <EventStatistics stats={getEventStats(firstEvent)} />;
       default:
-        const defaultEvent = events && events.length > 0 ? events[0] : { guest_events: [] };
+        const defaultEvent = events && events.length > 0 ? events[0] : null;
         return <EventStatistics stats={getEventStats(defaultEvent)} />;
     }
   };
