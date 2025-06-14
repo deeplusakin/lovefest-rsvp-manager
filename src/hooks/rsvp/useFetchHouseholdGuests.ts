@@ -42,45 +42,46 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         return;
       }
 
-      // Now fetch guests with their events using a more explicit join
-      const { data: guestsWithEvents, error: eventsError } = await supabase
-        .from('guests')
+      // Now fetch guests with their events - using separate query for events
+      const { data: guestEvents, error: guestEventsError } = await supabase
+        .from('guest_events')
         .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          dietary_restrictions,
-          guest_events (
-            event_id,
-            status,
-            events!guest_events_event_id_fkey (
-              name,
-              date,
-              location
-            )
+          guest_id,
+          event_id,
+          status,
+          events (
+            name,
+            date,
+            location
           )
         `)
-        .eq('household_id', householdId);
+        .in('guest_id', guestsData.map(g => g.id));
 
-      console.log("Guests with events query result:", { guestsWithEvents, error: eventsError });
+      console.log("Guest events query result:", { guestEvents, error: guestEventsError });
 
-      if (eventsError) {
-        console.error("Error fetching guests with events:", eventsError);
-        throw eventsError;
+      if (guestEventsError) {
+        console.error("Error fetching guest events:", guestEventsError);
+        throw guestEventsError;
       }
 
-      // Explicitly cast the data to match our Guest[] type
-      const typedGuests = guestsWithEvents as unknown as Guest[];
-      console.log("Typed guests:", typedGuests);
-      setGuests(typedGuests || []);
+      // Combine the data
+      const guestsWithEvents = guestsData.map(guest => ({
+        ...guest,
+        guest_events: guestEvents?.filter(ge => ge.guest_id === guest.id).map(ge => ({
+          event_id: ge.event_id,
+          status: ge.status,
+          events: ge.events
+        })) || []
+      }));
+
+      console.log("Combined guests with events:", guestsWithEvents);
+      setGuests(guestsWithEvents);
       
       // Initialize responses state
       const initialResponses: RsvpResponses = {};
       const initialGuestDetails: GuestDetailsMap = {};
       
-      typedGuests?.forEach(guest => {
+      guestsWithEvents.forEach(guest => {
         initialResponses[guest.id] = {};
         guest.guest_events?.forEach(event => {
           initialResponses[guest.id][event.event_id] = event.status;
@@ -96,7 +97,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
       setResponses(initialResponses);
       setGuestDetails(initialGuestDetails);
       
-      console.log("Guests loaded successfully:", typedGuests?.length || 0, "guests");
+      console.log("Guests loaded successfully:", guestsWithEvents?.length || 0, "guests");
       
     } catch (error: any) {
       console.error("Error in fetchHouseholdGuests:", error);
