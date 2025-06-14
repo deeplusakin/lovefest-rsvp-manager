@@ -75,51 +75,60 @@ export const GuestRsvpCard = ({
       )}
 
       <div className="space-y-6">
-        {guest.guest_events?.map(guestEvent => {
-          console.log("Processing guest_event:", JSON.stringify(guestEvent, null, 2));
-          
-          // Check if events data exists properly
-          if (!guestEvent.events) {
-            console.log("Event data is null for event_id:", guestEvent.event_id);
+        {guest.guest_events && guest.guest_events.length > 0 ? (
+          guest.guest_events.map(guestEvent => {
+            console.log("Processing guest_event:", JSON.stringify(guestEvent, null, 2));
+            
+            // Ensure we have event data
+            if (!guestEvent.events) {
+              console.log("Event data is missing for event_id:", guestEvent.event_id);
+              return (
+                <div key={guestEvent.event_id} className="space-y-3 p-4 border border-yellow-200 bg-yellow-50 rounded">
+                  <h4 className="font-medium text-yellow-800">Event Information Unavailable</h4>
+                  <p className="text-sm text-yellow-600">
+                    Event ID: {guestEvent.event_id} - Please contact support if this persists.
+                  </p>
+                </div>
+              );
+            }
+
+            const currentResponse = responses[guestEvent.event_id] || guestEvent.status;
+            console.log("Current response for event", guestEvent.event_id, ":", currentResponse);
+
             return (
-              <div key={guestEvent.event_id} className="space-y-3 p-4 border border-yellow-200 bg-yellow-50 rounded">
-                <h4 className="font-medium text-yellow-800">Event Information Unavailable</h4>
-                <p className="text-sm text-yellow-600">
-                  Event ID: {guestEvent.event_id} - Please contact support if this persists.
+              <div key={guestEvent.event_id} className="space-y-3">
+                <h4 className="font-medium">{guestEvent.events.name}</h4>
+                <p className="text-sm text-gray-600">
+                  {new Date(guestEvent.events.date).toLocaleDateString()} at {guestEvent.events.location}
                 </p>
+                <RadioGroup
+                  value={currentResponse}
+                  onValueChange={(value) => {
+                    console.log("RSVP change:", guest.id, guestEvent.event_id, value);
+                    onRsvpChange(guest.id, guestEvent.event_id, value);
+                  }}
+                  className="flex items-center gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="attending" id={`attending-${guest.id}-${guestEvent.event_id}`} />
+                    <Label htmlFor={`attending-${guest.id}-${guestEvent.event_id}`}>Attending</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="declined" id={`declined-${guest.id}-${guestEvent.event_id}`} />
+                    <Label htmlFor={`declined-${guest.id}-${guestEvent.event_id}`}>Cannot Attend</Label>
+                  </div>
+                </RadioGroup>
               </div>
             );
-          }
-
-          const currentResponse = responses[guestEvent.event_id] || guestEvent.status;
-          console.log("Current response for event", guestEvent.event_id, ":", currentResponse);
-
-          return (
-            <div key={guestEvent.event_id} className="space-y-3">
-              <h4 className="font-medium">{guestEvent.events.name}</h4>
-              <p className="text-sm text-gray-600">
-                {new Date(guestEvent.events.date).toLocaleDateString()} at {guestEvent.events.location}
-              </p>
-              <RadioGroup
-                value={currentResponse}
-                onValueChange={(value) => {
-                  console.log("RSVP change:", guest.id, guestEvent.event_id, value);
-                  onRsvpChange(guest.id, guestEvent.event_id, value);
-                }}
-                className="flex items-center gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="attending" id={`attending-${guest.id}-${guestEvent.event_id}`} />
-                  <Label htmlFor={`attending-${guest.id}-${guestEvent.event_id}`}>Attending</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="declined" id={`declined-${guest.id}-${guestEvent.event_id}`} />
-                  <Label htmlFor={`declined-${guest.id}-${guestEvent.event_id}`}>Cannot Attend</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          );
-        })}
+          })
+        ) : (
+          <div className="space-y-3 p-4 border border-gray-200 bg-gray-50 rounded">
+            <h4 className="font-medium text-gray-600">No Events Available</h4>
+            <p className="text-sm text-gray-500">
+              There are currently no events available for RSVP.
+            </p>
+          </div>
+        )}
       </div>
     </Card>
   );

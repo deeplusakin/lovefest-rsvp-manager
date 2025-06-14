@@ -42,7 +42,19 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         return;
       }
 
-      // Then fetch guest_events with events for these guests
+      // Fetch all events first to understand what events exist
+      const { data: allEvents, error: eventsError } = await supabase
+        .from('events')
+        .select('*');
+
+      console.log("All events query result:", { allEvents, error: eventsError });
+
+      if (eventsError) {
+        console.error("Error fetching events:", eventsError);
+        throw eventsError;
+      }
+
+      // Then fetch guest_events for these guests (use LEFT JOIN behavior)
       const guestIds = guestsData.map(guest => guest.id);
       
       const { data: guestEventsData, error: guestEventsError } = await supabase
@@ -50,14 +62,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         .select(`
           guest_id,
           event_id,
-          status,
-          events!inner (
-            id,
-            name,
-            date,
-            location,
-            description
-          )
+          status
         `)
         .in('guest_id', guestIds);
 
@@ -68,16 +73,23 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         throw guestEventsError;
       }
 
-      // Combine the data
+      // Combine the data - create guest_events for all events if they don't exist
       const guestsWithEvents = guestsData.map(guest => {
-        const guestEvents = guestEventsData?.filter(ge => ge.guest_id === guest.id) || [];
+        const existingGuestEvents = guestEventsData?.filter(ge => ge.guest_id === guest.id) || [];
+        
+        // Create guest_events for all events, using existing status or default to 'invited'
+        const guestEvents = allEvents?.map(event => {
+          const existingEvent = existingGuestEvents.find(ge => ge.event_id === event.id);
+          return {
+            event_id: event.id,
+            status: existingEvent?.status || 'invited',
+            events: event
+          };
+        }) || [];
+
         return {
           ...guest,
-          guest_events: guestEvents.map(ge => ({
-            event_id: ge.event_id,
-            status: ge.status,
-            events: ge.events
-          }))
+          guest_events: guestEvents
         };
       });
 
