@@ -70,37 +70,21 @@ export const useAdminAuth = (onAuthenticated: () => void) => {
     // Initial auth check
     checkAuth();
 
-    // Set up auth state change listener with better multi-device handling
+    // Set up auth state change listener with improved logic
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state change:', event, session ? 'session exists' : 'no session');
       
-      // Handle different auth events more precisely
+      // Only redirect to login on explicit sign out or when there's definitely no session after initial load
       if (event === 'SIGNED_OUT') {
-        // Only navigate to login on explicit sign out
         navigate('/login');
       } else if (event === 'SIGNED_IN' && session) {
         // Re-check admin status on sign in
         checkAuth();
       } else if (event === 'TOKEN_REFRESHED' && session) {
-        // Token was refreshed successfully, just log it
+        // Token was refreshed successfully, no action needed
         console.log('Token refreshed successfully');
-        // Don't do anything else - user should stay logged in
-      } else if (event === 'USER_UPDATED' && session) {
-        // User data was updated, but they're still authenticated
-        console.log('User data updated');
-      } else if (!session && event !== 'INITIAL_SESSION') {
-        // Only redirect if there's no session and it's not the initial load
-        // This prevents issues with multiple devices
-        console.log('No session detected, checking if should redirect');
-        // Add a small delay to prevent race conditions
-        setTimeout(() => {
-          supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-            if (!currentSession) {
-              navigate('/login');
-            }
-          });
-        }, 100);
       }
+      // Don't redirect on TOKEN_REFRESHED or during normal token refresh cycles
     });
 
     // Cleanup subscription on unmount
