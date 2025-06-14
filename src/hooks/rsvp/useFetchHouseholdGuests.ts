@@ -22,7 +22,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
       setLoading(true);
       console.log("Starting to fetch household guests for ID:", householdId);
 
-      // First, let's check if guests exist for this household
+      // First, fetch guests for this household
       const { data: guestsData, error: guestsError } = await supabase
         .from('guests')
         .select('*')
@@ -42,46 +42,51 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         return;
       }
 
-      // Fetch all events first to understand what events exist
+      // Fetch all events separately to ensure we have them
       const { data: allEvents, error: eventsError } = await supabase
         .from('events')
         .select('*');
 
       console.log("All events query result:", { allEvents, error: eventsError });
 
-      // Now fetch guest_events with a direct join to events
+      if (eventsError) {
+        console.error("Error fetching events:", eventsError);
+        throw eventsError;
+      }
+
+      // Fetch guest_events for these guests
       const { data: guestEventsData, error: guestEventsError } = await supabase
         .from('guest_events')
-        .select(`
-          guest_id,
-          event_id,
-          status,
-          events (*)
-        `)
+        .select('*')
         .in('guest_id', guestsData.map(g => g.id));
 
-      console.log("Guest events with join result:", { guestEventsData, error: guestEventsError });
+      console.log("Guest events query result:", { guestEventsData, error: guestEventsError });
 
       if (guestEventsError) {
         console.error("Error fetching guest events:", guestEventsError);
-        // Don't throw error, continue with empty events
+        throw guestEventsError;
       }
 
-      // Combine the data manually to ensure we have proper structure
+      // Manually combine the data to ensure proper structure
       const guestsWithEvents = guestsData.map(guest => {
         const guestEvents = guestEventsData?.filter(ge => ge.guest_id === guest.id) || [];
         
         return {
           ...guest,
-          guest_events: guestEvents.map(ge => ({
-            event_id: ge.event_id,
-            status: ge.status,
-            events: ge.events || {
-              name: "Unknown Event",
-              date: new Date().toISOString(),
-              location: "TBD"
-            }
-          }))
+          guest_events: guestEvents.map(ge => {
+            // Find the corresponding event
+            const eventData = allEvents?.find(event => event.id === ge.event_id);
+            
+            return {
+              event_id: ge.event_id,
+              status: ge.status,
+              events: eventData || {
+                name: "Event Not Found",
+                date: new Date().toISOString(),
+                location: "TBD"
+              }
+            };
+          })
         };
       });
 
