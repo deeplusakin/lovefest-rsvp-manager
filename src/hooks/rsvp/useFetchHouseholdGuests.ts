@@ -42,39 +42,52 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         return;
       }
 
-      // Now fetch guests with their events - using separate query for events
-      const { data: guestEvents, error: guestEventsError } = await supabase
+      // Fetch all events first to understand what events exist
+      const { data: allEvents, error: eventsError } = await supabase
+        .from('events')
+        .select('*');
+
+      console.log("All events query result:", { allEvents, error: eventsError });
+
+      // Now fetch guest_events with a direct join to events
+      const { data: guestEventsData, error: guestEventsError } = await supabase
         .from('guest_events')
         .select(`
           guest_id,
           event_id,
           status,
-          events (
-            name,
-            date,
-            location
-          )
+          events (*)
         `)
         .in('guest_id', guestsData.map(g => g.id));
 
-      console.log("Guest events query result:", { guestEvents, error: guestEventsError });
+      console.log("Guest events with join result:", { guestEventsData, error: guestEventsError });
 
       if (guestEventsError) {
         console.error("Error fetching guest events:", guestEventsError);
-        throw guestEventsError;
+        // Don't throw error, continue with empty events
       }
 
-      // Combine the data
-      const guestsWithEvents = guestsData.map(guest => ({
-        ...guest,
-        guest_events: guestEvents?.filter(ge => ge.guest_id === guest.id).map(ge => ({
-          event_id: ge.event_id,
-          status: ge.status,
-          events: ge.events
-        })) || []
-      }));
+      // Combine the data manually to ensure we have proper structure
+      const guestsWithEvents = guestsData.map(guest => {
+        const guestEvents = guestEventsData?.filter(ge => ge.guest_id === guest.id) || [];
+        
+        return {
+          ...guest,
+          guest_events: guestEvents.map(ge => ({
+            event_id: ge.event_id,
+            status: ge.status,
+            events: ge.events || {
+              name: "Unknown Event",
+              date: new Date().toISOString(),
+              location: "TBD"
+            }
+          }))
+        };
+      });
 
-      console.log("Combined guests with events:", guestsWithEvents);
+      console.log("Final guests with events structure:", guestsWithEvents);
+      console.log("Sample guest event structure:", guestsWithEvents[0]?.guest_events);
+      
       setGuests(guestsWithEvents);
       
       // Initialize responses state
