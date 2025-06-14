@@ -42,7 +42,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
         return;
       }
 
-      // Now fetch guests with their events
+      // Now fetch guests with their events using a more explicit join
       const { data: guestsWithEvents, error: eventsError } = await supabase
         .from('guests')
         .select(`
@@ -55,7 +55,7 @@ export const useFetchHouseholdGuests = (householdId: string) => {
           guest_events (
             event_id,
             status,
-            events (
+            events!guest_events_event_id_fkey (
               name,
               date,
               location
