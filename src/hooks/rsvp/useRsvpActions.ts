@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Guest, RsvpResponses, GuestDetailsMap } from "@/types/rsvp";
@@ -9,7 +10,6 @@ interface UseRsvpActionsProps {
   guestDetails: GuestDetailsMap;
   setGuestDetails: React.Dispatch<React.SetStateAction<GuestDetailsMap>>;
   guests: Guest[];
-  setHasChanges: (hasChanges: boolean) => void;
 }
 
 export const useRsvpActions = ({
@@ -17,9 +17,11 @@ export const useRsvpActions = ({
   setResponses,
   guestDetails,
   setGuestDetails,
-  guests,
-  setHasChanges
+  guests
 }: UseRsvpActionsProps) => {
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const handleRsvpChange = async (guestId: string, eventId: string, status: string) => {
     try {
@@ -75,6 +77,12 @@ export const useRsvpActions = ({
   };
 
   return {
+    message,
+    setMessage,
+    isSubmitting,
+    setIsSubmitting,
+    hasChanges,
+    setHasChanges,
     handleRsvpChange,
     handleGuestDetailChange
   };

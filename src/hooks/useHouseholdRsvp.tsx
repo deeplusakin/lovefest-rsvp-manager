@@ -27,8 +27,7 @@ export const useHouseholdRsvp = (householdId: string) => {
     setResponses,
     guestDetails,
     setGuestDetails,
-    guests,
-    setHasChanges
+    guests
   });
 
   const { handleSubmitMessage } = useMessageSubmission({

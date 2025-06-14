@@ -11,97 +11,43 @@ export const useFetchHouseholdGuests = (householdId: string) => {
   const [guestDetails, setGuestDetails] = useState<GuestDetailsMap>({});
 
   useEffect(() => {
-    if (householdId) {
-      console.log("Fetching guests for household:", householdId);
-      fetchHouseholdGuests();
-    }
+    fetchHouseholdGuests();
   }, [householdId]);
 
   const fetchHouseholdGuests = async () => {
     try {
-      setLoading(true);
-      console.log("Starting to fetch household guests for ID:", householdId);
-
-      // First fetch guests
-      const { data: guestsData, error: guestsError } = await supabase
+      const { data: guestsData, error } = await supabase
         .from('guests')
-        .select('*')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          dietary_restrictions,
+          guest_events (
+            event_id,
+            status,
+            events (
+              name,
+              date,
+              location
+            )
+          )
+        `)
         .eq('household_id', householdId);
 
-      console.log("Guests query result:", { guestsData, error: guestsError });
+      if (error) throw error;
 
-      if (guestsError) {
-        console.error("Error fetching guests:", guestsError);
-        throw guestsError;
-      }
-
-      if (!guestsData || guestsData.length === 0) {
-        console.log("No guests found for household:", householdId);
-        setGuests([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch all events first to understand what events exist
-      const { data: allEvents, error: eventsError } = await supabase
-        .from('events')
-        .select('*');
-
-      console.log("All events query result:", { allEvents, error: eventsError });
-
-      if (eventsError) {
-        console.error("Error fetching events:", eventsError);
-        throw eventsError;
-      }
-
-      // Then fetch guest_events for these guests (use LEFT JOIN behavior)
-      const guestIds = guestsData.map(guest => guest.id);
-      
-      const { data: guestEventsData, error: guestEventsError } = await supabase
-        .from('guest_events')
-        .select(`
-          guest_id,
-          event_id,
-          status
-        `)
-        .in('guest_id', guestIds);
-
-      console.log("Guest events query result:", { guestEventsData, error: guestEventsError });
-
-      if (guestEventsError) {
-        console.error("Error fetching guest events:", guestEventsError);
-        throw guestEventsError;
-      }
-
-      // Combine the data - create guest_events for all events if they don't exist
-      const guestsWithEvents = guestsData.map(guest => {
-        const existingGuestEvents = guestEventsData?.filter(ge => ge.guest_id === guest.id) || [];
-        
-        // Create guest_events for all events, using existing status or default to 'invited'
-        const guestEvents = allEvents?.map(event => {
-          const existingEvent = existingGuestEvents.find(ge => ge.event_id === event.id);
-          return {
-            event_id: event.id,
-            status: existingEvent?.status || 'invited',
-            events: event
-          };
-        }) || [];
-
-        return {
-          ...guest,
-          guest_events: guestEvents
-        };
-      });
-
-      console.log("Combined guests with events:", JSON.stringify(guestsWithEvents, null, 2));
-      
-      setGuests(guestsWithEvents);
+      // Explicitly cast the data to match our Guest[] type
+      const typedGuests = guestsData as unknown as Guest[];
+      setGuests(typedGuests || []);
       
       // Initialize responses state
       const initialResponses: RsvpResponses = {};
       const initialGuestDetails: GuestDetailsMap = {};
       
-      guestsWithEvents.forEach(guest => {
+      typedGuests?.forEach(guest => {
         initialResponses[guest.id] = {};
         guest.guest_events?.forEach(event => {
           initialResponses[guest.id][event.event_id] = event.status;
@@ -117,12 +63,9 @@ export const useFetchHouseholdGuests = (householdId: string) => {
       setResponses(initialResponses);
       setGuestDetails(initialGuestDetails);
       
-      console.log("Guests loaded successfully:", guestsWithEvents?.length || 0, "guests");
-      console.log("Initial responses:", initialResponses);
-      
     } catch (error: any) {
-      console.error("Error in fetchHouseholdGuests:", error);
       toast.error("Error fetching household members");
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }

@@ -1,51 +1,65 @@
 
 import { useState } from "react";
-import { SecureRsvpForm } from "@/components/SecureRsvpForm";
-import { HouseholdRsvp } from "@/components/HouseholdRsvp";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useRsvpCode } from "@/hooks/useRsvpCode";
 
 interface RsvpFormProps {
-  onHouseholdFound?: (householdId: string) => void;
+  onHouseholdFound: (householdId: string) => void;
 }
 
 export const RsvpForm = ({ onHouseholdFound }: RsvpFormProps) => {
-  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const { validateCode, isLoading } = useRsvpCode();
 
-  const handleValidCode = (id: string) => {
-    console.log("RsvpForm received valid household ID:", id);
-    setHouseholdId(id);
-    onHouseholdFound?.(id);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!code.trim()) {
+      toast.error("Please enter your invitation code");
+      return;
+    }
+
+    try {
+      const householdId = await validateCode(code);
+      if (householdId) {
+        onHouseholdFound(householdId);
+      }
+    } catch (error) {
+      // Error handling is done in the useRsvpCode hook
+    }
   };
 
-  if (householdId) {
-    return <HouseholdRsvp householdId={householdId} />;
-  }
-
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-serif mb-4">RSVP</h1>
-        <p className="text-lg text-muted-foreground">
-          We're excited to celebrate with you! Please enter your invitation code to RSVP.
+    <section className="py-24 bg-primary text-white">
+      <div className="container max-w-md text-center">
+        <h2 className="text-4xl md:text-5xl font-serif mb-8">RSVP</h2>
+        <p className="text-gray-300 mb-8">
+          Please enter your unique code (case sensitive) from your invitation to RSVP for our wedding celebration.
         </p>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="code">Invitation Code</Label>
+            <Input
+              id="code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+              placeholder="Enter your code"
+              disabled={isLoading}
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className="w-full bg-white text-primary hover:bg-white/90"
+            disabled={isLoading}
+          >
+            {isLoading ? "Verifying..." : "Continue"}
+          </Button>
+        </form>
       </div>
-      
-      <SecureRsvpForm onValidCode={handleValidCode} />
-      
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
-          <CardDescription>
-            If you're having trouble finding your invitation code or accessing the RSVP form, please contact us.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Your invitation code can be found on your wedding invitation or in the invitation email we sent you.
-            If you still can't find it, please reach out to us and we'll help you get access.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    </section>
   );
 };
