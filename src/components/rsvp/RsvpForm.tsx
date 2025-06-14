@@ -12,7 +12,6 @@ export const RsvpForm = ({ onHouseholdFound }: RsvpFormProps) => {
   const [householdId, setHouseholdId] = useState<string | null>(null);
 
   const handleValidCode = (id: string) => {
-    console.log("RsvpForm received valid household ID:", id);
     setHouseholdId(id);
     onHouseholdFound?.(id);
   };

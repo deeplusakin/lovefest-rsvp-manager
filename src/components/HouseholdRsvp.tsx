@@ -10,8 +10,6 @@ interface HouseholdRsvpProps {
 }
 
 export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
-  console.log("HouseholdRsvp component rendering with householdId:", householdId);
-  
   const {
     guests,
     loading,
@@ -27,24 +25,10 @@ export const HouseholdRsvp = ({ householdId }: HouseholdRsvpProps) => {
     handleSubmitRsvp
   } = useHouseholdRsvp(householdId);
 
-  console.log("HouseholdRsvp state:", { guests: guests?.length, loading, responses });
-
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-2">Loading household members...</span>
-      </div>
-    );
-  }
-
-  if (!guests || guests.length === 0) {
-    return (
-      <div className="text-center p-8">
-        <p className="text-gray-600 mb-4">No household members found.</p>
-        <p className="text-sm text-gray-500">
-          If this seems incorrect, please contact us for assistance.
-        </p>
       </div>
     );
   }
