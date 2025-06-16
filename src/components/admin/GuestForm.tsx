@@ -25,16 +25,19 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
   const { weddingEventId } = useWeddingEvent();
 
   const fetchHouseholds = async () => {
+    console.log("Fetching households...");
     const { data, error } = await supabase
       .from('households')
       .select('*')
       .order('name');
     
     if (error) {
+      console.error("Error fetching households:", error);
       toast.error("Error fetching households");
       return;
     }
     
+    console.log("Households fetched:", data);
     setHouseholds(data || []);
   };
 
@@ -50,7 +53,19 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
       return;
     }
 
+    console.log("Creating guest with data:", {
+      first_name: guestData.firstName,
+      last_name: guestData.lastName,
+      email: guestData.email || null,
+      dietary_restrictions: guestData.dietaryRestrictions || null,
+      household_id: selectedHouseholdId
+    });
+
     try {
+      // Check current auth session
+      const { data: session } = await supabase.auth.getSession();
+      console.log("Current session:", session);
+
       // Create the guest
       const { data: newGuest, error: guestError } = await supabase
         .from('guests')
@@ -64,10 +79,16 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
         .select('id')
         .single();
 
-      if (guestError) throw guestError;
+      if (guestError) {
+        console.error('Guest creation error:', guestError);
+        throw guestError;
+      }
+
+      console.log("Guest created successfully:", newGuest);
 
       // If we have a wedding event ID, automatically add the guest to this event
       if (weddingEventId) {
+        console.log("Adding guest to wedding event:", weddingEventId);
         const { error: rsvpError } = await supabase
           .from('guest_events')
           .insert({
@@ -93,9 +114,9 @@ export const GuestForm = ({ onSuccess }: GuestFormProps) => {
         dietaryRestrictions: ""
       });
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating guest:', error);
-      toast.error("Error creating guest");
+      toast.error(`Error creating guest: ${error.message || 'Unknown error'}`);
     }
   };
 
