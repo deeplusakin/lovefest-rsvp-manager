@@ -93,7 +93,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
           />
           <TableBody>
             {sortedHouseholdIds.map((householdId) => (
-              <React.Fragment key={householdId}>
+              <div key={householdId}>
                 {guestsByHousehold[householdId].map((guest) => (
                   <GuestRow
                     key={guest.id}
@@ -121,7 +121,7 @@ export const GuestsTable = ({ guests, onDelete }: GuestsTableProps) => {
                     onStartCreateNewHousehold={() => setIsCreatingNewHousehold(true)}
                   />
                 ))}
-              </React.Fragment>
+              </div>
             ))}
           </TableBody>
         </Table>
