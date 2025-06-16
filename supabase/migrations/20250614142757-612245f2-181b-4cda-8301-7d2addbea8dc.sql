@@ -46,3 +46,24 @@ CREATE POLICY "Guests can be updated publicly"
   FOR UPDATE 
   TO public 
   USING (true);
+
+-- Allow public insert to guests (for admin guest management)
+CREATE POLICY "Guests can be inserted publicly" 
+  ON public.guests 
+  FOR INSERT 
+  TO public 
+  WITH CHECK (true);
+
+-- Allow public insert to guest_events (for admin guest management)
+CREATE POLICY "Guest events can be inserted publicly" 
+  ON public.guest_events 
+  FOR INSERT 
+  TO public 
+  WITH CHECK (true);
+
+-- Allow public insert to households (for admin household management)
+CREATE POLICY "Households can be inserted publicly" 
+  ON public.households 
+  FOR INSERT 
+  TO public 
+  WITH CHECK (true);
