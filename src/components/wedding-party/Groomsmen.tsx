@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-// Updated data for groomsmen with the new images and corrected information
+// Updated data for groomsmen with Moses removed
 const groomsmen = [
   {
     id: 3,
@@ -45,13 +45,6 @@ const groomsmen = [
     role: "Groomsman",
     image: "/lovable-uploads/583f0616-7458-45cc-95a9-65cbeb479773.png",
     description: "Brother-in-law of the groom"
-  },
-  {
-    id: 10,
-    name: "Moses",
-    role: "Groomsman",
-    image: "/lovable-uploads/ceaf1077-d65b-430c-9270-58fde1c429ab.png",
-    description: "Close friend of the groom"
   },
   {
     id: 11,
