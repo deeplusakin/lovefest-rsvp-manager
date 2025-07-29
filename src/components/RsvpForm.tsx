@@ -73,29 +73,18 @@ export const RsvpForm = () => {
     <section className="py-24 bg-primary text-white">
       <div className="container max-w-md text-center">
         <h2 className="text-4xl md:text-5xl font-serif mb-8">RSVP</h2>
-        <p className="text-gray-300 mb-8">
-          Please enter your unique code (case sensitive) from your invitation to RSVP for our wedding celebration.
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="code">Invitation Code</Label>
-            <Input
-              id="code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-              placeholder="Enter your code"
-              disabled={isLoading}
-            />
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 space-y-4">
+          <div className="text-center">
+            <h3 className="text-2xl font-semibold mb-4">RSVP Period Has Ended</h3>
+            <p className="text-gray-300 mb-6">
+              Thank you for your interest in RSVPing to our wedding celebration. 
+              The RSVP period has now closed and we are no longer accepting responses.
+            </p>
+            <p className="text-gray-300">
+              If you have any urgent questions or concerns, please contact us directly.
+            </p>
           </div>
-          <Button 
-            type="submit" 
-            className="w-full bg-white text-primary hover:bg-white/90"
-            disabled={isLoading}
-          >
-            {isLoading ? "Verifying..." : "Continue"}
-          </Button>
-        </form>
+        </div>
       </div>
     </section>
   );
