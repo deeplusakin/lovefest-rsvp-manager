@@ -57,7 +57,7 @@ const groomsmen = [
     id: 12,
     name: "Belai",
     role: "Groomsman",
-    image: "/lovable-uploads/e2ca44b7-b009-4677-82e1-8f66e50c158e.png",
+    image: "/lovable-uploads/edac78a0-8307-4f36-957e-f7a3d2cb74e7.png",
     description: "Groom's cousin"
   }
 ];
